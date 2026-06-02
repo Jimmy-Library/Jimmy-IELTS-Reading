@@ -311,6 +311,127 @@ body.no-scroll {
     color: #92400e;
 }
 
+/* ── 浏览器提示横幅 ── */
+
+.browser-notice {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 9998;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 20px;
+    background: #FFFBEB;
+    border-bottom: 2px solid #F59E0B;
+    box-shadow: 0 2px 12px rgba(245, 158, 11, 0.18);
+    font-size: 14px;
+    line-height: 1.5;
+    animation: browserNoticeSlideDown 0.35s ease-out;
+}
+
+.browser-notice[hidden] {
+    display: none;
+}
+
+@keyframes browserNoticeSlideDown {
+    from { transform: translateY(-100%); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.browser-notice__icon {
+    flex-shrink: 0;
+    color: #D97706;
+    margin-top: 2px;
+}
+
+.browser-notice__body {
+    flex: 1;
+    min-width: 0;
+}
+
+.browser-notice__title {
+    font-weight: 600;
+    color: #92400E;
+    margin-bottom: 4px;
+    font-size: 15px;
+}
+
+.browser-notice__desc {
+    color: #78350F;
+    font-size: 13px;
+    opacity: 0.85;
+}
+
+.browser-notice__actions {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 2px;
+}
+
+.browser-notice__btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+
+.browser-notice__btn--copy {
+    background: #F59E0B;
+    color: #fff;
+    box-shadow: 0 2px 6px rgba(245, 158, 11, 0.35);
+}
+
+.browser-notice__btn--copy:active {
+    background: #D97706;
+    transform: scale(0.97);
+}
+
+.browser-notice__close {
+    flex-shrink: 0;
+    background: none;
+    border: none;
+    color: #92400E;
+    cursor: pointer;
+    padding: 4px;
+    opacity: 0.6;
+    transition: opacity 0.15s;
+    margin-top: 1px;
+}
+
+.browser-notice__close:hover {
+    opacity: 1;
+}
+
+@media (max-width: 640px) {
+    .browser-notice {
+        flex-wrap: wrap;
+        padding: 12px 16px;
+        gap: 10px;
+    }
+    .browser-notice__actions {
+        width: 100%;
+        justify-content: flex-end;
+    }
+    .browser-notice__btn {
+        font-size: 13px;
+        padding: 7px 14px;
+    }
+    .browser-notice__body {
+        flex-basis: calc(100% - 60px);
+    }
+}
+
 .validation-report__card {
     background: rgba(255, 255, 255, 0.92);
     border: 1px solid rgba(148, 163, 184, 0.28);

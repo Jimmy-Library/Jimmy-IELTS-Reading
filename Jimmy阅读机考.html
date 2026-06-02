@@ -12,6 +12,37 @@
 </head>
 
 <body class="hero-body boot-active" data-theme="heroui">
+
+    <!-- 浏览器提示横幅 -->
+    <div id="browser-notice" class="browser-notice" role="alert" hidden>
+        <div class="browser-notice__icon" aria-hidden="true">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="8" x2="12" y2="12"/>
+                <line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+        </div>
+        <div class="browser-notice__body">
+            <div class="browser-notice__title">为获得最佳答题体验，请使用浏览器打开</div>
+            <div class="browser-notice__desc">微信等 App 内置浏览器可能影响题目显示和答题功能。建议复制链接，粘贴到 Chrome / Safari / Edge 等浏览器中打开。</div>
+        </div>
+        <div class="browser-notice__actions">
+            <button class="browser-notice__btn browser-notice__btn--copy" id="browser-notice-copy" type="button">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                </svg>
+                复制链接
+            </button>
+        </div>
+        <button class="browser-notice__close" id="browser-notice-close" type="button" aria-label="关闭提示">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"/>
+                <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+        </button>
+    </div>
+
     <div id="boot-overlay" role="status" aria-live="polite">
         <div class="boot-panel">
             <img class="boot-brand-logo" src="Jimmy's logo.png" alt="Jimmy" decoding="async">
@@ -798,6 +829,77 @@
                     }
                 }
             } catch (e) { /* ignore */ }
+        })();
+    </script>
+    <script>
+        // ── 微信浏览器提示横幅 ──
+        (function () {
+            // 仅微信内置浏览器弹出
+            var ua = navigator.userAgent || '';
+            if (!/MicroMessenger/i.test(ua)) return;
+
+            // 本会话已关闭过就不再弹出
+            try {
+                if (sessionStorage.getItem('browser_notice_dismissed')) return;
+            } catch (_) {}
+
+            var notice = document.getElementById('browser-notice');
+            if (!notice) return;
+
+            // 显示横幅
+            notice.removeAttribute('hidden');
+
+            // 关闭按钮
+            var closeBtn = document.getElementById('browser-notice-close');
+            if (closeBtn) {
+                closeBtn.addEventListener('click', function () {
+                    notice.setAttribute('hidden', '');
+                    try { sessionStorage.setItem('browser_notice_dismissed', '1'); } catch (_) {}
+                });
+            }
+
+            // 复制链接按钮
+            var copyBtn = document.getElementById('browser-notice-copy');
+            if (!copyBtn) return;
+
+            var originalHTML = copyBtn.innerHTML;
+
+            function resetCopyBtn() {
+                copyBtn.innerHTML = originalHTML;
+            }
+
+            function markCopied() {
+                copyBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> 已复制';
+                setTimeout(resetCopyBtn, 2200);
+            }
+
+            function fallbackCopy(text) {
+                var ta = document.createElement('textarea');
+                ta.value = text;
+                ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;';
+                document.body.appendChild(ta);
+                ta.focus();
+                ta.select();
+                try {
+                    document.execCommand('copy');
+                    markCopied();
+                } catch (_) {
+                    copyBtn.innerHTML = '请手动复制链接';
+                    setTimeout(resetCopyBtn, 2200);
+                }
+                document.body.removeChild(ta);
+            }
+
+            copyBtn.addEventListener('click', function () {
+                var url = window.location.href;
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(url).then(markCopied).catch(function () {
+                        fallbackCopy(url);
+                    });
+                } else {
+                    fallbackCopy(url);
+                }
+            });
         })();
     </script>
 </body>
