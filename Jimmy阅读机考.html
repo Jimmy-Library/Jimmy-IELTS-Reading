@@ -832,12 +832,8 @@
         })();
     </script>
     <script>
-        // ── 微信浏览器提示横幅 ──
+        // ── 浏览器提示横幅 ──
         (function () {
-            // 仅微信内置浏览器弹出
-            var ua = navigator.userAgent || '';
-            if (!/MicroMessenger/i.test(ua)) return;
-
             // 本会话已关闭过就不再弹出
             try {
                 if (sessionStorage.getItem('browser_notice_dismissed')) return;
