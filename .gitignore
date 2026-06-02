@@ -1,0 +1,23 @@
+# Dependencies
+node_modules/
+.venv/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Backup files
+*.bak
+*~
+
+# Large binary files (adjust as needed)
+*.zip
+*.tar.gz

@@ -1,0 +1,2052 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>IELTS · 自定义阅读题编辑器 · Developed by Jimmy</title>
+<style>
+    :root {
+        --ink: #0d3a23;
+        --green: #1f7a4d;
+        --green-deep: #14532d;
+        --green-light: #e8f3eb;
+        --green-mid: #d4ead8;
+        --rule: #bcd8c5;
+        --paper: #ffffff;
+        --muted: #5b7064;
+        --warn: #d4a017;
+        --danger: #c0392b;
+        --accent-yellow: #ffd54a;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+        margin: 0; padding: 0;
+        font-family: Arial, Helvetica, "Microsoft YaHei", "PingFang SC", sans-serif;
+        background: #f6faf7;
+        color: var(--ink);
+        font-size: 14px;
+        line-height: 1.5;
+    }
+    button { font-family: inherit; }
+
+    /* 顶栏 */
+    header.editor-top {
+        background: linear-gradient(180deg, var(--green-deep) 0%, var(--green) 100%);
+        color: #ffffff;
+        padding: 12px 24px;
+        display: flex; align-items: center; justify-content: space-between;
+        border-bottom: 3px solid var(--accent-yellow);
+        position: sticky; top: 0; z-index: 30;
+    }
+    header.editor-top .brand {
+        display: flex; align-items: center; gap: 12px;
+    }
+    .brand-logo {
+        background: #ffffff;
+        color: var(--green-deep);
+        font-weight: 800; letter-spacing: 0.18em;
+        padding: 7px 12px;
+        border-radius: 3px;
+        border: 2px solid var(--accent-yellow);
+        font-size: 13px;
+    }
+    .brand-text h1 { margin: 0; font-size: 16px; letter-spacing: 0.04em; }
+    .brand-text p { margin: 2px 0 0; font-size: 11px; opacity: 0.85; letter-spacing: 0.04em; }
+    .top-actions { display: flex; gap: 8px; }
+    .top-actions button {
+        background: rgba(255,255,255,0.12); color: #fff;
+        border: 1px solid rgba(255,255,255,0.32);
+        padding: 7px 14px; border-radius: 4px;
+        font-size: 12px; font-weight: 600; letter-spacing: 0.04em;
+        cursor: pointer;
+    }
+    .top-actions button:hover { background: rgba(255,255,255,0.22); }
+    .top-actions button.primary {
+        background: var(--accent-yellow); color: var(--green-deep);
+        border-color: rgba(20,83,45,0.3);
+    }
+    .top-actions button.primary:hover { filter: brightness(1.05); }
+
+    /* 标签栏 */
+    nav.tabs {
+        background: #ffffff;
+        border-bottom: 1px solid var(--rule);
+        padding: 0 24px;
+        display: flex; gap: 4px;
+        position: sticky; top: 60px; z-index: 25;
+        overflow-x: auto;
+    }
+    nav.tabs button {
+        background: transparent; border: none;
+        padding: 12px 18px;
+        font-size: 13px; font-weight: 600;
+        color: var(--muted);
+        cursor: pointer;
+        border-bottom: 3px solid transparent;
+        margin-bottom: -1px;
+        letter-spacing: 0.04em;
+    }
+    nav.tabs button:hover { color: var(--green); }
+    nav.tabs button.active {
+        color: var(--green-deep);
+        border-bottom-color: var(--green);
+        background: var(--green-light);
+    }
+
+    /* 主体 */
+    main.editor-body { padding: 22px 24px 80px; max-width: 1280px; margin: 0 auto; }
+    section.tab-panel { display: none; }
+    section.tab-panel.active { display: block; }
+
+    .panel-card {
+        background: #ffffff;
+        border: 1px solid var(--rule);
+        border-radius: 6px;
+        padding: 22px 24px;
+        margin-bottom: 18px;
+        box-shadow: 0 2px 6px rgba(15,53,35,0.05);
+    }
+    .panel-card h2 {
+        font-size: 16px;
+        margin: 0 0 6px;
+        color: var(--green-deep);
+        letter-spacing: 0.04em;
+        display: flex; align-items: center; gap: 8px;
+    }
+    .panel-card p.hint {
+        margin: 0 0 16px;
+        font-size: 12px;
+        color: var(--muted);
+        line-height: 1.55;
+    }
+
+    .form-row { display: grid; grid-template-columns: 140px 1fr; gap: 14px; margin-bottom: 12px; align-items: start; }
+    .form-row label { padding-top: 7px; font-weight: 600; font-size: 13px; color: var(--ink); }
+    .form-row input[type=text],
+    .form-row input[type=number],
+    .form-row select,
+    .form-row textarea {
+        width: 100%;
+        padding: 8px 10px;
+        border: 1px solid var(--rule);
+        border-radius: 4px;
+        background: #fafdfb;
+        color: var(--ink);
+        font-family: inherit;
+        font-size: 13px;
+    }
+    .form-row textarea { font-family: "Consolas", "Monaco", monospace; min-height: 240px; resize: vertical; line-height: 1.5; }
+    .form-row input:focus, .form-row select:focus, .form-row textarea:focus {
+        outline: 2px solid var(--green); outline-offset: -2px;
+        background: #ffffff;
+    }
+    .form-row .field-help { font-size: 11.5px; color: var(--muted); margin-top: 4px; line-height: 1.4; }
+
+    .inline-actions {
+        display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px;
+    }
+    .btn-primary, .btn-secondary, .btn-danger, .btn-ghost {
+        padding: 7px 14px;
+        border-radius: 4px;
+        border: 1px solid;
+        font-size: 12.5px; font-weight: 600; letter-spacing: 0.04em;
+        cursor: pointer;
+        font-family: inherit;
+    }
+    .btn-primary {
+        background: linear-gradient(180deg, var(--green) 0%, var(--green-deep) 100%);
+        color: #ffffff; border-color: var(--green-deep);
+    }
+    .btn-primary:hover { filter: brightness(1.06); }
+    .btn-secondary {
+        background: #ffffff; color: var(--green);
+        border-color: var(--rule);
+    }
+    .btn-secondary:hover { background: var(--green-light); border-color: var(--green); }
+    .btn-danger {
+        background: #ffffff; color: var(--danger);
+        border-color: rgba(192,57,43,0.4);
+    }
+    .btn-danger:hover { background: rgba(192,57,43,0.08); }
+    .btn-ghost {
+        background: transparent; color: var(--muted);
+        border-color: transparent; padding: 4px 10px;
+    }
+    .btn-ghost:hover { background: var(--green-light); color: var(--green-deep); }
+
+    /* 题组卡片 */
+    .group-card {
+        background: #ffffff;
+        border: 1px solid var(--rule);
+        border-radius: 6px;
+        margin-bottom: 14px;
+        overflow: hidden;
+    }
+    .group-card header {
+        background: var(--green-light);
+        border-bottom: 1px solid var(--rule);
+        padding: 10px 16px;
+        display: flex; align-items: center; gap: 12px;
+        cursor: pointer;
+    }
+    .group-card header .group-title {
+        font-weight: 700; color: var(--green-deep); flex: 1;
+        display: flex; align-items: center; gap: 8px;
+    }
+    .group-card header .kind-tag {
+        background: var(--green); color: #fff;
+        padding: 2px 9px; border-radius: 3px;
+        font-size: 11px; font-weight: 600; letter-spacing: 0.04em;
+    }
+    .group-card header .questions-tag {
+        background: var(--accent-yellow); color: var(--green-deep);
+        padding: 2px 9px; border-radius: 3px;
+        font-size: 11px; font-weight: 600; letter-spacing: 0.04em;
+    }
+    .group-card header .group-actions { display: flex; gap: 6px; }
+    .group-card .group-body {
+        padding: 16px 18px;
+        display: block;
+    }
+    .group-card.collapsed .group-body { display: none; }
+
+    .add-group-row {
+        background: var(--green-light);
+        border: 1px dashed var(--green);
+        border-radius: 6px;
+        padding: 14px 18px;
+        display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+        margin-top: 8px;
+    }
+    .add-group-row select {
+        padding: 7px 10px; border: 1px solid var(--rule); border-radius: 4px;
+        font-size: 13px; background: #ffffff;
+    }
+    .add-group-row .kind-desc {
+        flex: 1;
+        font-size: 11.5px;
+        color: var(--muted);
+        margin-left: 6px;
+    }
+
+    /* 表项 */
+    .item-list {
+        display: flex; flex-direction: column;
+        gap: 8px; margin: 8px 0;
+    }
+    .item-row {
+        display: flex; gap: 8px; align-items: flex-start;
+        background: #fafdfb;
+        border: 1px solid var(--rule);
+        border-radius: 4px;
+        padding: 8px 10px;
+    }
+    .item-row .row-index {
+        background: var(--green); color: #ffffff;
+        padding: 4px 8px; border-radius: 3px;
+        font-size: 12px; font-weight: 700;
+        min-width: 36px; text-align: center;
+    }
+    .item-row input[type=text],
+    .item-row input[type=number],
+    .item-row textarea,
+    .item-row select {
+        padding: 6px 8px; border: 1px solid var(--rule); border-radius: 3px;
+        font-size: 12.5px; flex: 1; background: #ffffff;
+        font-family: inherit;
+    }
+    .item-row textarea { min-height: 38px; font-family: "Consolas", monospace; }
+    .item-row .row-remove {
+        background: transparent; border: 1px solid var(--rule);
+        color: var(--danger); width: 28px; height: 28px;
+        border-radius: 3px; cursor: pointer; padding: 0;
+    }
+    .item-row .row-remove:hover { background: rgba(192,57,43,0.08); }
+
+    /* 预览面板 */
+    .preview-frame {
+        background: #ffffff;
+        border: 1px solid var(--rule);
+        border-radius: 6px;
+        padding: 24px 28px;
+        max-height: 75vh;
+        overflow-y: auto;
+        min-height: 300px;
+    }
+    .preview-frame h2 { font-size: 18px; color: var(--green-deep); margin: 6px 0 12px; }
+    .preview-frame h3 { font-size: 16px; color: var(--green-deep); margin: 16px 0 8px; }
+    .preview-frame h4 { font-size: 15px; color: var(--ink); margin: 14px 0 6px; }
+    .preview-frame .group { background: #fafdfb; border: 1px solid var(--rule); padding: 14px 16px; border-radius: 4px; margin-bottom: 12px; }
+    .preview-frame .question-item { padding: 8px 0; border-bottom: 1px dashed var(--rule); }
+    .preview-frame .question-item:last-child { border-bottom: 0; }
+    .preview-frame .answer-input { padding: 4px 8px; border: 1px solid var(--rule); border-radius: 3px; min-width: 100px; background: #ffffe6; }
+    .preview-frame .choice-list { list-style: none; padding-left: 16px; margin: 6px 0; }
+    .preview-frame .choice-list li { padding: 2px 0; }
+    .preview-frame .paragraph-dropzone, .preview-frame .match-dropzone, .preview-frame .drop-target-summary {
+        background: var(--green-light); border: 1px dashed var(--green);
+        border-radius: 3px; padding: 4px 8px; min-height: 24px; display: inline-block; min-width: 100px;
+    }
+    .preview-frame .paragraph-dropzone { display: block; margin: 4px 0; }
+    .preview-frame .drag-item {
+        background: #ffffff; border: 1px solid var(--green);
+        padding: 4px 9px; border-radius: 3px; display: inline-block; margin: 2px;
+        font-size: 12.5px; cursor: grab;
+    }
+    .preview-frame .pool-items { display: flex; flex-wrap: wrap; gap: 4px; padding: 8px; background: #ffffff; border: 1px solid var(--rule); border-radius: 4px; margin: 6px 0; }
+    .preview-frame .headings-pool, .preview-frame .options-pool, .preview-frame .word-bank {
+        background: var(--green-light); border: 1px solid var(--rule); border-radius: 4px;
+        padding: 10px 12px; margin: 10px 0;
+    }
+    .preview-frame .completion-table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+    .preview-frame .completion-table th,
+    .preview-frame .completion-table td { border: 1px solid var(--rule); padding: 6px 8px; }
+    .preview-frame .completion-table thead th { background: var(--green-light); color: var(--green-deep); }
+    .preview-frame .diagram-wrapper { display: inline-block; margin: 8px 0; }
+
+    .export-card pre {
+        background: #0d2419; color: #d4ead8;
+        border: 1px solid var(--rule); border-radius: 4px;
+        padding: 14px 16px; max-height: 360px; overflow: auto;
+        font-family: Consolas, Monaco, monospace; font-size: 11.5px;
+        white-space: pre-wrap; line-break: anywhere;
+    }
+    .export-card .export-buttons { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+
+    .toast {
+        position: fixed; bottom: 24px; right: 24px;
+        background: var(--green); color: #ffffff;
+        padding: 10px 18px; border-radius: 4px;
+        font-size: 13px; font-weight: 600;
+        box-shadow: 0 4px 12px rgba(15,53,35,0.25);
+        opacity: 0; pointer-events: none;
+        transition: opacity 0.2s ease, transform 0.2s ease;
+        transform: translateY(8px);
+        z-index: 200;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); pointer-events: auto; }
+    .toast.error { background: var(--danger); }
+    .toast.warn { background: var(--warn); color: var(--green-deep); }
+
+    .empty-msg {
+        text-align: center; padding: 40px 20px; color: var(--muted);
+        background: #fafdfb; border: 1px dashed var(--rule); border-radius: 6px;
+    }
+
+    .kind-badge {
+        display: inline-block;
+        background: var(--green-light); color: var(--green-deep);
+        padding: 2px 8px; border-radius: 3px;
+        font-size: 11px; font-weight: 600; letter-spacing: 0.04em;
+        margin-left: 6px;
+    }
+
+    .checkbox-row { display: flex; gap: 8px; align-items: center; padding: 6px 0; font-size: 13px; }
+    .checkbox-row input[type=checkbox] { width: 16px; height: 16px; }
+
+    .field-grid {
+        display: grid; gap: 10px;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        margin-bottom: 10px;
+    }
+    .field-grid .form-row { grid-template-columns: 1fr; gap: 4px; margin-bottom: 0; }
+    .field-grid .form-row label { padding-top: 0; font-size: 12px; }
+
+    .placeholder-hint {
+        background: #fff8e1; border-left: 3px solid var(--accent-yellow);
+        padding: 8px 12px; border-radius: 3px;
+        font-size: 12px; color: #6a5b14; margin: 8px 0;
+    }
+    .placeholder-hint code { background: rgba(0,0,0,0.06); padding: 1px 5px; border-radius: 3px; font-size: 11.5px; }
+</style>
+</head>
+<body>
+
+<header class="editor-top">
+    <div class="brand">
+        <span class="brand-logo">IELTS</span>
+        <div class="brand-text">
+            <h1>自定义阅读题编辑器</h1>
+            <p>Custom Reading Builder · 11 题型 · 实时预览 · 多格式导出</p>
+        </div>
+    </div>
+    <div class="top-actions">
+        <button id="btn-new" type="button">🆕 新建</button>
+        <button id="btn-load" type="button">📂 导入 JSON</button>
+        <button id="btn-save-draft" type="button">💾 保存草稿</button>
+        <button id="btn-load-draft" type="button">📋 读取草稿</button>
+        <button id="btn-goto-export" type="button" class="primary">📤 导出</button>
+    </div>
+</header>
+
+<nav class="tabs">
+    <button type="button" class="tab-btn active" data-tab="meta">① 基础信息</button>
+    <button type="button" class="tab-btn" data-tab="passage">② 文章</button>
+    <button type="button" class="tab-btn" data-tab="groups">③ 题组</button>
+    <button type="button" class="tab-btn" data-tab="preview">④ 预览</button>
+    <button type="button" class="tab-btn" data-tab="export">⑤ 导出</button>
+    <button type="button" class="tab-btn" data-tab="help">❓ 帮助</button>
+</nav>
+
+<main class="editor-body">
+
+<!-- TAB 1: META -->
+<section class="tab-panel active" data-panel="meta">
+    <div class="panel-card">
+        <h2>基础信息</h2>
+        <p class="hint">这些字段会写进 <code>meta</code> 区与最终文件名,务必填准确。</p>
+        <div class="form-row">
+            <label>examId *</label>
+            <div>
+                <input type="text" id="meta-examId" placeholder="p1-custom-001" autocomplete="off">
+                <div class="field-help">小写字母 + 数字 + 短横线,全局唯一。对应文件名也用这个。</div>
+            </div>
+        </div>
+        <div class="form-row">
+            <label>title *</label>
+            <input type="text" id="meta-title" placeholder="占位标题 Sample Title">
+        </div>
+        <div class="form-row">
+            <label>category *</label>
+            <select id="meta-category">
+                <option value="P1">P1 · 基础</option>
+                <option value="P2">P2 · 中级</option>
+                <option value="P3">P3 · 高级</option>
+            </select>
+        </div>
+        <div class="form-row">
+            <label>frequency</label>
+            <select id="meta-frequency">
+                <option value="high">high · 高频</option>
+                <option value="medium">medium · 中频</option>
+                <option value="low">low · 低频</option>
+            </select>
+        </div>
+        <div class="form-row">
+            <label>questionIntroHtml</label>
+            <input type="text" id="meta-questionIntro" placeholder="<h3>Questions</h3>">
+        </div>
+    </div>
+</section>
+
+<!-- TAB 2: PASSAGE -->
+<section class="tab-panel" data-panel="passage">
+    <div class="panel-card">
+        <h2>文章正文</h2>
+        <p class="hint">
+            支持 HTML 片段。每段建议用 <code>&lt;p&gt;&lt;strong&gt;A&lt;/strong&gt; 段落正文…&lt;/p&gt;</code> 形式。<br>
+            如果选用 <strong>标题匹配(heading→paragraph)</strong> 题型,需要在每段外面包一层
+            <code>&lt;div class="paragraph-wrapper" id="qN-anchor"&gt;</code>,见模板按钮。
+        </p>
+        <div class="inline-actions" style="margin-bottom: 10px;">
+            <button type="button" class="btn-secondary" id="tpl-plain">模板 · 普通段落</button>
+            <button type="button" class="btn-secondary" id="tpl-heading">模板 · 段落 + 标题匹配 dropzone</button>
+            <button type="button" class="btn-secondary" id="tpl-section">模板 · 多分节文章</button>
+        </div>
+        <div class="form-row">
+            <label>passage HTML</label>
+            <textarea id="passage-html" placeholder="<h2>READING PASSAGE</h2>&#10;<p><strong>A</strong> 占位段落内容…</p>"></textarea>
+        </div>
+    </div>
+</section>
+
+<!-- TAB 3: GROUPS -->
+<section class="tab-panel" data-panel="groups">
+    <div class="panel-card">
+        <h2>题组管理</h2>
+        <p class="hint">
+            每个题组对应一种题型(kind)。题号自动按从上到下编号 → q1, q2, q3 …<br>
+            如需调整顺序,点击题组左侧的"↑ ↓ × 折叠"操作。
+        </p>
+        <div id="groups-container"></div>
+
+        <div class="add-group-row">
+            <strong>+ 添加题组</strong>
+            <select id="new-kind">
+                <option value="single_choice">single_choice · 单选</option>
+                <option value="multi_choice">multi_choice · 多选</option>
+                <option value="true_false_not_given">true_false_not_given · T/F/NG</option>
+                <option value="yes_no_not_given">yes_no_not_given · Y/N/NG</option>
+                <option value="matching_heading">matching · heading→paragraph</option>
+                <option value="matching_statement">matching · statement→option</option>
+                <option value="classification">classification · 分类(选项可重用)</option>
+                <option value="summary_completion">summary_completion · 摘要填空</option>
+                <option value="summary_with_bank">summary_completion · 带词库(拖词)</option>
+                <option value="sentence_completion">sentence_completion · 句子填空</option>
+                <option value="table_completion">table_completion · 表格填空</option>
+                <option value="diagram_completion">diagram_completion · 图示填空</option>
+                <option value="short_answer">short_answer · 简答题</option>
+            </select>
+            <button type="button" class="btn-primary" id="btn-add-group">添加</button>
+            <span class="kind-desc" id="new-kind-desc"></span>
+        </div>
+    </div>
+</section>
+
+<!-- TAB 4: PREVIEW -->
+<section class="tab-panel" data-panel="preview">
+    <div class="panel-card">
+        <h2>实时预览</h2>
+        <p class="hint">下面渲染的样式与正式练习页基本一致。拖拽 / 输入仅作交互预览,不会被保存。</p>
+        <div class="inline-actions" style="margin-bottom: 12px;">
+            <button type="button" class="btn-primary" id="btn-refresh-preview">🔄 刷新预览</button>
+            <button type="button" class="btn-secondary" id="btn-show-answers">👁️ 显示答案</button>
+            <button type="button" class="btn-secondary" id="btn-hide-answers">🙈 隐藏答案</button>
+        </div>
+        <div class="preview-frame" id="preview-frame">
+            <div class="empty-msg">预览将在这里出现 — 点击"刷新预览"或切到本标签时自动刷新</div>
+        </div>
+    </div>
+</section>
+
+<!-- TAB 5: EXPORT -->
+<section class="tab-panel" data-panel="export">
+    <div class="panel-card export-card">
+        <h2>导出格式</h2>
+        <p class="hint">三种格式:JSON(原始数据) / JS(可放入项目) / HTML(独立练习页)。</p>
+        <div class="export-buttons">
+            <button type="button" class="btn-primary" id="btn-export-json">📦 下载 JSON</button>
+            <button type="button" class="btn-primary" id="btn-export-js">📦 下载 ReadingExamSourceV1 (.js)</button>
+            <button type="button" class="btn-primary" id="btn-export-html">📦 下载独立 HTML</button>
+            <button type="button" class="btn-secondary" id="btn-copy-json">📋 复制 JSON</button>
+            <button type="button" class="btn-secondary" id="btn-copy-manifest">📋 复制 manifest 片段</button>
+        </div>
+        <h3 style="font-size: 13px; margin: 14px 0 6px;">数据预览(JSON)</h3>
+        <pre id="json-preview"></pre>
+        <h3 style="font-size: 13px; margin: 14px 0 6px;">manifest.js 片段</h3>
+        <pre id="manifest-preview"></pre>
+    </div>
+</section>
+
+<!-- TAB 6: HELP -->
+<section class="tab-panel" data-panel="help">
+    <div class="panel-card">
+        <h2>使用指南</h2>
+        <p class="hint">完整文档见 <a href="../README.md">../README.md</a> 与 <a href="../02-题型设计代码.md">02-题型设计代码.md</a>。</p>
+        <h3>① 一次完整流程</h3>
+        <ol>
+            <li>① 基础信息 → 填 examId / title / category</li>
+            <li>② 文章 → 粘贴或键入文章正文</li>
+            <li>③ 题组 → 添加若干题组,选 kind,填字段</li>
+            <li>④ 预览 → 检查实际渲染效果</li>
+            <li>⑤ 导出 → 下载 .js,放进 <code>assets/generated/reading-exams/</code>,在 manifest.js 追加一项</li>
+            <li>主程序刷新 → 设置 → 🔄 强制刷新题库 → 完成</li>
+        </ol>
+        <h3>② summary_completion / sentence_completion 占位符</h3>
+        <div class="placeholder-hint">
+            在文本中用 <code>{{q1}}</code> <code>{{q2}}</code> 标记需要填空的位置,系统会自动替换为 <code>&lt;input data-question="q1"&gt;</code>。
+            <br>例:<code>The 占位主题 was first 1{{q1}} in 2{{q2}}.</code>
+        </div>
+        <h3>③ matching · 选项池</h3>
+        <p>选项池里每个 chip 在 schema 里只是元数据,但页面上对应 <code>&lt;div class="drag-item" draggable="true" data-heading="iv"&gt;</code>。</p>
+        <h3>④ 草稿保存</h3>
+        <p>点击 <strong>💾 保存草稿</strong> 把当前表单存到 <code>localStorage</code>(键:<code>ielts-editor-draft</code>),下次回来 <strong>📋 读取草稿</strong> 即可恢复。</p>
+        <h3>⑤ 注意事项</h3>
+        <ul>
+            <li>导出前请预览一次,确保没有空字段。</li>
+            <li>导出的 .js 文件名建议与 examId 一致,与 manifest 的 <code>script</code> 字段对齐。</li>
+            <li>图示题(diagram_completion)需要图片资源,导出后请把图片放到 <code>assets/diagrams/</code> 并改路径。</li>
+            <li>本编辑器不会调用网络,所有数据只存在浏览器内 / 你的下载。</li>
+        </ul>
+    </div>
+</section>
+
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+ * 编辑器状态 + 题型注册表 + 渲染逻辑
+ * Developed by Jimmy · 所有示例用占位文本
+ * ============================================================ */
+
+/** 当前编辑中的题目数据 */
+const state = {
+    meta: {
+        examId: '',
+        title: '',
+        category: 'P1',
+        frequency: 'high',
+        questionIntroHtml: '<h3>Questions</h3>'
+    },
+    passageHtml: '',
+    groups: []   // { id, kind, displayKind, payload }
+};
+
+/** 题型描述与字段定义注册表
+ *  displayKind: 编辑器下拉选项标识(可能比实际 kind 更细)
+ *  realKind:    最终 schema 里的 kind
+ */
+const KIND_DEFS = {
+    single_choice: {
+        realKind: 'single_choice',
+        label: '单选(single_choice)',
+        desc: '题干 + A/B/C/D 选项,radio 单选',
+        defaultPayload: () => ({
+            instructions: 'Choose the correct letter, A, B, C or D.',
+            options: ['A', 'B', 'C', 'D'],
+            questions: [{ stem: '占位题干', options: ['占位选项 A', '占位选项 B', '占位选项 C', '占位选项 D'], answer: 'A' }]
+        }),
+        toHtml: scQuestionGroupHtml,
+        countQuestions: (p) => p.questions.length,
+        toAnswerKey: (p, qIds) => Object.fromEntries(qIds.map((id, i) => [id, p.questions[i].answer]))
+    },
+    multi_choice: {
+        realKind: 'multi_choice',
+        label: '多选(multi_choice)',
+        desc: '在 N 个选项中选 K 个,checkbox 共享 name',
+        defaultPayload: () => ({
+            instructions: 'Choose TWO letters, A–E.',
+            options: ['A', 'B', 'C', 'D', 'E'],
+            optionLabels: ['占位选项 A', '占位选项 B', '占位选项 C', '占位选项 D', '占位选项 E'],
+            pickCount: 2,
+            answers: ['A', 'C']
+        }),
+        toHtml: mcQuestionGroupHtml,
+        countQuestions: (p) => p.pickCount,
+        toAnswerKey: (p, qIds) => Object.fromEntries(qIds.map((id, i) => [id, p.answers[i]]))
+    },
+    true_false_not_given: {
+        realKind: 'true_false_not_given',
+        label: 'T/F/NG(true_false_not_given)',
+        desc: '事实判断题:TRUE / FALSE / NOT GIVEN',
+        defaultPayload: () => ({
+            instructions: 'Do the following statements agree with the information given in the passage?',
+            questions: [
+                { stem: '占位陈述一', answer: 'TRUE' },
+                { stem: '占位陈述二', answer: 'FALSE' }
+            ]
+        }),
+        toHtml: (p, ids) => tfngHtml(p, ids, ['TRUE', 'FALSE', 'NOT GIVEN'], 'TRUE / FALSE / NOT GIVEN'),
+        countQuestions: (p) => p.questions.length,
+        toAnswerKey: (p, qIds) => Object.fromEntries(qIds.map((id, i) => [id, p.questions[i].answer]))
+    },
+    yes_no_not_given: {
+        realKind: 'yes_no_not_given',
+        label: 'Y/N/NG(yes_no_not_given)',
+        desc: '观点判断题:YES / NO / NOT GIVEN',
+        defaultPayload: () => ({
+            instructions: 'Do the following statements agree with the claims of the writer?',
+            questions: [
+                { stem: '占位观点一', answer: 'YES' },
+                { stem: '占位观点二', answer: 'NO' }
+            ]
+        }),
+        toHtml: (p, ids) => tfngHtml(p, ids, ['YES', 'NO', 'NOT GIVEN'], 'YES / NO / NOT GIVEN'),
+        countQuestions: (p) => p.questions.length,
+        toAnswerKey: (p, qIds) => Object.fromEntries(qIds.map((id, i) => [id, p.questions[i].answer]))
+    },
+    matching_heading: {
+        realKind: 'matching',
+        label: 'matching · heading→paragraph',
+        desc: '把段落 A-H 与标题列表(roman i-x)匹配 · DOM 写法 A',
+        defaultPayload: () => ({
+            instructions: 'Choose the correct heading for each paragraph from the list of headings below.',
+            paragraphs: ['A', 'B', 'C'],
+            headings: [
+                { id: 'i', text: '占位标题一 A chance discovery' },
+                { id: 'ii', text: '占位标题二 A long journey' },
+                { id: 'iii', text: '占位标题三 An unexpected outcome' },
+                { id: 'iv', text: '占位标题四 The role of climate' }
+            ],
+            allowReuse: false,
+            answers: ['i', 'iii', 'ii']
+        }),
+        toHtml: matchingHeadingHtml,
+        countQuestions: (p) => p.paragraphs.length,
+        toAnswerKey: (p, qIds) => Object.fromEntries(qIds.map((id, i) => [id, p.answers[i]]))
+    },
+    matching_statement: {
+        realKind: 'matching',
+        label: 'matching · statement→option',
+        desc: '陈述列表与选项列表匹配 · DOM 写法 B',
+        defaultPayload: () => ({
+            instructions: 'Match each statement with the correct option, A–E.',
+            statements: ['占位陈述一', '占位陈述二', '占位陈述三'],
+            options: [
+                { id: 'A', text: '占位选项一' },
+                { id: 'B', text: '占位选项二' },
+                { id: 'C', text: '占位选项三' },
+                { id: 'D', text: '占位选项四' },
+                { id: 'E', text: '占位选项五' }
+            ],
+            allowReuse: false,
+            answers: ['A', 'C', 'B']
+        }),
+        toHtml: matchingStatementHtml,
+        countQuestions: (p) => p.statements.length,
+        toAnswerKey: (p, qIds) => Object.fromEntries(qIds.map((id, i) => [id, p.answers[i]]))
+    },
+    classification: {
+        realKind: 'classification',
+        label: 'classification · 分类(可重用)',
+        desc: '与 matching_statement 一致,但选项可被多个题目共用',
+        defaultPayload: () => ({
+            instructions: 'Classify the following items as:',
+            statements: ['占位项目一', '占位项目二', '占位项目三', '占位项目四'],
+            options: [
+                { id: 'A', text: '占位分类一' },
+                { id: 'B', text: '占位分类二' },
+                { id: 'C', text: '占位分类三' }
+            ],
+            allowReuse: true,
+            answers: ['A', 'B', 'A', 'C']
+        }),
+        toHtml: matchingStatementHtml,
+        countQuestions: (p) => p.statements.length,
+        toAnswerKey: (p, qIds) => Object.fromEntries(qIds.map((id, i) => [id, p.answers[i]]))
+    },
+    summary_completion: {
+        realKind: 'summary_completion',
+        label: 'summary_completion · 摘要填空',
+        desc: '段落内若干空位,用 {{qN}} 占位标注',
+        defaultPayload: () => ({
+            instructions: 'Complete the summary using NO MORE THAN TWO WORDS from the passage.',
+            template: 'The 占位主题 was first introduced in {{q1}}, and later gained popularity through {{q2}}. Today it remains an important {{q3}}.',
+            answers: { q1: 'the 1800s', q2: 'trade', q3: 'industry' }
+        }),
+        toHtml: summaryCompletionHtml,
+        countQuestions: (p) => extractPlaceholders(p.template).length,
+        toAnswerKey: (p, qIds) => {
+            const placeholders = extractPlaceholders(p.template);
+            const out = {};
+            placeholders.forEach((ph, i) => {
+                out[qIds[i]] = p.answers[ph] || '';
+            });
+            return out;
+        }
+    },
+    summary_with_bank: {
+        realKind: 'summary_completion',
+        label: 'summary · 词库式',
+        desc: '段落填空 + 拖词库(word bank)',
+        defaultPayload: () => ({
+            instructions: 'Complete the summary by dragging words from the list below.',
+            template: 'The 占位主题 was first cultivated for {{q1}}, and later became a popular item of {{q2}}.',
+            wordBank: ['harvest', 'trade', 'industry', 'export'],
+            answers: { q1: 'harvest', q2: 'trade' }
+        }),
+        toHtml: summaryWithBankHtml,
+        countQuestions: (p) => extractPlaceholders(p.template).length,
+        toAnswerKey: (p, qIds) => {
+            const placeholders = extractPlaceholders(p.template);
+            return Object.fromEntries(placeholders.map((ph, i) => [qIds[i], p.answers[ph] || '']));
+        }
+    },
+    sentence_completion: {
+        realKind: 'sentence_completion',
+        label: 'sentence_completion · 句子填空',
+        desc: '一行一题,空格用 {{qN}} 标注',
+        defaultPayload: () => ({
+            instructions: 'Complete the sentences. Choose NO MORE THAN THREE WORDS.',
+            sentences: [
+                '占位句子一 — 风车最早出现于 {{q1}}.',
+                '占位句子二 — 主要的动力来源是 {{q2}}.'
+            ],
+            answers: { q1: 'the 1300s', q2: 'wind' }
+        }),
+        toHtml: sentenceCompletionHtml,
+        countQuestions: (p) => p.sentences.reduce((sum, s) => sum + extractPlaceholders(s).length, 0),
+        toAnswerKey: (p, qIds) => {
+            const out = {};
+            let idx = 0;
+            p.sentences.forEach((s) => {
+                extractPlaceholders(s).forEach((ph) => {
+                    out[qIds[idx++]] = p.answers[ph] || '';
+                });
+            });
+            return out;
+        }
+    },
+    table_completion: {
+        realKind: 'table_completion',
+        label: 'table_completion · 表格填空',
+        desc: '表格单元格内填空,用 {{qN}} 标注',
+        defaultPayload: () => ({
+            instructions: 'Complete the table. NO MORE THAN TWO WORDS.',
+            headers: ['Period', 'Main Use', 'Region'],
+            rows: [
+                ['Pre-1800', '{{q1}}', '占位地区'],
+                ['1800-1900', '占位用途', '{{q2}}'],
+                ['Post-1900', '{{q3}}', '{{q4}}']
+            ],
+            answers: { q1: 'lighting', q2: 'Europe', q3: 'transportation', q4: 'Asia' }
+        }),
+        toHtml: tableCompletionHtml,
+        countQuestions: (p) => p.rows.flat().reduce((sum, c) => sum + extractPlaceholders(c).length, 0),
+        toAnswerKey: (p, qIds) => {
+            const out = {};
+            let idx = 0;
+            p.rows.flat().forEach((cell) => {
+                extractPlaceholders(cell).forEach((ph) => {
+                    out[qIds[idx++]] = p.answers[ph] || '';
+                });
+            });
+            return out;
+        }
+    },
+    diagram_completion: {
+        realKind: 'diagram_completion',
+        label: 'diagram_completion · 图示填空',
+        desc: '在示意图上标注,需要图片资源',
+        defaultPayload: () => ({
+            instructions: 'Label the diagram. NO MORE THAN TWO WORDS.',
+            imageSrc: 'assets/diagrams/placeholder.svg',
+            imageAlt: '占位示意图',
+            labels: [
+                { x: 120, y: 30, width: 100, answer: '占位标签一' },
+                { x: 200, y: 80, width: 100, answer: '占位标签二' }
+            ]
+        }),
+        toHtml: diagramCompletionHtml,
+        countQuestions: (p) => p.labels.length,
+        toAnswerKey: (p, qIds) => Object.fromEntries(qIds.map((id, i) => [id, p.labels[i].answer]))
+    },
+    short_answer: {
+        realKind: 'short_answer',
+        label: 'short_answer · 简答题',
+        desc: '完整问句 + 文本输入框',
+        defaultPayload: () => ({
+            instructions: 'Answer the questions. NO MORE THAN THREE WORDS.',
+            questions: [
+                { stem: '占位问题一?', answer: '占位答案一' },
+                { stem: '占位问题二?', answer: '占位答案二' }
+            ]
+        }),
+        toHtml: shortAnswerHtml,
+        countQuestions: (p) => p.questions.length,
+        toAnswerKey: (p, qIds) => Object.fromEntries(qIds.map((id, i) => [id, p.questions[i].answer]))
+    }
+};
+
+/* ============================================================
+ * HTML 生成函数
+ * ============================================================ */
+function esc(s) {
+    return String(s == null ? '' : s)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+function extractPlaceholders(text) {
+    const re = /\{\{(q\d+)\}\}/g;
+    const out = []; let m;
+    while ((m = re.exec(text)) !== null) out.push(m[1]);
+    return out;
+}
+
+function replacePlaceholders(text, qIds, indexRef) {
+    return text.replace(/\{\{(q\d+)\}\}/g, () => {
+        const id = qIds[indexRef.i++];
+        return `<input type="text" data-question="${id}" class="answer-input" maxlength="60">`;
+    });
+}
+
+function scQuestionGroupHtml(p, qIds) {
+    const items = p.questions.map((q, i) => {
+        const id = qIds[i];
+        const opts = q.options.map((opt, j) => {
+            const letter = p.options[j] || String.fromCharCode(65 + j);
+            return `<li><label><input type="radio" name="${id}" value="${esc(letter)}"> ${esc(letter)} ${esc(opt)}</label></li>`;
+        }).join('');
+        return `<div class="question-item" id="${id}-anchor">
+            <p><strong>${id.replace('q','')}</strong> ${esc(q.stem)}</p>
+            <ul class="choice-list">${opts}</ul>
+        </div>`;
+    }).join('');
+    return `<div class="group">
+        <h4>Questions ${qIds[0].replace('q','')}–${qIds[qIds.length-1].replace('q','')}</h4>
+        <p>${esc(p.instructions)}</p>
+        ${items}
+    </div>`;
+}
+
+function mcQuestionGroupHtml(p, qIds) {
+    const sharedName = qIds.join('-');
+    const opts = p.options.map((letter, i) => `
+        <li><label><input type="checkbox" name="${sharedName}" value="${esc(letter)}"> ${esc(letter)} ${esc(p.optionLabels[i] || '')}</label></li>
+    `).join('');
+    return `<div class="group">
+        <h4>Questions ${qIds[0].replace('q','')}–${qIds[qIds.length-1].replace('q','')}</h4>
+        <p>${esc(p.instructions)}</p>
+        <ul class="choice-list">${opts}</ul>
+    </div>`;
+}
+
+function tfngHtml(p, qIds, optionValues, optionsCaption) {
+    const items = p.questions.map((q, i) => {
+        const id = qIds[i];
+        const opts = optionValues.map(v => `
+            <label><input type="radio" name="${id}" value="${esc(v)}"> ${esc(v)}</label>
+        `).join(' ');
+        return `<div class="question-item" id="${id}-anchor">
+            <p><strong>${id.replace('q','')}</strong> ${esc(q.stem)}</p>
+            <div class="tfng-options">${opts}</div>
+        </div>`;
+    }).join('');
+    return `<div class="group">
+        <h4>Questions ${qIds[0].replace('q','')}–${qIds[qIds.length-1].replace('q','')}</h4>
+        <p>${esc(p.instructions)}</p>
+        <ul><li><strong>${optionsCaption.split(' / ')[0]}</strong> 占位说明:陈述符合</li>
+            <li><strong>${optionsCaption.split(' / ')[1]}</strong> 占位说明:陈述矛盾</li>
+            <li><strong>${optionsCaption.split(' / ')[2]}</strong> 占位说明:文章未提</li></ul>
+        ${items}
+    </div>`;
+}
+
+function matchingHeadingHtml(p, qIds) {
+    const headings = p.headings.map(h =>
+        `<div class="drag-item" draggable="true" data-heading="${esc(h.id)}">${esc(h.id)}. ${esc(h.text)}</div>`
+    ).join('');
+    const paragraphs = p.paragraphs.map((label, i) => {
+        const id = qIds[i];
+        return `<div class="paragraph-wrapper" id="${id}-anchor">
+            <div class="paragraph-dropzone dropzone" data-paragraph="${esc(label)}" data-question="${id}">
+                <span class="paragraph-label">Paragraph ${esc(label)} (Q${id.replace('q','')}):</span>
+                <div class="dropped-items"></div>
+            </div>
+        </div>`;
+    }).join('');
+    const reuseAttr = p.allowReuse ? ' data-allow-reuse="true"' : '';
+    return `<div class="group"${reuseAttr}>
+        <h4>Questions ${qIds[0].replace('q','')}–${qIds[qIds.length-1].replace('q','')}</h4>
+        <p>${esc(p.instructions)}</p>
+        ${paragraphs}
+        <div class="headings-pool">
+            <strong>List of Headings</strong>
+            <div class="pool-items">${headings}</div>
+        </div>
+    </div>`;
+}
+
+function matchingStatementHtml(p, qIds) {
+    const items = p.statements.map((stmt, i) => {
+        const id = qIds[i];
+        return `<div class="question-item" id="${id}-anchor">
+            <div class="match-question-item">
+                <div class="match-dropzone" data-question="${id}"></div>
+                <p><strong>${id.replace('q','')}</strong> ${esc(stmt)}</p>
+            </div>
+        </div>`;
+    }).join('');
+    const opts = p.options.map(o =>
+        `<div class="drag-item" draggable="true" data-option="${esc(o.id)}">${esc(o.id)} ${esc(o.text)}</div>`
+    ).join('');
+    const reuseAttr = p.allowReuse ? ' data-allow-reuse="true"' : '';
+    return `<div class="group"${reuseAttr}>
+        <h4>Questions ${qIds[0].replace('q','')}–${qIds[qIds.length-1].replace('q','')}</h4>
+        <p>${esc(p.instructions)}</p>
+        ${items}
+        <div class="options-pool">
+            <strong>Options</strong>
+            <div class="pool-items" style="flex-direction: column; align-items: flex-start;">${opts}</div>
+        </div>
+    </div>`;
+}
+
+function summaryCompletionHtml(p, qIds) {
+    const ref = { i: 0 };
+    return `<div class="group">
+        <h4>Questions ${qIds[0].replace('q','')}–${qIds[qIds.length-1].replace('q','')}</h4>
+        <p>${esc(p.instructions)}</p>
+        <div class="summary-paragraph"><p>${replacePlaceholders(esc(p.template), qIds, ref)}</p></div>
+    </div>`;
+}
+
+function summaryWithBankHtml(p, qIds) {
+    const ref = { i: 0 };
+    const dropZoneText = esc(p.template).replace(/\{\{(q\d+)\}\}/g, () => {
+        const id = qIds[ref.i++];
+        return `<span class="drop-target-summary dropzone" data-question="${id}"></span>`;
+    });
+    const words = (p.wordBank || []).map(w =>
+        `<div class="drag-item" draggable="true" data-word="${esc(w)}">${esc(w)}</div>`
+    ).join('');
+    return `<div class="group">
+        <h4>Questions ${qIds[0].replace('q','')}–${qIds[qIds.length-1].replace('q','')}</h4>
+        <p>${esc(p.instructions)}</p>
+        <div class="word-bank">
+            <strong>List of Words</strong>
+            <div class="pool-items">${words}</div>
+        </div>
+        <div class="summary-paragraph"><p>${dropZoneText}</p></div>
+    </div>`;
+}
+
+function sentenceCompletionHtml(p, qIds) {
+    const ref = { i: 0 };
+    const items = p.sentences.map((s, i) => {
+        const html = replacePlaceholders(esc(s), qIds, ref);
+        return `<div class="question-item">
+            <p><strong>${i + 1}</strong> ${html}</p>
+        </div>`;
+    }).join('');
+    return `<div class="group">
+        <h4>Questions ${qIds[0].replace('q','')}–${qIds[qIds.length-1].replace('q','')}</h4>
+        <p>${esc(p.instructions)}</p>
+        ${items}
+    </div>`;
+}
+
+function tableCompletionHtml(p, qIds) {
+    const ref = { i: 0 };
+    const headers = p.headers.map(h => `<th>${esc(h)}</th>`).join('');
+    const rows = p.rows.map(r => {
+        const cells = r.map(c => `<td>${replacePlaceholders(esc(c), qIds, ref)}</td>`).join('');
+        return `<tr>${cells}</tr>`;
+    }).join('');
+    return `<div class="group">
+        <h4>Questions ${qIds[0].replace('q','')}–${qIds[qIds.length-1].replace('q','')}</h4>
+        <p>${esc(p.instructions)}</p>
+        <table class="completion-table">
+            <thead><tr>${headers}</tr></thead>
+            <tbody>${rows}</tbody>
+        </table>
+    </div>`;
+}
+
+function diagramCompletionHtml(p, qIds) {
+    const labels = p.labels.map((l, i) => {
+        const id = qIds[i];
+        return `<input type="text" data-question="${id}" class="answer-input diagram-label"
+            style="position: absolute; left: ${Number(l.x)||0}px; top: ${Number(l.y)||0}px; width: ${Number(l.width)||100}px;">`;
+    }).join('');
+    return `<div class="group">
+        <h4>Questions ${qIds[0].replace('q','')}–${qIds[qIds.length-1].replace('q','')}</h4>
+        <p>${esc(p.instructions)}</p>
+        <div class="diagram-wrapper" style="position: relative; display: inline-block;">
+            <img src="${esc(p.imageSrc)}" alt="${esc(p.imageAlt)}" />
+            ${labels}
+        </div>
+    </div>`;
+}
+
+function shortAnswerHtml(p, qIds) {
+    const items = p.questions.map((q, i) => {
+        const id = qIds[i];
+        return `<div class="question-item" id="${id}-anchor">
+            <p><strong>${id.replace('q','')}</strong> ${esc(q.stem)}</p>
+            <input type="text" data-question="${id}" class="answer-input" maxlength="60">
+        </div>`;
+    }).join('');
+    return `<div class="group">
+        <h4>Questions ${qIds[0].replace('q','')}–${qIds[qIds.length-1].replace('q','')}</h4>
+        <p>${esc(p.instructions)}</p>
+        ${items}
+    </div>`;
+}
+
+/* ============================================================
+ * UI 渲染:题组卡片表单
+ * ============================================================ */
+function renderGroupsContainer() {
+    const container = document.getElementById('groups-container');
+    if (state.groups.length === 0) {
+        container.innerHTML = '<div class="empty-msg">还没有题组,点击下面的"添加"开始。</div>';
+        return;
+    }
+    container.innerHTML = state.groups.map((g, idx) => renderGroupCard(g, idx)).join('');
+
+    // 绑定事件
+    container.querySelectorAll('[data-action]').forEach(el => {
+        el.addEventListener('click', handleGroupAction);
+    });
+    container.querySelectorAll('[data-bind]').forEach(el => {
+        el.addEventListener('input', handleGroupInput);
+        el.addEventListener('change', handleGroupInput);
+    });
+}
+
+function renderGroupCard(g, idx) {
+    const def = KIND_DEFS[g.displayKind];
+    if (!def) return `<div class="group-card"><header><span class="group-title">未知题型 ${esc(g.displayKind)}</span></header></div>`;
+    const startNum = computeStartNum(idx);
+    const qCount = def.countQuestions(g.payload);
+    const endNum = startNum + qCount - 1;
+    const formHtml = renderGroupForm(g, idx);
+    return `<div class="group-card${g._collapsed ? ' collapsed' : ''}" data-group-idx="${idx}">
+        <header>
+            <button type="button" class="btn-ghost" data-action="toggle-collapse" data-idx="${idx}">${g._collapsed ? '▶' : '▼'}</button>
+            <span class="group-title">
+                题组 ${idx + 1}
+                <span class="kind-tag">${esc(def.label)}</span>
+                <span class="questions-tag">Q${startNum}${qCount > 1 ? '–Q' + endNum : ''}</span>
+            </span>
+            <div class="group-actions">
+                <button type="button" class="btn-ghost" data-action="move-up" data-idx="${idx}" title="上移">↑</button>
+                <button type="button" class="btn-ghost" data-action="move-down" data-idx="${idx}" title="下移">↓</button>
+                <button type="button" class="btn-danger" data-action="remove" data-idx="${idx}" title="删除">删除</button>
+            </div>
+        </header>
+        <div class="group-body">${formHtml}</div>
+    </div>`;
+}
+
+function computeStartNum(targetIdx) {
+    let count = 1;
+    for (let i = 0; i < targetIdx; i++) {
+        const g = state.groups[i];
+        const def = KIND_DEFS[g.displayKind];
+        if (def) count += def.countQuestions(g.payload);
+    }
+    return count;
+}
+
+function renderGroupForm(g, idx) {
+    switch (g.displayKind) {
+        case 'single_choice': return formSingleChoice(g, idx);
+        case 'multi_choice': return formMultiChoice(g, idx);
+        case 'true_false_not_given':
+        case 'yes_no_not_given': return formTfngYnng(g, idx);
+        case 'matching_heading': return formMatchingHeading(g, idx);
+        case 'matching_statement': return formMatchingStatement(g, idx);
+        case 'classification': return formMatchingStatement(g, idx);
+        case 'summary_completion': return formSummary(g, idx, false);
+        case 'summary_with_bank': return formSummary(g, idx, true);
+        case 'sentence_completion': return formSentence(g, idx);
+        case 'table_completion': return formTable(g, idx);
+        case 'diagram_completion': return formDiagram(g, idx);
+        case 'short_answer': return formShortAnswer(g, idx);
+        default: return '<p>未实现</p>';
+    }
+}
+
+/* 通用工具:bind 属性 dataset 解析为 state 写入路径 */
+function bindAttr(path) {
+    return `data-bind="${path}"`;
+}
+
+/* 单选 */
+function formSingleChoice(g, idx) {
+    const p = g.payload;
+    return `
+        <div class="form-row">
+            <label>题组说明</label>
+            <input type="text" ${bindAttr(`groups[${idx}].payload.instructions`)} value="${esc(p.instructions)}">
+        </div>
+        <div class="form-row">
+            <label>选项标签(逗号分隔)</label>
+            <input type="text" ${bindAttr(`groups[${idx}].payload.options`)} data-array="comma" value="${esc(p.options.join(','))}">
+        </div>
+        <h4 style="margin: 14px 0 8px; font-size: 13px;">题目列表</h4>
+        <div class="item-list">
+            ${p.questions.map((q, qi) => `
+                <div class="item-row">
+                    <span class="row-index">Q${computeStartNum(idx) + qi}</span>
+                    <div style="flex: 1; display: flex; flex-direction: column; gap: 6px;">
+                        <input type="text" ${bindAttr(`groups[${idx}].payload.questions[${qi}].stem`)} value="${esc(q.stem)}" placeholder="题干">
+                        <input type="text" ${bindAttr(`groups[${idx}].payload.questions[${qi}].options`)} data-array="newline" value="${esc((q.options||[]).join('|'))}" placeholder="A选项|B选项|C选项|D选项(用 | 分隔)" data-sep="|">
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <span style="font-size: 12px; color: var(--muted);">正确答案:</span>
+                            <select ${bindAttr(`groups[${idx}].payload.questions[${qi}].answer`)}>
+                                ${p.options.map(o => `<option value="${esc(o)}"${o===q.answer?' selected':''}>${esc(o)}</option>`).join('')}
+                            </select>
+                        </div>
+                    </div>
+                    <button type="button" class="row-remove" data-action="remove-item" data-idx="${idx}" data-path="questions" data-row="${qi}">×</button>
+                </div>
+            `).join('')}
+        </div>
+        <button type="button" class="btn-secondary" data-action="add-item" data-idx="${idx}" data-path="questions">+ 添加题目</button>
+    `;
+}
+
+/* 多选 */
+function formMultiChoice(g, idx) {
+    const p = g.payload;
+    return `
+        <div class="form-row">
+            <label>题组说明</label>
+            <input type="text" ${bindAttr(`groups[${idx}].payload.instructions`)} value="${esc(p.instructions)}">
+        </div>
+        <div class="field-grid">
+            <div class="form-row">
+                <label>选项标签(逗号分隔)</label>
+                <input type="text" ${bindAttr(`groups[${idx}].payload.options`)} data-array="comma" value="${esc(p.options.join(','))}">
+            </div>
+            <div class="form-row">
+                <label>选项文本(每行一个)</label>
+                <textarea style="min-height: 100px;" ${bindAttr(`groups[${idx}].payload.optionLabels`)} data-array="newline">${esc(p.optionLabels.join('\n'))}</textarea>
+            </div>
+            <div class="form-row">
+                <label>共选几个(pickCount)</label>
+                <input type="number" min="1" ${bindAttr(`groups[${idx}].payload.pickCount`)} data-cast="int" value="${p.pickCount}">
+            </div>
+            <div class="form-row">
+                <label>正确答案(逗号分隔)</label>
+                <input type="text" ${bindAttr(`groups[${idx}].payload.answers`)} data-array="comma" value="${esc(p.answers.join(','))}">
+            </div>
+        </div>
+        <div class="placeholder-hint">多选会共享 name 属性,采集时按 ASCII 顺序分配到 pickCount 个题号上。</div>
+    `;
+}
+
+/* TFNG / YNNG */
+function formTfngYnng(g, idx) {
+    const p = g.payload;
+    const isYnng = g.displayKind === 'yes_no_not_given';
+    const options = isYnng ? ['YES', 'NO', 'NOT GIVEN'] : ['TRUE', 'FALSE', 'NOT GIVEN'];
+    return `
+        <div class="form-row">
+            <label>题组说明</label>
+            <input type="text" ${bindAttr(`groups[${idx}].payload.instructions`)} value="${esc(p.instructions)}">
+        </div>
+        <h4 style="margin: 14px 0 8px; font-size: 13px;">陈述列表</h4>
+        <div class="item-list">
+            ${p.questions.map((q, qi) => `
+                <div class="item-row">
+                    <span class="row-index">Q${computeStartNum(idx) + qi}</span>
+                    <div style="flex: 1; display: flex; flex-direction: column; gap: 6px;">
+                        <input type="text" ${bindAttr(`groups[${idx}].payload.questions[${qi}].stem`)} value="${esc(q.stem)}" placeholder="陈述内容">
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <span style="font-size: 12px; color: var(--muted);">答案:</span>
+                            <select ${bindAttr(`groups[${idx}].payload.questions[${qi}].answer`)}>
+                                ${options.map(o => `<option value="${o}"${o===q.answer?' selected':''}>${o}</option>`).join('')}
+                            </select>
+                        </div>
+                    </div>
+                    <button type="button" class="row-remove" data-action="remove-item" data-idx="${idx}" data-path="questions" data-row="${qi}">×</button>
+                </div>
+            `).join('')}
+        </div>
+        <button type="button" class="btn-secondary" data-action="add-item" data-idx="${idx}" data-path="questions">+ 添加陈述</button>
+    `;
+}
+
+/* matching heading */
+function formMatchingHeading(g, idx) {
+    const p = g.payload;
+    return `
+        <div class="form-row">
+            <label>题组说明</label>
+            <input type="text" ${bindAttr(`groups[${idx}].payload.instructions`)} value="${esc(p.instructions)}">
+        </div>
+        <div class="form-row">
+            <label>段落标签(逗号分隔)</label>
+            <input type="text" ${bindAttr(`groups[${idx}].payload.paragraphs`)} data-array="comma" value="${esc(p.paragraphs.join(','))}">
+            <div class="field-help">用大写字母,如 A,B,C。每个对应一道题。</div>
+        </div>
+        <div class="checkbox-row">
+            <input type="checkbox" ${bindAttr(`groups[${idx}].payload.allowReuse`)} data-cast="bool"${p.allowReuse?' checked':''}>
+            <label>允许同一标题被重用(allowOptionReuse)</label>
+        </div>
+
+        <h4 style="margin: 14px 0 8px; font-size: 13px;">标题池</h4>
+        <div class="item-list">
+            ${p.headings.map((h, hi) => `
+                <div class="item-row">
+                    <input type="text" style="max-width: 80px;" ${bindAttr(`groups[${idx}].payload.headings[${hi}].id`)} value="${esc(h.id)}" placeholder="i / ii / iii">
+                    <input type="text" ${bindAttr(`groups[${idx}].payload.headings[${hi}].text`)} value="${esc(h.text)}" placeholder="标题文本">
+                    <button type="button" class="row-remove" data-action="remove-item" data-idx="${idx}" data-path="headings" data-row="${hi}">×</button>
+                </div>
+            `).join('')}
+        </div>
+        <button type="button" class="btn-secondary" data-action="add-item" data-idx="${idx}" data-path="headings">+ 添加标题</button>
+
+        <h4 style="margin: 14px 0 8px; font-size: 13px;">每个段落的答案(标题 id)</h4>
+        <div class="item-list">
+            ${p.paragraphs.map((para, pi) => `
+                <div class="item-row">
+                    <span class="row-index">Q${computeStartNum(idx) + pi}</span>
+                    <span style="padding: 4px 8px; font-size: 12px;">段落 ${esc(para)} →</span>
+                    <input type="text" ${bindAttr(`groups[${idx}].payload.answers[${pi}]`)} value="${esc(p.answers[pi]||'')}" placeholder="对应标题 id">
+                </div>
+            `).join('')}
+        </div>
+    `;
+}
+
+/* matching statement & classification */
+function formMatchingStatement(g, idx) {
+    const p = g.payload;
+    return `
+        <div class="form-row">
+            <label>题组说明</label>
+            <input type="text" ${bindAttr(`groups[${idx}].payload.instructions`)} value="${esc(p.instructions)}">
+        </div>
+        <div class="checkbox-row">
+            <input type="checkbox" ${bindAttr(`groups[${idx}].payload.allowReuse`)} data-cast="bool"${p.allowReuse?' checked':''}>
+            <label>允许选项重复使用(classification 通常勾选)</label>
+        </div>
+
+        <h4 style="margin: 14px 0 8px; font-size: 13px;">陈述/项目列表</h4>
+        <div class="item-list">
+            ${p.statements.map((s, si) => `
+                <div class="item-row">
+                    <span class="row-index">Q${computeStartNum(idx) + si}</span>
+                    <input type="text" ${bindAttr(`groups[${idx}].payload.statements[${si}]`)} value="${esc(s)}" placeholder="陈述/项目">
+                    <input type="text" style="max-width: 80px;" ${bindAttr(`groups[${idx}].payload.answers[${si}]`)} value="${esc(p.answers[si]||'')}" placeholder="答案 id">
+                    <button type="button" class="row-remove" data-action="remove-item" data-idx="${idx}" data-path="statements" data-row="${si}">×</button>
+                </div>
+            `).join('')}
+        </div>
+        <button type="button" class="btn-secondary" data-action="add-item" data-idx="${idx}" data-path="statements">+ 添加陈述</button>
+
+        <h4 style="margin: 14px 0 8px; font-size: 13px;">选项池(A/B/C...)</h4>
+        <div class="item-list">
+            ${p.options.map((o, oi) => `
+                <div class="item-row">
+                    <input type="text" style="max-width: 80px;" ${bindAttr(`groups[${idx}].payload.options[${oi}].id`)} value="${esc(o.id)}" placeholder="A">
+                    <input type="text" ${bindAttr(`groups[${idx}].payload.options[${oi}].text`)} value="${esc(o.text)}" placeholder="选项文本">
+                    <button type="button" class="row-remove" data-action="remove-item" data-idx="${idx}" data-path="options" data-row="${oi}">×</button>
+                </div>
+            `).join('')}
+        </div>
+        <button type="button" class="btn-secondary" data-action="add-item" data-idx="${idx}" data-path="options">+ 添加选项</button>
+    `;
+}
+
+/* summary completion */
+function formSummary(g, idx, withBank) {
+    const p = g.payload;
+    const placeholders = extractPlaceholders(p.template);
+    return `
+        <div class="form-row">
+            <label>题组说明</label>
+            <input type="text" ${bindAttr(`groups[${idx}].payload.instructions`)} value="${esc(p.instructions)}">
+        </div>
+        <div class="placeholder-hint">
+            在模板内用 <code>{{q1}}</code>、<code>{{q2}}</code> 标注空位。题号会按出现顺序映射到 Q${computeStartNum(idx)} 起。
+        </div>
+        <div class="form-row">
+            <label>摘要模板</label>
+            <textarea style="min-height: 140px;" ${bindAttr(`groups[${idx}].payload.template`)}>${esc(p.template)}</textarea>
+        </div>
+        ${withBank ? `
+        <div class="form-row">
+            <label>词库(每行一个)</label>
+            <textarea style="min-height: 80px;" ${bindAttr(`groups[${idx}].payload.wordBank`)} data-array="newline">${esc((p.wordBank||[]).join('\n'))}</textarea>
+        </div>` : ''}
+
+        <h4 style="margin: 14px 0 8px; font-size: 13px;">每个空格的答案</h4>
+        <div class="item-list">
+            ${placeholders.map((ph, pi) => `
+                <div class="item-row">
+                    <span class="row-index">${ph}</span>
+                    <input type="text" ${bindAttr(`groups[${idx}].payload.answers.${ph}`)} value="${esc(p.answers[ph]||'')}" placeholder="正确答案">
+                </div>
+            `).join('') || '<div class="empty-msg" style="padding: 20px;">模板里还没有 {{qN}} 占位</div>'}
+        </div>
+    `;
+}
+
+/* sentence completion */
+function formSentence(g, idx) {
+    const p = g.payload;
+    const allPlaceholders = [];
+    p.sentences.forEach(s => extractPlaceholders(s).forEach(ph => allPlaceholders.push(ph)));
+    return `
+        <div class="form-row">
+            <label>题组说明</label>
+            <input type="text" ${bindAttr(`groups[${idx}].payload.instructions`)} value="${esc(p.instructions)}">
+        </div>
+        <div class="placeholder-hint">每行一句话,空格用 <code>{{qN}}</code> 标记。</div>
+        <div class="item-list">
+            ${p.sentences.map((s, si) => `
+                <div class="item-row">
+                    <span class="row-index">${si + 1}</span>
+                    <textarea style="min-height: 50px;" ${bindAttr(`groups[${idx}].payload.sentences[${si}]`)}>${esc(s)}</textarea>
+                    <button type="button" class="row-remove" data-action="remove-item" data-idx="${idx}" data-path="sentences" data-row="${si}">×</button>
+                </div>
+            `).join('')}
+        </div>
+        <button type="button" class="btn-secondary" data-action="add-item" data-idx="${idx}" data-path="sentences">+ 添加句子</button>
+
+        <h4 style="margin: 14px 0 8px; font-size: 13px;">每个空格的答案</h4>
+        <div class="item-list">
+            ${allPlaceholders.map((ph) => `
+                <div class="item-row">
+                    <span class="row-index">${ph}</span>
+                    <input type="text" ${bindAttr(`groups[${idx}].payload.answers.${ph}`)} value="${esc(p.answers[ph]||'')}" placeholder="正确答案">
+                </div>
+            `).join('') || '<div class="empty-msg" style="padding: 20px;">句子里还没有 {{qN}} 占位</div>'}
+        </div>
+    `;
+}
+
+/* table completion */
+function formTable(g, idx) {
+    const p = g.payload;
+    const flat = p.rows.flat();
+    const placeholders = [];
+    flat.forEach(c => extractPlaceholders(c).forEach(ph => placeholders.push(ph)));
+    return `
+        <div class="form-row">
+            <label>题组说明</label>
+            <input type="text" ${bindAttr(`groups[${idx}].payload.instructions`)} value="${esc(p.instructions)}">
+        </div>
+        <div class="placeholder-hint">单元格里要填空的位置用 <code>{{qN}}</code> 标记。</div>
+        <div class="form-row">
+            <label>表头(逗号分隔)</label>
+            <input type="text" ${bindAttr(`groups[${idx}].payload.headers`)} data-array="comma" value="${esc(p.headers.join(','))}">
+        </div>
+        <h4 style="margin: 14px 0 8px; font-size: 13px;">行数据(每行 JSON 数组)</h4>
+        <div class="placeholder-hint">
+            一行写一个 JSON 数组,例如:<br>
+            <code>["Pre-1800", "{{q1}}", "占位地区"]</code>
+        </div>
+        <div class="form-row">
+            <label>rows</label>
+            <textarea style="min-height: 120px;" ${bindAttr(`groups[${idx}].payload.rows`)} data-array="rows-json">${esc(p.rows.map(r => JSON.stringify(r)).join('\n'))}</textarea>
+        </div>
+        <h4 style="margin: 14px 0 8px; font-size: 13px;">每个空格的答案</h4>
+        <div class="item-list">
+            ${placeholders.map((ph) => `
+                <div class="item-row">
+                    <span class="row-index">${ph}</span>
+                    <input type="text" ${bindAttr(`groups[${idx}].payload.answers.${ph}`)} value="${esc(p.answers[ph]||'')}" placeholder="正确答案">
+                </div>
+            `).join('') || '<div class="empty-msg" style="padding: 20px;">表里还没有 {{qN}} 占位</div>'}
+        </div>
+    `;
+}
+
+/* diagram completion */
+function formDiagram(g, idx) {
+    const p = g.payload;
+    return `
+        <div class="form-row">
+            <label>题组说明</label>
+            <input type="text" ${bindAttr(`groups[${idx}].payload.instructions`)} value="${esc(p.instructions)}">
+        </div>
+        <div class="form-row">
+            <label>图片路径</label>
+            <input type="text" ${bindAttr(`groups[${idx}].payload.imageSrc`)} value="${esc(p.imageSrc)}" placeholder="assets/diagrams/your-image.svg">
+        </div>
+        <div class="form-row">
+            <label>图片 alt</label>
+            <input type="text" ${bindAttr(`groups[${idx}].payload.imageAlt`)} value="${esc(p.imageAlt)}">
+        </div>
+        <h4 style="margin: 14px 0 8px; font-size: 13px;">标签列表(x/y/width 像素 + 答案)</h4>
+        <div class="item-list">
+            ${p.labels.map((l, li) => `
+                <div class="item-row">
+                    <span class="row-index">Q${computeStartNum(idx) + li}</span>
+                    <input type="number" style="max-width: 90px;" ${bindAttr(`groups[${idx}].payload.labels[${li}].x`)} data-cast="int" value="${l.x}" placeholder="x">
+                    <input type="number" style="max-width: 90px;" ${bindAttr(`groups[${idx}].payload.labels[${li}].y`)} data-cast="int" value="${l.y}" placeholder="y">
+                    <input type="number" style="max-width: 90px;" ${bindAttr(`groups[${idx}].payload.labels[${li}].width`)} data-cast="int" value="${l.width}" placeholder="w">
+                    <input type="text" ${bindAttr(`groups[${idx}].payload.labels[${li}].answer`)} value="${esc(l.answer)}" placeholder="答案">
+                    <button type="button" class="row-remove" data-action="remove-item" data-idx="${idx}" data-path="labels" data-row="${li}">×</button>
+                </div>
+            `).join('')}
+        </div>
+        <button type="button" class="btn-secondary" data-action="add-item" data-idx="${idx}" data-path="labels">+ 添加标签</button>
+    `;
+}
+
+/* short answer */
+function formShortAnswer(g, idx) {
+    const p = g.payload;
+    return `
+        <div class="form-row">
+            <label>题组说明</label>
+            <input type="text" ${bindAttr(`groups[${idx}].payload.instructions`)} value="${esc(p.instructions)}">
+        </div>
+        <h4 style="margin: 14px 0 8px; font-size: 13px;">问题列表</h4>
+        <div class="item-list">
+            ${p.questions.map((q, qi) => `
+                <div class="item-row">
+                    <span class="row-index">Q${computeStartNum(idx) + qi}</span>
+                    <input type="text" ${bindAttr(`groups[${idx}].payload.questions[${qi}].stem`)} value="${esc(q.stem)}" placeholder="问题">
+                    <input type="text" style="max-width: 200px;" ${bindAttr(`groups[${idx}].payload.questions[${qi}].answer`)} value="${esc(q.answer)}" placeholder="正确答案">
+                    <button type="button" class="row-remove" data-action="remove-item" data-idx="${idx}" data-path="questions" data-row="${qi}">×</button>
+                </div>
+            `).join('')}
+        </div>
+        <button type="button" class="btn-secondary" data-action="add-item" data-idx="${idx}" data-path="questions">+ 添加问题</button>
+    `;
+}
+
+/* ============================================================
+ * 数据读写
+ * ============================================================ */
+function setByPath(obj, path, value) {
+    const keys = path.replace(/\[(\d+)\]/g, '.$1').split('.');
+    let cur = obj;
+    for (let i = 0; i < keys.length - 1; i++) {
+        const k = keys[i];
+        if (!(k in cur) || cur[k] == null) cur[k] = isNaN(keys[i+1]) ? {} : [];
+        cur = cur[k];
+    }
+    cur[keys[keys.length - 1]] = value;
+}
+
+function handleGroupInput(event) {
+    const el = event.target;
+    const path = el.dataset.bind;
+    if (!path) return;
+    let value = el.value;
+    if (el.type === 'checkbox') value = el.checked;
+    else if (el.dataset.cast === 'int') value = parseInt(value, 10) || 0;
+    else if (el.dataset.cast === 'bool') value = !!el.checked;
+    else if (el.dataset.array === 'comma') value = value.split(',').map(s => s.trim()).filter(Boolean);
+    else if (el.dataset.array === 'newline') value = value.split('\n').map(s => s.trim()).filter(Boolean);
+    else if (el.dataset.array === 'rows-json') {
+        try {
+            value = value.split('\n').map(s => s.trim()).filter(Boolean).map(s => JSON.parse(s));
+        } catch (e) { return; }
+    } else if (el.dataset.sep === '|') value = value.split('|').map(s => s.trim());
+
+    setByPath(state, path, value);
+
+    // 部分变更需要重渲染(增减占位符等)
+    if (path.includes('.template') || path.includes('.sentences') || path.includes('.rows')) {
+        renderGroupsContainer();
+    }
+}
+
+function handleGroupAction(event) {
+    const action = event.currentTarget.dataset.action;
+    const idx = parseInt(event.currentTarget.dataset.idx, 10);
+    if (action === 'remove') {
+        if (confirm('确认删除这个题组?')) {
+            state.groups.splice(idx, 1);
+            renderGroupsContainer();
+        }
+    } else if (action === 'move-up' && idx > 0) {
+        [state.groups[idx - 1], state.groups[idx]] = [state.groups[idx], state.groups[idx - 1]];
+        renderGroupsContainer();
+    } else if (action === 'move-down' && idx < state.groups.length - 1) {
+        [state.groups[idx + 1], state.groups[idx]] = [state.groups[idx], state.groups[idx + 1]];
+        renderGroupsContainer();
+    } else if (action === 'toggle-collapse') {
+        state.groups[idx]._collapsed = !state.groups[idx]._collapsed;
+        renderGroupsContainer();
+    } else if (action === 'add-item') {
+        const path = event.currentTarget.dataset.path;
+        addItemToGroup(idx, path);
+    } else if (action === 'remove-item') {
+        const path = event.currentTarget.dataset.path;
+        const row = parseInt(event.currentTarget.dataset.row, 10);
+        state.groups[idx].payload[path].splice(row, 1);
+        renderGroupsContainer();
+    }
+}
+
+function addItemToGroup(idx, path) {
+    const g = state.groups[idx];
+    const dk = g.displayKind;
+    const list = g.payload[path];
+    if (!Array.isArray(list)) return;
+    let newItem;
+    if (dk === 'single_choice' && path === 'questions') {
+        newItem = { stem: '占位题干', options: ['占位选项 A', '占位选项 B', '占位选项 C', '占位选项 D'], answer: 'A' };
+    } else if ((dk === 'true_false_not_given' || dk === 'yes_no_not_given') && path === 'questions') {
+        newItem = { stem: '占位陈述', answer: dk === 'yes_no_not_given' ? 'YES' : 'TRUE' };
+    } else if (dk === 'matching_heading' && path === 'headings') {
+        newItem = { id: 'i', text: '占位标题' };
+    } else if (dk === 'matching_statement' || dk === 'classification') {
+        if (path === 'statements') {
+            newItem = '占位陈述';
+            list.push(newItem);
+            g.payload.answers.push('A');
+            renderGroupsContainer(); return;
+        }
+        if (path === 'options') newItem = { id: 'A', text: '占位选项' };
+    } else if (dk === 'sentence_completion' && path === 'sentences') {
+        newItem = '占位句子 {{qN}}';
+    } else if (dk === 'diagram_completion' && path === 'labels') {
+        newItem = { x: 100, y: 50, width: 100, answer: '占位标签' };
+    } else if (dk === 'short_answer' && path === 'questions') {
+        newItem = { stem: '占位问题', answer: '占位答案' };
+    }
+    if (newItem !== undefined) list.push(newItem);
+    renderGroupsContainer();
+}
+
+/* ============================================================
+ * 全局事件
+ * ============================================================ */
+document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const tab = btn.dataset.tab;
+        document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+        document.querySelector(`[data-panel="${tab}"]`).classList.add('active');
+        if (tab === 'preview') refreshPreview();
+        if (tab === 'export') refreshExport();
+    });
+});
+
+document.getElementById('meta-examId').addEventListener('input', e => state.meta.examId = e.target.value.trim());
+document.getElementById('meta-title').addEventListener('input', e => state.meta.title = e.target.value);
+document.getElementById('meta-category').addEventListener('change', e => state.meta.category = e.target.value);
+document.getElementById('meta-frequency').addEventListener('change', e => state.meta.frequency = e.target.value);
+document.getElementById('meta-questionIntro').addEventListener('input', e => state.meta.questionIntroHtml = e.target.value);
+document.getElementById('passage-html').addEventListener('input', e => state.passageHtml = e.target.value);
+
+document.getElementById('btn-add-group').addEventListener('click', () => {
+    const dk = document.getElementById('new-kind').value;
+    const def = KIND_DEFS[dk];
+    if (!def) return toast('未知题型', 'error');
+    state.groups.push({
+        id: 'g' + (state.groups.length + 1),
+        displayKind: dk,
+        kind: def.realKind,
+        payload: def.defaultPayload(),
+        _collapsed: false
+    });
+    renderGroupsContainer();
+    toast('已添加题组 — 在下方填写内容');
+});
+
+document.getElementById('new-kind').addEventListener('change', e => {
+    const dk = e.target.value;
+    const def = KIND_DEFS[dk];
+    document.getElementById('new-kind-desc').textContent = def ? def.desc : '';
+});
+
+document.getElementById('btn-new').addEventListener('click', () => {
+    if (state.groups.length > 0 && !confirm('确认清空所有数据并新建?')) return;
+    resetState();
+    syncFormsFromState();
+    renderGroupsContainer();
+    toast('已重置');
+});
+
+document.getElementById('btn-save-draft').addEventListener('click', () => {
+    try {
+        localStorage.setItem('ielts-editor-draft', JSON.stringify(state));
+        toast('草稿已保存到浏览器');
+    } catch (e) { toast('保存失败:' + e.message, 'error'); }
+});
+
+document.getElementById('btn-load-draft').addEventListener('click', () => {
+    try {
+        const raw = localStorage.getItem('ielts-editor-draft');
+        if (!raw) return toast('没有找到草稿', 'warn');
+        const data = JSON.parse(raw);
+        Object.assign(state, data);
+        syncFormsFromState();
+        renderGroupsContainer();
+        toast('草稿已恢复');
+    } catch (e) { toast('恢复失败:' + e.message, 'error'); }
+});
+
+document.getElementById('btn-load').addEventListener('click', () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'application/json,.json,.js';
+    input.onchange = async () => {
+        const f = input.files[0]; if (!f) return;
+        const text = await f.text();
+        try {
+            // 既支持纯 JSON,也支持 .js 包装(粗略截取大括号内容)
+            const jsonMatch = text.match(/register\("[^"]+",\s*({[\s\S]+})\s*\);\s*\}/);
+            const json = JSON.parse(jsonMatch ? jsonMatch[1] : text);
+            importFromExamSource(json);
+            renderGroupsContainer();
+            syncFormsFromState();
+            toast('已导入');
+        } catch (e) { toast('导入失败:' + e.message, 'error'); }
+    };
+    input.click();
+});
+
+document.getElementById('btn-goto-export').addEventListener('click', () => {
+    document.querySelector('[data-tab="export"]').click();
+});
+
+document.getElementById('btn-refresh-preview').addEventListener('click', refreshPreview);
+document.getElementById('btn-show-answers').addEventListener('click', () => refreshPreview(true));
+document.getElementById('btn-hide-answers').addEventListener('click', () => refreshPreview(false));
+
+document.getElementById('btn-export-json').addEventListener('click', () => downloadFile(buildExamSource(), 'json'));
+document.getElementById('btn-export-js').addEventListener('click', () => downloadFile(buildExamSource(), 'js'));
+document.getElementById('btn-export-html').addEventListener('click', () => downloadFile(buildExamSource(), 'html'));
+document.getElementById('btn-copy-json').addEventListener('click', () => {
+    navigator.clipboard.writeText(JSON.stringify(buildExamSource(), null, 4)).then(
+        () => toast('JSON 已复制到剪贴板'),
+        e => toast('复制失败:' + e.message, 'error')
+    );
+});
+document.getElementById('btn-copy-manifest').addEventListener('click', () => {
+    navigator.clipboard.writeText(buildManifestSnippet()).then(
+        () => toast('manifest 片段已复制'),
+        e => toast('复制失败:' + e.message, 'error')
+    );
+});
+
+document.getElementById('tpl-plain').addEventListener('click', () => {
+    state.passageHtml = `<h2>READING PASSAGE</h2>
+<p>You should spend about 20 minutes on Questions 1–13.</p>
+<h3>占位标题 Sample Title</h3>
+<p><strong>A</strong> 占位段落 A 的正文。</p>
+<p><strong>B</strong> 占位段落 B 的正文。</p>
+<p><strong>C</strong> 占位段落 C 的正文。</p>`;
+    syncFormsFromState();
+    toast('已插入模板');
+});
+
+document.getElementById('tpl-heading').addEventListener('click', () => {
+    state.passageHtml = `<h2>READING PASSAGE</h2>
+<h3>占位标题</h3>
+<div class="paragraph-wrapper" id="q1-anchor">
+    <div class="paragraph-dropzone dropzone" data-paragraph="A" data-question="q1">
+        <span class="paragraph-label">Paragraph A (Q1):</span>
+        <div class="dropped-items"></div>
+    </div>
+    <p><strong>A</strong> 占位段落 A 的正文。</p>
+</div>
+<div class="paragraph-wrapper" id="q2-anchor">
+    <div class="paragraph-dropzone dropzone" data-paragraph="B" data-question="q2">
+        <span class="paragraph-label">Paragraph B (Q2):</span>
+        <div class="dropped-items"></div>
+    </div>
+    <p><strong>B</strong> 占位段落 B 的正文。</p>
+</div>`;
+    syncFormsFromState();
+    toast('已插入模板');
+});
+
+document.getElementById('tpl-section').addEventListener('click', () => {
+    state.passageHtml = `<h2>READING PASSAGE</h2>
+<h3>Section 1 · 占位章节</h3>
+<p>占位章节一的正文段落。</p>
+<h3>Section 2 · 占位章节</h3>
+<p>占位章节二的正文段落。</p>`;
+    syncFormsFromState();
+    toast('已插入模板');
+});
+
+/* ============================================================
+ * 业务逻辑
+ * ============================================================ */
+function resetState() {
+    state.meta = {
+        examId: '', title: '', category: 'P1', frequency: 'high',
+        questionIntroHtml: '<h3>Questions</h3>'
+    };
+    state.passageHtml = '';
+    state.groups = [];
+}
+
+function syncFormsFromState() {
+    document.getElementById('meta-examId').value = state.meta.examId || '';
+    document.getElementById('meta-title').value = state.meta.title || '';
+    document.getElementById('meta-category').value = state.meta.category || 'P1';
+    document.getElementById('meta-frequency').value = state.meta.frequency || 'high';
+    document.getElementById('meta-questionIntro').value = state.meta.questionIntroHtml || '';
+    document.getElementById('passage-html').value = state.passageHtml || '';
+}
+
+function buildQuestionIds() {
+    const ids = [];
+    let counter = 1;
+    state.groups.forEach(g => {
+        const def = KIND_DEFS[g.displayKind];
+        if (!def) return;
+        const count = def.countQuestions(g.payload);
+        const groupIds = [];
+        for (let i = 0; i < count; i++) {
+            const id = 'q' + counter++;
+            ids.push(id);
+            groupIds.push(id);
+        }
+        g._qIds = groupIds;
+    });
+    return ids;
+}
+
+function buildExamSource() {
+    const order = buildQuestionIds();
+    const displayMap = Object.fromEntries(order.map(id => [id, id.replace('q', '')]));
+
+    const questionGroups = state.groups.map((g, idx) => {
+        const def = KIND_DEFS[g.displayKind];
+        return {
+            groupId: g.id || `group-${idx + 1}`,
+            kind: def.realKind,
+            questionIds: g._qIds.slice(),
+            bodyHtml: def.toHtml(g.payload, g._qIds),
+            allowOptionReuse: !!(g.payload.allowReuse)
+        };
+    });
+
+    const answerKey = {};
+    state.groups.forEach(g => {
+        const def = KIND_DEFS[g.displayKind];
+        Object.assign(answerKey, def.toAnswerKey(g.payload, g._qIds));
+    });
+
+    return {
+        schemaVersion: 'ReadingExamSourceV1',
+        examId: state.meta.examId || 'unnamed-exam',
+        meta: {
+            title: state.meta.title || 'Untitled',
+            category: state.meta.category || 'P1',
+            frequency: state.meta.frequency || 'high',
+            questionIntroHtml: state.meta.questionIntroHtml || '<h3>Questions</h3>'
+        },
+        passage: {
+            blocks: [{
+                blockId: 'passage-main',
+                kind: 'html',
+                html: state.passageHtml || '<p>占位文章</p>'
+            }]
+        },
+        questionGroups,
+        answerKey,
+        questionOrder: order,
+        questionDisplayMap: displayMap
+    };
+}
+
+function buildManifestSnippet() {
+    const id = state.meta.examId || 'unnamed-exam';
+    return `"${id}": {\n    "examId":   "${id}",\n    "dataKey":  "${id}",\n    "script":   "./${id}.js",\n    "title":    "${state.meta.title || 'Untitled'}",\n    "category": "${state.meta.category || 'P1'}"\n},`;
+}
+
+function importFromExamSource(json) {
+    if (!json || typeof json !== 'object') return;
+    state.meta.examId = json.examId || '';
+    state.meta.title = (json.meta && json.meta.title) || '';
+    state.meta.category = (json.meta && json.meta.category) || 'P1';
+    state.meta.frequency = (json.meta && json.meta.frequency) || 'high';
+    state.meta.questionIntroHtml = (json.meta && json.meta.questionIntroHtml) || '<h3>Questions</h3>';
+    state.passageHtml = (json.passage && json.passage.blocks && json.passage.blocks[0] && json.passage.blocks[0].html) || '';
+    // 简化的反序列化:无法精准还原 displayKind,只能基于 kind 选一个最接近的 displayKind
+    state.groups = (json.questionGroups || []).map((qg) => {
+        const dk = pickDisplayKindByRealKind(qg.kind, qg);
+        const def = KIND_DEFS[dk];
+        const payload = def ? def.defaultPayload() : {};
+        // 因为反序列化复杂,这里只保留默认 payload,让用户在 UI 里重新填
+        return {
+            id: qg.groupId,
+            displayKind: dk,
+            kind: qg.kind,
+            payload,
+            _collapsed: false
+        };
+    });
+    toast('导入完成(题组以默认 payload 填充,需要手动校对)', 'warn');
+}
+
+function pickDisplayKindByRealKind(realKind, qg) {
+    if (realKind === 'matching') {
+        if (qg.bodyHtml && qg.bodyHtml.indexOf('paragraph-dropzone') !== -1) return 'matching_heading';
+        return 'matching_statement';
+    }
+    if (realKind === 'summary_completion') {
+        if (qg.bodyHtml && qg.bodyHtml.indexOf('word-bank') !== -1) return 'summary_with_bank';
+        return 'summary_completion';
+    }
+    return realKind;
+}
+
+function refreshPreview(showAnswers) {
+    const data = buildExamSource();
+    const frame = document.getElementById('preview-frame');
+    const sections = data.questionGroups.map(qg => qg.bodyHtml).join('\n');
+    const ak = showAnswers ? renderAnswerKeyBlock(data.answerKey) : '';
+    frame.innerHTML = `
+        ${data.passage.blocks.map(b => b.html).join('\n')}
+        <div style="border-top: 2px solid var(--green); margin: 20px 0; padding-top: 16px;"></div>
+        ${data.meta.questionIntroHtml || ''}
+        ${sections}
+        ${ak}
+    `;
+}
+
+function renderAnswerKeyBlock(answerKey) {
+    const rows = Object.entries(answerKey).map(([k, v]) => `
+        <tr><td style="padding: 4px 8px; border: 1px solid var(--rule);"><strong>${esc(k)}</strong></td>
+            <td style="padding: 4px 8px; border: 1px solid var(--rule);">${esc(Array.isArray(v) ? v.join(' / ') : v)}</td></tr>
+    `).join('');
+    return `<div style="margin-top: 24px; padding: 14px; background: var(--green-light); border: 1px solid var(--green); border-radius: 4px;">
+        <h4 style="margin: 0 0 8px;">📋 答案 Key(预览模式)</h4>
+        <table style="border-collapse: collapse;">${rows}</table>
+    </div>`;
+}
+
+function refreshExport() {
+    const data = buildExamSource();
+    document.getElementById('json-preview').textContent = JSON.stringify(data, null, 4);
+    document.getElementById('manifest-preview').textContent = buildManifestSnippet();
+}
+
+function downloadFile(data, format) {
+    const id = data.examId || 'unnamed-exam';
+    let content, filename, mime;
+    if (format === 'json') {
+        content = JSON.stringify(data, null, 4);
+        filename = `${id}.json`;
+        mime = 'application/json';
+    } else if (format === 'js') {
+        content = `(function registerReadingExamData(global) {
+    'use strict';
+    if (!global.__READING_EXAM_DATA__ || typeof global.__READING_EXAM_DATA__.register !== "function") {
+        throw new Error("reading_exam_registry_missing");
+    }
+    global.__READING_EXAM_DATA__.register("${id}", ${JSON.stringify(data, null, 4)});
+})(typeof window !== "undefined" ? window : globalThis);
+`;
+        filename = `${id}.js`;
+        mime = 'application/javascript';
+    } else if (format === 'html') {
+        content = buildStandaloneHtml(data);
+        filename = `${id}.html`;
+        mime = 'text/html';
+    }
+    const blob = new Blob([content], { type: mime + ';charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 1500);
+    toast(`已下载 ${filename}`);
+}
+
+function buildStandaloneHtml(data) {
+    const sections = data.questionGroups.map(qg => qg.bodyHtml).join('\n');
+    const ak = JSON.stringify(data.answerKey);
+    return `<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>${esc(data.meta.title)} · IELTS Practice</title>
+<style>
+    body { font-family: Arial, Helvetica, "Microsoft YaHei", sans-serif; max-width: 900px; margin: 0 auto; padding: 24px; color: #14532d; background: #f6faf7; }
+    h2 { color: #14532d; }
+    h3 { color: #1f7a4d; }
+    .group { background: #ffffff; padding: 16px; border: 1px solid #bcd8c5; border-radius: 6px; margin-bottom: 16px; }
+    .answer-input { padding: 4px 8px; border: 1px solid #bcd8c5; border-radius: 3px; min-width: 100px; background: #ffffe6; font-family: inherit; }
+    .question-item { padding: 8px 0; border-bottom: 1px dashed #d4ead8; }
+    .question-item:last-child { border-bottom: 0; }
+    .paragraph-dropzone, .match-dropzone, .drop-target-summary { background: #e8f3eb; border: 1px dashed #1f7a4d; padding: 4px 8px; border-radius: 3px; min-height: 24px; min-width: 100px; display: inline-block; }
+    .paragraph-dropzone { display: block; margin: 4px 0; }
+    .drag-item { background: #ffffff; border: 1px solid #1f7a4d; padding: 4px 9px; border-radius: 3px; display: inline-block; margin: 2px; cursor: grab; }
+    .drag-item.in-zone { background: #d4ead8; }
+    .pool-items { display: flex; flex-wrap: wrap; gap: 4px; padding: 8px; background: #ffffff; border: 1px solid #bcd8c5; border-radius: 4px; }
+    .headings-pool, .options-pool, .word-bank { background: #e8f3eb; padding: 10px 12px; border-radius: 4px; }
+    .completion-table { border-collapse: collapse; width: 100%; }
+    .completion-table th, .completion-table td { border: 1px solid #bcd8c5; padding: 6px 8px; }
+    .completion-table thead th { background: #e8f3eb; }
+    .choice-list { list-style: none; padding-left: 16px; }
+    .choice-list li { padding: 2px 0; }
+    .toolbar { position: sticky; top: 0; background: #14532d; color: #fff; padding: 12px 16px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.12); margin-bottom: 16px; }
+    .toolbar button { background: #ffd54a; color: #14532d; border: none; padding: 8px 14px; border-radius: 4px; font-weight: 700; cursor: pointer; }
+    .result { background: #ffffff; padding: 14px; border: 1px solid #1f7a4d; border-radius: 4px; margin-top: 16px; display: none; }
+    .result.show { display: block; }
+    .result table { border-collapse: collapse; width: 100%; }
+    .result td, .result th { padding: 4px 8px; border: 1px solid #bcd8c5; }
+    .result .ok { color: #1f7a4d; font-weight: 700; }
+    .result .bad { color: #c0392b; font-weight: 700; }
+</style>
+</head>
+<body>
+<div class="toolbar">
+    <strong>${esc(data.meta.title)} · ${esc(data.meta.category)} · ${esc(data.meta.frequency)}</strong>
+    <div>
+        <button type="button" id="btn-submit">提交并对答案</button>
+        <button type="button" id="btn-reset">重置</button>
+    </div>
+</div>
+${data.passage.blocks.map(b => b.html).join('\n')}
+<hr>
+${data.meta.questionIntroHtml || ''}
+${sections}
+<div class="result" id="result"></div>
+
+<script>
+const ANSWER_KEY = ${ak};
+const QUESTION_ORDER = ${JSON.stringify(data.questionOrder)};
+
+function normalizeToken(v) {
+    if (v == null) return '';
+    const cleaned = String(v).replace(/[“”]/g,'"').replace(/[‘’]/g,"'").replace(/\\s+/g,' ').trim().replace(/^[\\s"'()\\[\\]{}<>.,;:!?]+|[\\s"'()\\[\\]{}<>.,;:!?]+$/g,'');
+    if (!cleaned) return '';
+    const l = cleaned.toLowerCase();
+    if (['true','t','yes','y'].includes(l)) return 'true';
+    if (['false','f','no','n'].includes(l)) return 'false';
+    if (['ng','notgiven','not-given','not given'].includes(l)) return 'not given';
+    if (/^[a-z]$/i.test(cleaned)) return cleaned.toUpperCase();
+    const m = cleaned.match(/^([A-Za-z])(?:[.)])?\\s+/);
+    if (m && cleaned.length > 2) return m[1].toUpperCase();
+    return cleaned;
+}
+function compareAns(u, c) {
+    const expected = Array.isArray(c) ? c.map(normalizeToken) : [normalizeToken(c)];
+    const actual = normalizeToken(u);
+    return expected.some(e => e.toLowerCase() === actual.toLowerCase());
+}
+function collect() {
+    const out = {};
+    QUESTION_ORDER.forEach(id => {
+        // radio
+        const r = document.querySelector('input[type=radio][name="'+id+'"]:checked');
+        if (r) { out[id] = r.value; return; }
+        // checkbox sharing
+        // skipped for brevity
+        // text input
+        const t = document.querySelector('[data-question="'+id+'"]');
+        if (t) {
+            if (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT') {
+                out[id] = t.value || '';
+                return;
+            }
+            // dropzone with drag-item
+            const dropped = t.querySelector('.drag-item');
+            if (dropped) {
+                out[id] = dropped.dataset.heading || dropped.dataset.option || dropped.dataset.word || dropped.textContent;
+                return;
+            }
+        }
+        out[id] = '';
+    });
+    return out;
+}
+function submitAll() {
+    const ans = collect();
+    let correct = 0;
+    const rows = QUESTION_ORDER.map(id => {
+        const u = ans[id];
+        const c = ANSWER_KEY[id];
+        const ok = compareAns(u, c);
+        if (ok) correct++;
+        return '<tr><td>'+id+'</td><td>'+(u||'<em>(空)</em>')+'</td><td>'+(Array.isArray(c)?c.join(' / '):c)+'</td><td class="'+(ok?'ok':'bad')+'">'+(ok?'✓':'✗')+'</td></tr>';
+    }).join('');
+    const total = QUESTION_ORDER.length;
+    const pct = Math.round(correct / total * 100);
+    document.getElementById('result').innerHTML = '<h3>得分:'+correct+' / '+total+' ('+pct+'%)</h3><table><thead><tr><th>题号</th><th>你的答案</th><th>正确答案</th><th>结果</th></tr></thead><tbody>'+rows+'</tbody></table>';
+    document.getElementById('result').classList.add('show');
+}
+document.getElementById('btn-submit').addEventListener('click', submitAll);
+document.getElementById('btn-reset').addEventListener('click', () => { document.querySelectorAll('input,textarea,select').forEach(i=>{if(i.type==='checkbox'||i.type==='radio')i.checked=false;else i.value='';}); document.getElementById('result').classList.remove('show'); });
+
+// 简单的拖拽
+document.querySelectorAll('.drag-item').forEach(el => {
+    el.addEventListener('dragstart', e => { e.dataTransfer.setData('text/plain', el.outerHTML); window.__draggedId = el; });
+});
+document.querySelectorAll('.dropzone, .paragraph-dropzone, .match-dropzone, .drop-target-summary').forEach(zone => {
+    zone.addEventListener('dragover', e => e.preventDefault());
+    zone.addEventListener('drop', e => {
+        e.preventDefault();
+        const src = window.__draggedId;
+        if (!src) return;
+        zone.innerHTML = src.outerHTML;
+        zone.querySelector('.drag-item').classList.add('in-zone');
+    });
+});
+</script>
+</body>
+</html>`;
+}
+
+function toast(msg, kind) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.className = 'toast show' + (kind ? ' ' + kind : '');
+    setTimeout(() => el.className = 'toast', 2500);
+}
+
+/* ============================================================
+ * 启动
+ * ============================================================ */
+syncFormsFromState();
+renderGroupsContainer();
+document.getElementById('new-kind').dispatchEvent(new Event('change'));
+</script>
+
+</body>
+</html>
