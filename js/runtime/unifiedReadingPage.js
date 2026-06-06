@@ -986,10 +986,6 @@
             item.dataset.answerValue = normalizedValue;
             item.dataset.answerLabel = normalizedLabel;
             item.setAttribute('draggable', 'true');
-            item.addEventListener('click', () => {
-                clearDropzone(dropzone);
-                updateNavStatuses();
-            });
             attachDraggableBehavior(item);
 
             if (dropzone.classList.contains('drop-target-summary')) {

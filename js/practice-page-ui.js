@@ -1074,6 +1074,72 @@
             sourceAllowsReuse: false
         };
         let clickSelectedItem = null;
+        const autoScrollState = {
+            interval: null,
+            active: false
+        };
+
+        function stopAutoScroll() {
+            if (autoScrollState.interval) {
+                cancelAnimationFrame(autoScrollState.interval);
+                autoScrollState.interval = null;
+            }
+            autoScrollState.active = false;
+        }
+
+        function getScrollContainer(element) {
+            if (!element) return null;
+            let el = element;
+            while (el && el !== document.body && el !== document.documentElement) {
+                const style = window.getComputedStyle(el);
+                const overflowY = style.overflowY;
+                if (overflowY === 'auto' || overflowY === 'scroll') {
+                    if (el.scrollHeight > el.clientHeight) {
+                        return el;
+                    }
+                }
+                el = el.parentElement;
+            }
+            return (document.scrollingElement || document.documentElement);
+        }
+
+        function startAutoScroll(clientY, scrollContainer) {
+            const container = scrollContainer || (document.scrollingElement || document.documentElement);
+            const rect = container === (document.scrollingElement || document.documentElement)
+                ? { top: 0, bottom: window.innerHeight, height: window.innerHeight }
+                : container.getBoundingClientRect();
+
+            const edgeThreshold = 80; // px from top/bottom to trigger scroll
+            const maxSpeed = 15;     // px per frame max
+            const distanceFromTop = clientY - rect.top;
+            const distanceFromBottom = rect.bottom - clientY;
+
+            let direction = 0;
+            let speed = 0;
+
+            if (distanceFromTop < edgeThreshold && distanceFromTop > 0) {
+                direction = -1;
+                speed = maxSpeed * (1 - distanceFromTop / edgeThreshold);
+            } else if (distanceFromBottom < edgeThreshold && distanceFromBottom > 0) {
+                direction = 1;
+                speed = maxSpeed * (1 - distanceFromBottom / edgeThreshold);
+            }
+
+            if (direction === 0) {
+                stopAutoScroll();
+                return;
+            }
+
+            if (!autoScrollState.active) {
+                autoScrollState.active = true;
+                function scrollLoop() {
+                    if (!autoScrollState.active) return;
+                    container.scrollBy(0, direction * speed);
+                    autoScrollState.interval = requestAnimationFrame(scrollLoop);
+                }
+                scrollLoop();
+            }
+        }
 
         function setClickSelectedItem(item) {
             if (clickSelectedItem && clickSelectedItem !== item) {
@@ -1125,6 +1191,7 @@
 
         function handleDragEnd() {
             resetDragState();
+            stopAutoScroll();
         }
 
         function resolveDropContainer(target) {
@@ -1198,6 +1265,10 @@
             if (!container) return;
             event.preventDefault();
             container.classList.add('drag-over');
+
+            // Auto-scroll when dragging near viewport or scroll-container edges
+            const scrollContainer = getScrollContainer(event.target);
+            startAutoScroll(event.clientY, scrollContainer);
         }
 
         function handleDragLeave(event) {
@@ -1211,6 +1282,7 @@
             const container = resolveDropContainer(event.target);
             if (!container || !dragState.item) return;
             event.preventDefault();
+            stopAutoScroll();
             const previousContainer = dragState.sourceContainer || dragState.item.parentElement;
             const draggedItem = resolveDraggedItem(container);
             container.classList.remove('drag-over');
@@ -1274,6 +1346,21 @@
                 clearClickSelectedItem();
             }
         }, true);
+
+        // Double-click to return assigned drag items back to the option pool
+        document.addEventListener('dblclick', (event) => {
+            const target = event.target instanceof HTMLElement ? event.target : null;
+            if (!target) return;
+            const dragItem = target.closest(ACTIVE_DRAG_ITEM_SELECTOR);
+            if (!dragItem || !(dragItem instanceof HTMLElement)) return;
+            // Only handle items that are already assigned (placed in a dropzone)
+            if (dragItem.dataset.assignedItem !== 'true') return;
+            const dropzone = dragItem.closest('.match-dropzone, .paragraph-dropzone, .drop-target-summary');
+            const container = dropzone || dragItem.parentElement;
+            returnItemToPool(dragItem);
+            clearClickSelectedItem();
+            handleAnswerInteraction(container);
+        });
 
         function resetPracticePage() {
             if (submissionLocked) {
