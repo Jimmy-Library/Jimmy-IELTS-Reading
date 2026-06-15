@@ -2358,11 +2358,11 @@ window.completeExamIndex = [
     },
     {
         id: 'p3-low-078',
-        title: 'P3 (ds做出来的) - Music Language We All Speak 音乐语言',
+        title: 'P3 - Music Language We All Speak 音乐语言',
         category: 'P3',
         frequency: 'low',
         path: '三月/6.P3 次高频/',
-        filename: '78. P3 (ds做出来的) - Music Language We All Speak 音乐语言.html',
+        filename: '78. P3 - Music Language We All Speak 音乐语言.html',
         hasHtml: true,
         hasPdf: false,
         pdfFilename: 'ReadingPractice/PDF/78. P3 (仅原文无题) - Music Language We All Speak 音乐语言.pdf',

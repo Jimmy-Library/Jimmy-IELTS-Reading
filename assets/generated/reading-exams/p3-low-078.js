@@ -2,7 +2,7 @@
   "schemaVersion": "ReadingExamSourceV1",
   "examId": "p3-low-078",
   "meta": {
-    "title": "P3 (ds做出来的) - Music Language We All Speak 音乐语言",
+    "title": "P3 - Music Language We All Speak 音乐语言",
     "category": "P3",
     "frequency": "low"
   },

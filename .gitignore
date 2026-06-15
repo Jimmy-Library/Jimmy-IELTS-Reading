@@ -21,3 +21,6 @@ npm-debug.log*
 # Large binary files (adjust as needed)
 *.zip
 *.tar.gz
+
+# Local Netlify folder
+.netlify
