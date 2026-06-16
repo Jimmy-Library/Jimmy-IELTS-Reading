@@ -186,6 +186,8 @@
                     <button class="btn btn-sm shui-filter-btn active" type="button" aria-pressed="true"
                         data-filter-id="all" onclick="filterByType('all')">全部</button>
                     <button class="btn btn-sm shui-filter-btn" type="button" aria-pressed="false"
+                        data-filter-id="new-june-2026" onclick="filterByNewJune2026()">2026.6月新增</button>
+                    <button class="btn btn-sm shui-filter-btn" type="button" aria-pressed="false"
                         data-filter-id="p1" onclick="browseCategory('P1','reading')">P1</button>
                     <button class="btn btn-sm shui-filter-btn" type="button" aria-pressed="false"
                         data-filter-id="p2" onclick="browseCategory('P2','reading')">P2</button>
@@ -262,8 +264,10 @@
                 <div class="hero-panel__header">
                     <h3 class="hero-panel__title">📈 练习历史 <span class="hero-tag">SHUI Timeline</span></h3>
                     <div id="record-type-filter-buttons" class="hero-panel__actions shui-filter-group">
-                        <button class="btn btn-sm shui-filter-btn" type="button" aria-pressed="true"
-                            data-filter-type="all" onclick="filterRecordsByType('all')">全部</button>
+                        <button class="btn btn-sm shui-filter-btn active" type="button" aria-pressed="true"
+                            data-filter-status="all" onclick="filterRecordsByStatus('all')">全部</button>
+                        <button class="btn btn-sm shui-filter-btn" type="button" aria-pressed="false"
+                            data-filter-status="incomplete" onclick="filterRecordsByStatus('incomplete')">未完成</button>
                         <button class="btn btn-sm shui-filter-btn" type="button" aria-pressed="false"
                             data-filter-type="reading" onclick="filterRecordsByType('reading')">阅读</button>
                     </div>

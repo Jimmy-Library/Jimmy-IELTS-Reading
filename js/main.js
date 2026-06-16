@@ -1511,6 +1511,22 @@ function setupPracticeHistoryInteractions() {
         window.DOM.delegate('change', '.practice-history-list input[data-record-id], #history-list input[data-record-id]', function (event) {
             handleCheckbox(this.dataset.recordId, event);
         });
+
+        // 未完成草稿：继续做题 / 删除草稿
+        window.DOM.delegate('click', '.practice-history-list [data-record-action="resume-draft"], #history-list [data-record-action="resume-draft"]', function (event) {
+            event.preventDefault();
+            event.stopPropagation();
+            if (typeof window.resumeIncompleteDraft === 'function') {
+                window.resumeIncompleteDraft(this.dataset.draftId);
+            }
+        });
+        window.DOM.delegate('click', '.practice-history-list [data-record-action="delete-draft"], #history-list [data-record-action="delete-draft"]', function (event) {
+            event.preventDefault();
+            event.stopPropagation();
+            if (typeof window.deleteIncompleteDraft === 'function') {
+                window.deleteIncompleteDraft(this.dataset.draftId);
+            }
+        });
     } else {
         container.addEventListener('click', (event) => {
             const detailsTarget = event.target.closest('[data-record-action="details"]');
@@ -1522,6 +1538,28 @@ function setupPracticeHistoryInteractions() {
             const deleteTarget = event.target.closest('[data-record-action="delete"]');
             if (deleteTarget && container.contains(deleteTarget)) {
                 handleDelete(deleteTarget.dataset.recordId, event);
+                return;
+            }
+
+            // 未完成草稿：继续做题
+            const resumeTarget = event.target.closest('[data-record-action="resume-draft"]');
+            if (resumeTarget && container.contains(resumeTarget)) {
+                event.preventDefault();
+                event.stopPropagation();
+                if (typeof window.resumeIncompleteDraft === 'function') {
+                    window.resumeIncompleteDraft(resumeTarget.dataset.draftId);
+                }
+                return;
+            }
+
+            // 未完成草稿：删除草稿
+            const deleteDraftTarget = event.target.closest('[data-record-action="delete-draft"]');
+            if (deleteDraftTarget && container.contains(deleteDraftTarget)) {
+                event.preventDefault();
+                event.stopPropagation();
+                if (typeof window.deleteIncompleteDraft === 'function') {
+                    window.deleteIncompleteDraft(deleteDraftTarget.dataset.draftId);
+                }
                 return;
             }
 
@@ -1620,6 +1658,27 @@ function updatePracticeView() {
     }
 
     setupPracticeHistoryInteractions();
+
+    // 「未完成」筛选：渲染本地草稿（单篇+套题），与已提交记录分开
+    const statusFilter = String(window.__practiceHistoryStatusFilter || 'all').trim().toLowerCase();
+    if (statusFilter === 'incomplete') {
+        const drafts = collectIncompleteDrafts();
+        const renderer0 = window.PracticeHistoryRenderer;
+        if (renderer0 && typeof renderer0.renderView === 'function') {
+            const r = renderer0.renderView({
+                container: historyContainer,
+                records: drafts,
+                scrollerOptions: { itemHeight: 92, containerHeight: 650 },
+                itemFactory: function (draft) { return createIncompleteDraftNode(draft); },
+                scroller: practiceListScroller
+            });
+            if (r && r.scroller !== undefined) {
+                practiceListScroller = r.scroller;
+            }
+        }
+        refreshBulkDeleteButton();
+        return;
+    }
 
     let recordsToShow = stats && typeof stats.sortByDateDesc === 'function'
         ? stats.sortByDateDesc(records)
@@ -1934,6 +1993,7 @@ function filterByType(type) {
     // 重置浏览模式和路径（清除频率模式残留）
     window.__browseFilterMode = 'default';
     window.__browsePath = null;
+    window.__browseNewOnly = false;
 
     // 重置 browseController 到默认模式
     // 关键修复：仅在当前不是默认模式时才调用 resetToDefault，防止死循环
@@ -2105,8 +2165,244 @@ if (typeof window.browseCategory !== 'function') {
 }
 
 function filterRecordsByType(type) {
+    window.__practiceHistoryStatusFilter = 'all';
     setBrowseFilterState(getCurrentCategory(), type);
+
+    // 同步按钮高亮
+    try {
+        // 取消所有 status 按钮的高亮
+        document.querySelectorAll('#record-type-filter-buttons [data-filter-status]').forEach((btn) => {
+            btn.classList.remove('active');
+            btn.setAttribute('aria-pressed', 'false');
+        });
+        // 高亮匹配的 type 按钮
+        const normalizedType = String(type || 'all').trim().toLowerCase();
+        document.querySelectorAll('#record-type-filter-buttons [data-filter-type]').forEach((btn) => {
+            const btnType = String(btn.getAttribute('data-filter-type') || '').trim().toLowerCase();
+            const isActive = btnType === normalizedType;
+            btn.classList.toggle('active', isActive);
+            btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+        });
+    } catch (_) { }
+
     updatePracticeView();
+}
+if (typeof window !== 'undefined') {
+    window.filterRecordsByType = filterRecordsByType;
+}
+
+// 练习历史「已提交 / 未完成」筛选
+function filterRecordsByStatus(status) {
+    const normalized = String(status || 'all').trim().toLowerCase();
+    window.__practiceHistoryStatusFilter = normalized === 'incomplete' ? 'incomplete' : 'all';
+    // 同步按钮高亮
+    try {
+        document.querySelectorAll('#record-type-filter-buttons [data-filter-status]').forEach((btn) => {
+            const isActive = btn.getAttribute('data-filter-status') === window.__practiceHistoryStatusFilter;
+            btn.classList.toggle('active', isActive);
+            btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+        });
+        // 取消所有 type 按钮的高亮（切换 status 时清掉之前的类型筛选）
+        document.querySelectorAll('#record-type-filter-buttons [data-filter-type]').forEach((btn) => {
+            btn.classList.remove('active');
+            btn.setAttribute('aria-pressed', 'false');
+        });
+    } catch (_) { }
+    updatePracticeView();
+}
+if (typeof window !== 'undefined') {
+    window.filterRecordsByStatus = filterRecordsByStatus;
+}
+
+// 枚举本地未完成草稿（单篇 + 套题），构造练习历史用的伪记录
+function collectIncompleteDrafts() {
+    const drafts = [];
+    let store = null;
+    try { store = window.localStorage; } catch (_) { store = null; }
+    if (!store) {
+        return drafts;
+    }
+    const countAnswers = (draft) => {
+        const answers = draft && draft.answers && typeof draft.answers === 'object' ? draft.answers : {};
+        return Object.keys(answers).filter((k) => {
+            const v = answers[k];
+            return v !== null && v !== undefined && String(v).trim() !== '';
+        }).length;
+    };
+    try {
+        // 先收集所有已有套题进度的 suite ID，用于去重
+        const suiteProgressIds = new Set();
+        for (let i = 0; i < store.length; i += 1) {
+            const key = store.key(i);
+            if (key && key.indexOf('ielts_suite_progress::') === 0) {
+                suiteProgressIds.add(key.slice('ielts_suite_progress::'.length));
+            }
+        }
+
+        for (let i = 0; i < store.length; i += 1) {
+            const key = store.key(i);
+            if (!key) continue;
+            // 单篇草稿
+            if (key.indexOf('ielts_single_draft::') === 0) {
+                const examId = key.slice('ielts_single_draft::'.length);
+                let parsed = null;
+                try { parsed = JSON.parse(store.getItem(key)); } catch (_) { parsed = null; }
+                if (!parsed || !parsed.draft) continue;
+                drafts.push({
+                    id: key,
+                    kind: 'single',
+                    examId,
+                    title: parsed.examTitle || examId,
+                    answeredCount: countAnswers(parsed.draft),
+                    elapsed: Number(parsed.elapsed) || 0,
+                    savedAt: Number(parsed.savedAt) || 0
+                });
+            } else if (key.indexOf('ielts_suite_draft::') === 0) {
+                // 套题单篇草稿（仅在无对应 progress 时才作为独立条目出现）
+                const rest = key.slice('ielts_suite_draft::'.length);
+                const sepIdx = rest.indexOf('::');
+                if (sepIdx <= 0) continue;
+                const suiteSessionId = rest.slice(0, sepIdx);
+                // 已有套题进度条目则跳过
+                if (suiteProgressIds.has(suiteSessionId)) continue;
+                const examId = rest.slice(sepIdx + 2);
+                let parsed = null;
+                try { parsed = JSON.parse(store.getItem(key)); } catch (_) { parsed = null; }
+                if (!parsed || !parsed.draft) continue;
+                drafts.push({
+                    id: key,
+                    kind: 'suite-passage',
+                    suiteSessionId,
+                    examId,
+                    title: (parsed.examTitle || examId) + '（套题片段）',
+                    answeredCount: countAnswers(parsed.draft),
+                    elapsed: Number(parsed.elapsed) || 0,
+                    savedAt: Number(parsed.savedAt) || 0
+                });
+            } else if (key.indexOf('ielts_suite_progress::') === 0) {
+                // 套题进度
+                const suiteSessionId = key.slice('ielts_suite_progress::'.length);
+                let parsed = null;
+                try { parsed = JSON.parse(store.getItem(key)); } catch (_) { parsed = null; }
+                if (!parsed) continue;
+                drafts.push({
+                    id: key,
+                    kind: 'suite',
+                    suiteSessionId,
+                    title: parsed.title || ('套题 ' + suiteSessionId),
+                    answeredCount: Number(parsed.answeredCount) || 0,
+                    totalQuestions: Number(parsed.totalQuestions) || 0,
+                    elapsed: Number(parsed.elapsed) || 0,
+                    savedAt: Number(parsed.updatedAt || parsed.savedAt) || 0,
+                    sequence: Array.isArray(parsed.sequence) ? parsed.sequence : []
+                });
+            }
+        }
+    } catch (_) { }
+    drafts.sort((a, b) => (b.savedAt || 0) - (a.savedAt || 0));
+    return drafts;
+}
+
+// 渲染未完成草稿条目（练习历史 itemFactory）
+function createIncompleteDraftNode(draft) {
+    const item = document.createElement('div');
+    item.className = 'history-item history-record-item history-incomplete-item';
+    item.dataset.draftId = draft.id;
+
+    const fmtTime = (sec) => {
+        const s = Math.max(0, Math.floor(Number(sec) || 0));
+        const m = Math.floor(s / 60);
+        const r = s % 60;
+        return m + ':' + (r < 10 ? '0' + r : r);
+    };
+    const totalText = draft.totalQuestions > 0
+        ? (draft.answeredCount + '/' + draft.totalQuestions)
+        : String(draft.answeredCount);
+    const savedText = draft.savedAt ? new Date(draft.savedAt).toLocaleString() : '未知时间';
+    const kindLabel = draft.kind === 'suite' ? '套题' : (draft.kind === 'suite-passage' ? '套题片段' : '单篇');
+
+    const info = document.createElement('div');
+    info.className = 'record-info';
+    info.innerHTML =
+        '<div class="practice-record-title"><strong>' + (draft.title || '未命名') + '</strong>'
+        + ' <span class="incomplete-badge" style="font-size:0.7rem;color:#f59e0b;border:1px solid #f59e0b;border-radius:4px;padding:0 5px;margin-left:6px;">未完成·' + kindLabel + '</span></div>'
+        + '<div class="record-meta-line"><small class="record-date">' + savedText + '</small>'
+        + ' <small>已做 ' + totalText + ' 题 · 用时 ' + fmtTime(draft.elapsed) + '</small></div>';
+
+    const actions = document.createElement('div');
+    actions.className = 'record-actions-container';
+    actions.innerHTML =
+        '<button type="button" class="btn btn-sm" data-record-action="resume-draft" data-draft-id="' + draft.id + '" style="margin-right:6px;">继续做题</button>'
+        + '<button type="button" class="delete-record-btn" title="删除草稿" data-record-action="delete-draft" data-draft-id="' + draft.id + '">🗑️</button>';
+
+    item.appendChild(info);
+    item.appendChild(actions);
+    return item;
+}
+
+// 处理未完成草稿的「继续做题 / 删除草稿」点击
+function resumeIncompleteDraft(draftId) {
+    const drafts = collectIncompleteDrafts();
+    const draft = drafts.find((d) => d.id === draftId);
+    if (!draft) {
+        if (typeof window.showMessage === 'function') {
+            window.showMessage('未找到对应的草稿记录，可能已被清除。', 'warning');
+        }
+        return;
+    }
+    if (draft.kind === 'single' && draft.examId) {
+        // 标记强制续做，阅读页打开后直接恢复、不再弹窗
+        try { sessionStorage.setItem('ielts_force_resume::' + draft.examId, '1'); } catch (_) { }
+        if (typeof window.openExam === 'function') {
+            window.openExam(draft.examId);
+        }
+    } else if (draft.kind === 'suite-passage' && draft.examId) {
+        // 套题片段：按单篇方式打开，套题上下文已丢失
+        try { sessionStorage.setItem('ielts_force_resume::' + draft.examId, '1'); } catch (_) { }
+        if (typeof window.openExam === 'function') {
+            window.openExam(draft.examId);
+        }
+    } else if (draft.kind === 'suite') {
+        if (typeof window.resumeSuiteDraft === 'function') {
+            window.resumeSuiteDraft(draft.suiteSessionId);
+        } else if (typeof window.showMessage === 'function') {
+            window.showMessage('套题续做模块未就绪', 'warning');
+        }
+    }
+}
+
+function deleteIncompleteDraft(draftId) {
+    try {
+        window.localStorage.removeItem(draftId);
+        // 套题进度删除时一并清理其分篇草稿
+        if (draftId.indexOf('ielts_suite_progress::') === 0) {
+            const sid = draftId.slice('ielts_suite_progress::'.length);
+            const prefix = 'ielts_suite_draft::' + sid + '::';
+            const toRemove = [];
+            for (let i = 0; i < window.localStorage.length; i += 1) {
+                const k = window.localStorage.key(i);
+                if (k && k.indexOf(prefix) === 0) toRemove.push(k);
+            }
+            toRemove.forEach((k) => window.localStorage.removeItem(k));
+        }
+    } catch (_) { }
+    updatePracticeView();
+}
+if (typeof window !== 'undefined') {
+    window.resumeIncompleteDraft = resumeIncompleteDraft;
+    window.deleteIncompleteDraft = deleteIncompleteDraft;
+    // 套题续做：委托给 app 实例的 resumeSuiteDraft
+    if (typeof window.resumeSuiteDraft !== 'function') {
+        window.resumeSuiteDraft = function (suiteSessionId) {
+            if (window.app && typeof window.app.resumeSuiteDraft === 'function') {
+                return window.app.resumeSuiteDraft(suiteSessionId);
+            }
+            if (typeof window.showMessage === 'function') {
+                window.showMessage('套题续做模块未就绪', 'warning');
+            }
+            return undefined;
+        };
+    }
 }
 
 function filterRecordsByTime(range) {

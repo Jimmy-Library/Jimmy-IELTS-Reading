@@ -532,6 +532,9 @@
       this._currentStep = fromBeginning ? 0 : this._stateManager.getCurrentStep();
       this._isActive = true;
 
+      // 根据题库内容动态更新引导步骤
+      this._refreshDynamicSteps();
+
       this._renderer.createOverlay();
       this._renderer.createTooltip();
 
@@ -546,6 +549,65 @@
       });
 
       this._showCurrentStep();
+    }
+
+    /**
+     * 根据实际题库内容动态更新引导步骤
+     */
+    _refreshDynamicSteps() {
+      // 尝试获取题库统计信息
+      const stats = this._getExamStats();
+      const totalExams = stats.totalExams || '多套';
+      const htmlExams = stats.htmlExams || totalExams;
+      const pdfExams = stats.pdfExams || totalExams;
+
+      // 动态更新欢迎步骤
+      const welcomeStep = this._steps.find(s => s.id === 'welcome');
+      if (welcomeStep) {
+        welcomeStep.content = '这是 Jimmy 开发的雅思机考练习平台，参照官方机考界面，提供阅读、听力练习与词汇背诵等功能。'
+          + `当前题库共有 ${totalExams} 套题目（其中 HTML 版 ${htmlExams} 套、PDF 版 ${pdfExams} 套），让我们快速了解一下各项功能吧！`;
+      }
+
+      // 动态更新题库浏览步骤
+      const browseStep = this._steps.find(s => s.id === 'browse');
+      if (browseStep) {
+        browseStep.content = `浏览全部 ${totalExams} 套可用题目，支持搜索、筛选和排序功能。点击题目即可开始练习或查看解析。`;
+      }
+    }
+
+    /**
+     * 获取题库统计信息
+     */
+    _getExamStats() {
+      const result = { totalExams: null, htmlExams: null, pdfExams: null };
+      try {
+        // 方式 1: 从 readingExamRegistry 获取
+        const registry = window.__READING_EXAM_DATA__;
+        if (registry && typeof registry.keys === 'function') {
+          const keys = registry.keys();
+          result.totalExams = keys.length;
+          return result;
+        }
+        // 方式 2: 从页面 DOM 读取
+        const totalEl = document.getElementById('total-exams');
+        if (totalEl) {
+          const val = parseInt(totalEl.textContent, 10);
+          if (Number.isFinite(val)) result.totalExams = val;
+        }
+        const htmlEl = document.getElementById('html-exams');
+        if (htmlEl) {
+          const val = parseInt(htmlEl.textContent, 10);
+          if (Number.isFinite(val)) result.htmlExams = val;
+        }
+        const pdfEl = document.getElementById('pdf-exams');
+        if (pdfEl) {
+          const val = parseInt(pdfEl.textContent, 10);
+          if (Number.isFinite(val)) result.pdfExams = val;
+        }
+      } catch (e) {
+        console.warn('[Onboarding] 获取题库统计失败:', e);
+      }
+      return result;
     }
 
     stop() {

@@ -584,6 +584,23 @@
             color: #fff;
         }
 
+        /* Pink highlight (second highlight pass) */
+        .hl[data-hl-type="pink"] {
+            background-color: #ec4899;
+            color: #fff;
+        }
+
+        /* 回顾只读模式：隐藏选区工具条的高亮/删除按钮（仅保留 Note 查看） */
+        body.review-readonly-mode #btnHL,
+        body.review-readonly-mode #btnUH {
+            display: none;
+        }
+
+        /* 回顾只读模式：计时器不可点击 */
+        body.review-readonly-mode #timer {
+            cursor: default;
+        }
+
         /* Dark Mode variables */
         body.dark-mode {
             --panel: #1e293b;
@@ -610,6 +627,11 @@
 
         body.dark-mode .hl[data-hl-type="note"] {
             background-color: #0369d9;
+            color: #fff;
+        }
+
+        body.dark-mode .hl[data-hl-type="pink"] {
+            background-color: #ec4899;
             color: #fff;
         }
 
@@ -758,18 +780,17 @@
             color: white;
         }
 
-        /* Notes panel basic styles */
+        /* Notes panel —— 右侧边栏样式 */
         #notes-panel {
             position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 400px;
-            height: 300px;
+            top: 0;
+            right: 0;
+            width: 380px;
+            max-width: 92vw;
+            height: 100%;
             background: var(--panel);
-            border: 1px solid var(--line);
-            border-radius: 8px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            border-left: 1px solid var(--line);
+            box-shadow: -10px 0 30px rgba(0, 0, 0, 0.12);
             z-index: 1001;
             display: none;
             /* toggled by JS */
@@ -780,23 +801,156 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 12px 16px;
+            padding: 14px 18px;
             border-bottom: 1px solid var(--line);
-            font-weight: 600;
+            flex-shrink: 0;
         }
 
-        #notes-panel textarea {
-            flex: 1;
-            padding: 16px;
+        #notes-panel header h3 {
+            margin: 0;
+            font-size: 1.15rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        #notes-panel .notes-header-actions {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        #notes-panel .notes-header-actions button {
+            background: none;
             border: none;
-            resize: none;
+            cursor: pointer;
+            color: var(--text);
+            padding: 0;
+            display: inline-flex;
+            align-items: center;
+            opacity: 0.85;
+        }
+
+        #notes-panel .notes-header-actions button:hover {
+            opacity: 1;
+        }
+
+        /* 笔记列表容器 */
+        #notes-panel .notes-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0;
+        }
+
+        #notes-panel .notes-list__empty {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--muted, #999);
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        /* 单条笔记 */
+        .note-item {
+            border-bottom: 1px solid var(--line);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .note-item:last-child {
+            border-bottom: none;
+        }
+
+        .note-item__header {
+            display: flex;
+            align-items: flex-start;
+            padding: 12px 14px 8px;
+            gap: 8px;
+            background: #e8f1fd;
+        }
+
+        body.dark-mode .note-item__header {
+            background: #1e2d45;
+        }
+
+        .note-item__part {
+            font-weight: 700;
+            font-size: 0.85rem;
+            color: #2563eb;
+            white-space: nowrap;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+        .note-item__text {
+            flex: 1;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            word-break: break-word;
+        }
+
+        .note-item__delete {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #999;
+            font-size: 1.2rem;
+            line-height: 1;
+            padding: 0 2px;
+            flex-shrink: 0;
+            opacity: 0.6;
+            transition: opacity 0.15s, color 0.15s;
+        }
+
+        .note-item__delete:hover {
+            opacity: 1;
+            color: #e53e3e;
+        }
+
+        .note-item__textarea {
+            width: 100%;
+            min-height: 60px;
+            padding: 10px 14px 12px;
+            border: none;
+            border-top: 1px dashed var(--line);
+            resize: vertical;
             background: transparent;
             color: var(--text);
             font-family: inherit;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            box-sizing: border-box;
         }
 
-        #notes-panel textarea:focus {
+        .note-item__textarea:focus {
             outline: none;
+            background: rgba(37, 99, 235, 0.03);
+        }
+
+        #notes-panel .notes-footer {
+            padding: 10px 18px;
+            text-align: right;
+            border-top: 1px solid var(--line);
+            flex-shrink: 0;
+        }
+
+        #notes-panel #notes-delete-all {
+            background: none;
+            border: none;
+            color: #e53e3e;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        #notes-panel #notes-delete-all:hover {
+            text-decoration: underline;
+        }
+
+        /* 眼睛图标：隐藏标注时淡化全部高亮背景 */
+        body.notes-hide-marks .hl {
+            background-color: transparent !important;
+            color: inherit !important;
         }
 
         /* ---------------- Exam Option Layouts ---------------- */
@@ -990,8 +1144,32 @@
     </div>
     <div id="notes-panel">
         <header>
-            <h3>Notes</h3><button id="close-note" type="button">Close</button>
-        </header><textarea></textarea>
+            <h3>NOTES</h3>
+            <div class="notes-header-actions">
+                <button id="notes-eye" type="button" title="显示/隐藏标注" aria-label="显示或隐藏标注">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z" />
+                        <circle cx="12" cy="12" r="3" />
+                    </svg>
+                </button>
+                <button id="close-note" type="button" aria-label="关闭">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                </button>
+            </div>
+        </header>
+        <div class="notes-list" id="notes-list">
+            <div class="notes-list__empty" id="notes-list-empty">
+                📝 选中文章中的文字，点击 Note 按钮添加笔记
+            </div>
+        </div>
+        <div class="notes-footer">
+            <button id="notes-delete-all" type="button">DELETE ALL</button>
+        </div>
     </div>
     <div class="overlay"></div>
 

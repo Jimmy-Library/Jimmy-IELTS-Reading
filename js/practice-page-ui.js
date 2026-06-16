@@ -11,6 +11,7 @@
         let settingsOpen = false;
         let notesOpen = false;
         let timerRunning = true;
+        let timerLocked = false;
         let seconds = 0;
         let timer;
         let localTimerAnchorMs = Date.now();
@@ -29,6 +30,9 @@
         let lastRange = null;
         let currentHlNode = null;
         let keepToolbar = false;
+        // 多笔记状态
+        let notesList = [];
+        let noteIdCounter = 0;
         injectPracticeUIStyles();
 
         const overlay = document.querySelector('.overlay');
@@ -148,7 +152,27 @@
 
         window[PRACTICE_TIMER_BRIDGE_KEY] = {
             eventName: PRACTICE_TIMER_EVENT,
-            getSnapshot: getPracticeTimerSnapshot
+            getSnapshot: getPracticeTimerSnapshot,
+            // 续做：把本地计时器秒数设为指定值（仅非套题/本地计时模式有效）
+            setElapsedSeconds: function (value) {
+                const next = Math.max(0, Math.floor(Number(value) || 0));
+                seconds = next;
+                renderTimerDisplay();
+                updateTimerVisualState();
+                emitPracticeTimerState('set_elapsed');
+            },
+            // 启停计时
+            setRunning: function (running) {
+                setTimerRunning(!!running);
+            },
+            // 锁定计时器（回顾模式：禁止点击启停）
+            lock: function () {
+                timerLocked = true;
+                if (timerRunning) {
+                    setTimerRunning(false);
+                }
+                updateTimerVisualState();
+            }
         };
 
         function updateTimerVisualState() {
@@ -257,6 +281,114 @@
             if (notesPanel) notesPanel.style.display = 'none';
             if (settingsPanel) settingsPanel.style.display = 'none';
             if (overlay) overlay.style.display = 'none';
+        }
+
+        // ===== 多笔记系统 =====
+        function renderNotesList() {
+            const listEl = document.getElementById('notes-list');
+            const emptyEl = document.getElementById('notes-list-empty');
+            if (!listEl) return;
+
+            // 清除旧内容，保留 empty 占位
+            listEl.querySelectorAll('.note-item').forEach(el => el.remove());
+
+            if (notesList.length === 0) {
+                if (emptyEl) emptyEl.style.display = 'block';
+                const deleteAllBtn = document.getElementById('notes-delete-all');
+                if (deleteAllBtn) deleteAllBtn.style.display = 'none';
+                return;
+            }
+
+            if (emptyEl) emptyEl.style.display = 'none';
+            const deleteAllBtn = document.getElementById('notes-delete-all');
+            if (deleteAllBtn) deleteAllBtn.style.display = 'inline-block';
+
+            notesList.forEach((note, index) => {
+                const item = document.createElement('div');
+                item.className = 'note-item';
+                item.dataset.noteId = note.id;
+
+                // 头部：Part + 选中文本 + 删除按钮
+                const header = document.createElement('div');
+                header.className = 'note-item__header';
+
+                const partLabel = document.createElement('span');
+                partLabel.className = 'note-item__part';
+                partLabel.textContent = 'Note ' + (index + 1);
+
+                const textSpan = document.createElement('span');
+                textSpan.className = 'note-item__text';
+                textSpan.textContent = note.text;
+
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'note-item__delete';
+                deleteBtn.title = '删除此笔记';
+                deleteBtn.textContent = '×';
+                deleteBtn.addEventListener('click', () => deleteNote(note.id));
+
+                header.appendChild(partLabel);
+                header.appendChild(textSpan);
+                header.appendChild(deleteBtn);
+
+                // 文本框
+                const textarea = document.createElement('textarea');
+                textarea.className = 'note-item__textarea';
+                textarea.placeholder = 'Record ideas';
+                textarea.value = note.comment || '';
+                textarea.addEventListener('input', (e) => {
+                    note.comment = e.target.value;
+                });
+                // 阻止点击 textarea 时关闭面板
+                textarea.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                });
+
+                item.appendChild(header);
+                item.appendChild(textarea);
+                listEl.appendChild(item);
+            });
+        }
+
+        function addNote(text, part) {
+            const note = {
+                id: 'note-' + (++noteIdCounter),
+                text: text,
+                part: part || 'Part 1',
+                comment: ''
+            };
+            notesList.push(note);
+            renderNotesList();
+            return note;
+        }
+
+        function deleteNote(noteId) {
+            notesList = notesList.filter(n => n.id !== noteId);
+            renderNotesList();
+        }
+
+        function deleteAllNotes() {
+            if (notesList.length === 0) return;
+            if (!confirm('确定要删除所有笔记吗？')) return;
+            notesList = [];
+            // 同时清除所有高亮标注
+            document.querySelectorAll('.hl[data-hl-type="note"]').forEach(el => {
+                const parent = el.parentNode;
+                if (parent) {
+                    while (el.firstChild) {
+                        parent.insertBefore(el.firstChild, el);
+                    }
+                    parent.removeChild(el);
+                    parent.normalize();
+                }
+            });
+            renderNotesList();
+        }
+
+        function openNotesPanel() {
+            closeAllPanels();
+            notesOpen = true;
+            notesPanel.style.display = 'flex';
+            renderNotesList();
         }
 
         function ensurePracticeConfig() {
@@ -412,9 +544,32 @@
             positionSelbarForRect(range.getBoundingClientRect());
         }
 
+        function isReviewReadonly() {
+            return document.body.classList.contains('review-readonly-mode');
+        }
+
         function doHighlight() {
-            if (!selbar || currentHlNode || !lastRange || lastRange.collapsed) return;
+            if (!selbar) return;
+            // 回顾只读模式：禁止新增/修改高亮
+            if (isReviewReadonly()) {
+                if (selbar) selbar.style.display = 'none';
+                return;
+            }
             const sel = window.getSelection();
+
+            // 已存在高亮：第二次点击 Highlight 把棕色升级为粉色（不影响蓝色笔记）
+            if (currentHlNode instanceof HTMLElement) {
+                const existingKind = currentHlNode.dataset && currentHlNode.dataset.hlType;
+                if (existingKind !== 'note' && existingKind !== 'pink') {
+                    currentHlNode.dataset.hlType = 'pink';
+                }
+                currentHlNode = null;
+                sel?.removeAllRanges();
+                selbar.style.display = 'none';
+                return;
+            }
+
+            if (!lastRange || lastRange.collapsed) return;
             try {
                 const span = createHighlightSpan();
                 lastRange.surroundContents(span);
@@ -426,6 +581,11 @@
         }
 
         function removeHighlight() {
+            // 回顾只读模式：禁止删除高亮
+            if (isReviewReadonly()) {
+                if (selbar) selbar.style.display = 'none';
+                return;
+            }
             const sel = window.getSelection();
             let targetNode = currentHlNode;
             if (!targetNode && lastRange) {
@@ -436,12 +596,19 @@
                         : ancestor.closest('.hl');
             }
             if (targetNode && targetNode.parentNode) {
-                const parent = targetNode.parentNode;
-                while (targetNode.firstChild) {
-                    parent.insertBefore(targetNode.firstChild, targetNode);
+                const hlType = targetNode.dataset && targetNode.dataset.hlType;
+                if (hlType === 'pink') {
+                    // 粉色：降级回棕色，保留高亮
+                    delete targetNode.dataset.hlType;
+                } else {
+                    // 棕色或其它：彻底取消高亮
+                    const parent = targetNode.parentNode;
+                    while (targetNode.firstChild) {
+                        parent.insertBefore(targetNode.firstChild, targetNode);
+                    }
+                    parent.removeChild(targetNode);
+                    parent.normalize();
                 }
-                parent.removeChild(targetNode);
-                parent.normalize();
             }
             currentHlNode = null;
             sel?.removeAllRanges();
@@ -483,17 +650,37 @@
             timerEl.addEventListener('click', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                if (submissionLocked) return;
+                if (submissionLocked || timerLocked) return;
                 setTimerRunning(!timerRunning);
             });
         }
 
-        if (noteBtn && notesPanel && overlay) {
+        function openNotesPanel() {
+            closeAllPanels();
+            notesOpen = true;
+            notesPanel.style.display = 'flex';
+            // 右侧边栏不铺遮罩，避免挡住做题区
+        }
+
+        if (noteBtn && notesPanel) {
             noteBtn.addEventListener('click', () => {
-                closeAllPanels();
-                notesOpen = true;
-                notesPanel.style.display = 'flex';
-                overlay.style.display = 'block';
+                openNotesPanel();
+            });
+        }
+
+        // 眼睛图标：显示/隐藏全部标注高亮
+        const notesEyeBtn = document.getElementById('notes-eye');
+        if (notesEyeBtn) {
+            notesEyeBtn.addEventListener('click', () => {
+                document.body.classList.toggle('notes-hide-marks');
+            });
+        }
+
+        // DELETE ALL：清空全部笔记
+        const notesDeleteAllBtn = document.getElementById('notes-delete-all');
+        if (notesDeleteAllBtn) {
+            notesDeleteAllBtn.addEventListener('click', () => {
+                deleteAllNotes();
             });
         }
 
@@ -630,8 +817,13 @@
 
         if (btnHighlight) btnHighlight.addEventListener('click', doHighlight);
         if (btnUnhighlight) btnUnhighlight.addEventListener('click', removeHighlight);
-        if (btnNote && notesPanel && overlay) {
+        if (btnNote && notesPanel) {
             btnNote.addEventListener('click', function () {
+                // 回顾只读模式：不新增笔记标注
+                if (isReviewReadonly()) {
+                    if (selbar) selbar.style.display = 'none';
+                    return;
+                }
                 const text = (
                     currentHlNode
                         ? currentHlNode.textContent
@@ -651,19 +843,36 @@
                     } else if (currentHlNode) {
                         markHighlightAsNote(currentHlNode);
                     }
-                    const noteArea = notesPanel.querySelector('textarea');
-                    if (noteArea) {
-                        noteArea.value += (noteArea.value ? '\n\n' : '') + '> ' + text;
-                        closeAllPanels();
-                        notesOpen = true;
-                        notesPanel.style.display = 'flex';
-                        overlay.style.display = 'block';
-                        noteArea.scrollTop = noteArea.scrollHeight;
-                    }
+                    // 添加新笔记到列表
+                    const part = resolveNotePartLabel();
+                    addNote(text, part);
+                    openNotesPanel();
                 }
                 window.getSelection()?.removeAllRanges();
                 if (selbar) selbar.style.display = 'none';
             });
+        }
+
+        // 推断当前选区所属 Part（多篇时按 left 区段序号，单篇默认 Part 1）
+        function resolveNotePartLabel() {
+            try {
+                const sel = window.getSelection();
+                let node = sel && sel.rangeCount ? sel.getRangeAt(0).commonAncestorContainer : null;
+                if (node && node.nodeType === Node.TEXT_NODE) {
+                    node = node.parentElement;
+                }
+                const passages = Array.from(document.querySelectorAll('#left .passage, #left [data-passage-index]'));
+                if (node && passages.length > 1) {
+                    const host = node.closest('.passage, [data-passage-index]');
+                    const idx = host ? passages.indexOf(host) : -1;
+                    if (idx >= 0) {
+                        return 'Part ' + (idx + 1);
+                    }
+                }
+            } catch (_) {
+                // ignore
+            }
+            return 'Part 1';
         }
 
         const DRAGGABLE_ITEM_SELECTOR = '.drag-item, .drag-item-clone, .draggable-word, .card';

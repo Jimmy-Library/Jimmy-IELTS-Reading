@@ -4,6 +4,7 @@
     const MESSAGE_SOURCE = 'practice_page';
     const INIT_RETRY_MS = 1500;
     const SIMULATION_DRAFT_SYNC_MS = 1200;
+    const SINGLE_DRAFT_KEY_PREFIX = 'ielts_single_draft::';
     const EXPLANATION_STYLE_ID = 'reading-explanation-style';
     const PRACTICE_TIMER_BRIDGE_KEY = '__IELTS_PRACTICE_TIMER__';
     const PRACTICE_TIMER_EVENT = 'practiceTimerStateChange';
@@ -54,6 +55,8 @@
         simulationContextReady: false,
         simulationDraftSyncTimer: null,
         simulationDraftFingerprint: '',
+        singleDraftSaveTimer: null,
+        singleDraftHandlersBound: false,
         suiteSequenceExamIds: [],
         suiteBlueprint: null,
         suiteBlueprintKey: '',
@@ -129,6 +132,12 @@
         const params = new URLSearchParams(global.location.search);
         state.examId = decodeParam(params.get('examId')) || null;
         state.dataKey = decodeParam(params.get('dataKey')) || state.examId;
+        // 回顾模式：URL 带 review=1 时同步进入只读回顾态（不弹续做、禁高亮、冻结计时）
+        const reviewFlag = decodeParam(params.get('review')).trim();
+        if (reviewFlag === '1' || reviewFlag.toLowerCase() === 'true') {
+            state.reviewMode = true;
+            state.readOnly = true;
+        }
         const suiteSessionId = decodeParam(params.get('suiteSessionId')) || null;
         if (suiteSessionId) {
             state.suiteSessionId = suiteSessionId;
@@ -1864,6 +1873,8 @@
         await renderExplanations();
         updateNavStatuses(replayResults);
         setReadOnlyMode(data.readOnly !== false);
+        // 回顾模式：计时固定为记录的完成用时并锁定（不再走动、不可点击启停）
+        freezeReviewTimer(Number(entry.duration ?? data.duration) || 0);
         // 还原练习时的高亮标注
         if (replayHighlights.length && typeof applyHighlights === 'function') {
             try {
@@ -2080,6 +2091,374 @@
         };
     }
 
+    // ===== 单篇模式：本地草稿缓存 + 续做 =====
+
+    function getSingleDraftStorageKey() {
+        const examId = state.examId ? String(state.examId).trim() : '';
+        if (!examId) {
+            return '';
+        }
+        return `${SINGLE_DRAFT_KEY_PREFIX}${examId}`;
+    }
+
+    // 是否处于「应当保存单篇草稿」的状态
+    function isSingleDraftEligible() {
+        return Boolean(
+            !state.simulationMode
+            && !state.readOnly
+            && !state.reviewMode
+            && !state.submitted
+            && state.examId
+        );
+    }
+
+    function draftHasContent(draft) {
+        if (!draft || typeof draft !== 'object') {
+            return false;
+        }
+        const hasAnswers = draft.answers
+            && typeof draft.answers === 'object'
+            && Object.keys(draft.answers).length > 0;
+        const hasHighlights = Array.isArray(draft.highlights) && draft.highlights.length > 0;
+        return Boolean(hasAnswers || hasHighlights);
+    }
+
+    function saveSingleDraft(reason = 'auto') {
+        if (!isSingleDraftEligible()) {
+            return;
+        }
+        const key = getSingleDraftStorageKey();
+        if (!key || !global.localStorage) {
+            return;
+        }
+        const draft = cloneDraftSafely(collectCurrentDraft());
+        if (!draftHasContent(draft)) {
+            // 没有任何作答/高亮则不写入（也清掉历史空草稿）
+            return;
+        }
+        try {
+            global.localStorage.setItem(key, JSON.stringify({
+                draft,
+                savedAt: Date.now(),
+                fingerprint: buildDraftFingerprint(draft),
+                elapsed: getPageElapsedSeconds(),
+                examTitle: state.dataset?.meta?.title || ''
+            }));
+        } catch (_) {
+            // ignore localStorage failures in restricted environments
+        }
+    }
+
+    function readSingleDraft() {
+        const key = getSingleDraftStorageKey();
+        if (!key || !global.localStorage) {
+            return null;
+        }
+        try {
+            const raw = global.localStorage.getItem(key);
+            if (!raw) {
+                return null;
+            }
+            const parsed = JSON.parse(raw);
+            return parsed && parsed.draft && typeof parsed.draft === 'object' ? parsed : null;
+        } catch (_) {
+            return null;
+        }
+    }
+
+    function clearSingleDraft() {
+        const key = getSingleDraftStorageKey();
+        if (!key || !global.localStorage) {
+            return;
+        }
+        try {
+            global.localStorage.removeItem(key);
+        } catch (_) {
+            // ignore
+        }
+    }
+
+    // ===== 套题单篇草稿持久化（ielts_suite_draft::<suiteId>::<examId>）=====
+    const SUITE_DRAFT_KEY_PREFIX = 'ielts_suite_draft::';
+
+    function getSuiteDraftStorageKey() {
+        const suiteId = state.suiteSessionId ? String(state.suiteSessionId).trim() : '';
+        const examId = state.examId ? String(state.examId).trim() : '';
+        if (!suiteId || !examId) {
+            return '';
+        }
+        return `${SUITE_DRAFT_KEY_PREFIX}${suiteId}::${examId}`;
+    }
+
+    function isSuiteDraftEligible() {
+        return Boolean(
+            state.simulationMode
+            && !state.readOnly
+            && !state.reviewMode
+            && !state.submitted
+            && state.suiteSessionId
+            && state.examId
+        );
+    }
+
+    function saveSuiteDraft(reason = 'auto') {
+        if (!isSuiteDraftEligible()) {
+            return;
+        }
+        const key = getSuiteDraftStorageKey();
+        if (!key || !global.localStorage) {
+            return;
+        }
+        const draft = cloneDraftSafely(collectCurrentDraft());
+        if (!draftHasContent(draft)) {
+            return;
+        }
+        try {
+            global.localStorage.setItem(key, JSON.stringify({
+                draft,
+                savedAt: Date.now(),
+                fingerprint: buildDraftFingerprint(draft),
+                elapsed: getPageElapsedSeconds(),
+                examTitle: state.dataset?.meta?.title || '',
+                suiteSessionId: state.suiteSessionId
+            }));
+        } catch (_) {
+            // ignore localStorage failures
+        }
+    }
+
+    function clearSuiteDraft() {
+        const key = getSuiteDraftStorageKey();
+        if (!key || !global.localStorage) {
+            return;
+        }
+        try {
+            global.localStorage.removeItem(key);
+        } catch (_) {
+            // ignore
+        }
+    }
+
+    function clearSuiteDraftsForSession(suiteSessionId) {
+        if (!suiteSessionId || !global.localStorage) {
+            return;
+        }
+        const prefix = `${SUITE_DRAFT_KEY_PREFIX}${suiteSessionId}::`;
+        try {
+            const toRemove = [];
+            for (let i = 0; i < global.localStorage.length; i += 1) {
+                const k = global.localStorage.key(i);
+                if (k && k.indexOf(prefix) === 0) toRemove.push(k);
+            }
+            toRemove.forEach(k => global.localStorage.removeItem(k));
+        } catch (_) {
+            // ignore
+        }
+    }
+
+    function scheduleSingleDraftSave() {
+        if (!isSingleDraftEligible()) {
+            return;
+        }
+        if (state.singleDraftSaveTimer) {
+            return;
+        }
+        state.singleDraftSaveTimer = global.setTimeout(() => {
+            state.singleDraftSaveTimer = null;
+            saveSingleDraft('debounced');
+        }, 800);
+    }
+
+    // 绑定单篇模式下的自动保存触发点（仅绑定一次）
+    function bindSingleDraftHandlers() {
+        if (state.singleDraftHandlersBound) {
+            return;
+        }
+        state.singleDraftHandlersBound = true;
+
+        const flush = () => saveSingleDraft('flush');
+
+        global.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                flush();
+            }
+        });
+        global.addEventListener('pagehide', flush);
+        global.addEventListener('beforeunload', flush);
+
+        // 作答 / 高亮变化时 debounce 保存
+        document.addEventListener('change', scheduleSingleDraftSave, true);
+        document.addEventListener('input', scheduleSingleDraftSave, true);
+        document.addEventListener('mouseup', scheduleSingleDraftSave, true);
+    }
+
+    // 续做弹窗：检测到已保存草稿时询问「继续 / 重做」
+    function showResumePrompt(savedDraft) {
+        return new Promise((resolve) => {
+            const overlay = document.createElement('div');
+            overlay.id = 'single-draft-resume-overlay';
+            overlay.style.cssText = [
+                'position:fixed', 'inset:0', 'z-index:99999',
+                'display:flex', 'align-items:center', 'justify-content:center',
+                'background:rgba(15,23,42,0.55)'
+            ].join(';');
+
+            const card = document.createElement('div');
+            card.style.cssText = [
+                'background:#fff', 'color:#1e293b', 'border-radius:14px',
+                'max-width:380px', 'width:86%', 'padding:24px 22px',
+                'box-shadow:0 18px 48px rgba(15,23,42,0.35)',
+                'font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,sans-serif',
+                'text-align:center'
+            ].join(';');
+
+            const elapsed = Number(savedDraft.elapsed) || 0;
+            const mm = Math.floor(elapsed / 60);
+            const ss = elapsed % 60;
+            const elapsedText = elapsed > 0
+                ? `（上次用时 ${mm}:${ss < 10 ? '0' + ss : ss}）`
+                : '';
+
+            const title = document.createElement('div');
+            title.style.cssText = 'font-size:1.05rem;font-weight:600;margin-bottom:8px;';
+            title.textContent = '检测到未完成的做题记录';
+
+            const desc = document.createElement('div');
+            desc.style.cssText = 'font-size:0.85rem;opacity:0.7;margin-bottom:20px;line-height:1.5;';
+            desc.textContent = `要从上次的进度继续，还是重新开始？${elapsedText}`;
+
+            const btnRow = document.createElement('div');
+            btnRow.style.cssText = 'display:flex;gap:12px;justify-content:center;';
+
+            const makeBtn = (label, primary) => {
+                const b = document.createElement('button');
+                b.type = 'button';
+                b.textContent = label;
+                b.style.cssText = [
+                    'flex:1', 'padding:10px 0', 'border-radius:9px', 'cursor:pointer',
+                    'font-size:0.9rem', 'border:1px solid',
+                    primary ? 'border-color:#2563eb;background:#2563eb;color:#fff'
+                            : 'border-color:#cbd5e1;background:#fff;color:#475569'
+                ].join(';');
+                return b;
+            };
+
+            const continueBtn = makeBtn('从上次继续', true);
+            const restartBtn = makeBtn('重新开始', false);
+
+            const close = (choice) => {
+                if (overlay.parentNode) {
+                    overlay.parentNode.removeChild(overlay);
+                }
+                resolve(choice);
+            };
+
+            continueBtn.addEventListener('click', () => close('continue'));
+            restartBtn.addEventListener('click', () => close('restart'));
+
+            btnRow.appendChild(continueBtn);
+            btnRow.appendChild(restartBtn);
+            card.appendChild(title);
+            card.appendChild(desc);
+            card.appendChild(btnRow);
+            overlay.appendChild(card);
+            document.body.appendChild(overlay);
+        });
+    }
+
+    // 单篇模式启动：若有草稿则询问续做
+    async function initSingleDraftFlow() {
+        // 套题/模拟模式或回顾只读模式同步即可判定，直接跳过（回顾不弹续做）
+        if (state.simulationMode || state.suiteSessionId || state.reviewMode || state.readOnly) {
+            return;
+        }
+        // 回顾/只读模式经由异步消息设置，稍等一拍再判定，避免在回顾窗口误弹续做框
+        await new Promise((resolve) => global.setTimeout(resolve, 600));
+        if (!isSingleDraftEligible()) {
+            return;
+        }
+        bindSingleDraftHandlers();
+        const saved = readSingleDraft();
+        if (!saved || !draftHasContent(saved.draft)) {
+            return;
+        }
+        // 从「未完成」列表点「继续做题」进入：带强制续做标记，直接恢复、不再弹窗
+        const forceKey = `ielts_force_resume::${state.examId}`;
+        let forceResume = false;
+        try {
+            forceResume = global.sessionStorage && global.sessionStorage.getItem(forceKey) === '1';
+            if (forceResume) {
+                global.sessionStorage.removeItem(forceKey);
+            }
+        } catch (_) {
+            forceResume = false;
+        }
+        if (forceResume) {
+            try {
+                applyDraftToDom(saved.draft);
+                restorePageElapsed(Number(saved.elapsed) || 0);
+            } catch (error) {
+                console.warn('[SingleDraft] 强制续做恢复失败:', error);
+            }
+            return;
+        }
+        const choice = await showResumePrompt(saved);
+        // 弹窗期间若进入回顾态则放弃恢复
+        if (!isSingleDraftEligible()) {
+            return;
+        }
+        if (choice === 'continue') {
+            try {
+                applyDraftToDom(saved.draft);
+                restorePageElapsed(Number(saved.elapsed) || 0);
+            } catch (error) {
+                console.warn('[SingleDraft] 恢复草稿失败:', error);
+            }
+        } else {
+            clearSingleDraft();
+        }
+    }
+
+    // 回顾：把计时固定为完成用时并锁定（禁止启停）
+    function freezeReviewTimer(durationSeconds) {
+        const bridge = global[PRACTICE_TIMER_BRIDGE_KEY];
+        if (!bridge) {
+            return;
+        }
+        try {
+            if (typeof bridge.setElapsedSeconds === 'function') {
+                bridge.setElapsedSeconds(Math.max(0, Math.floor(Number(durationSeconds) || 0)));
+            }
+            if (typeof bridge.setRunning === 'function') {
+                bridge.setRunning(false);
+            }
+            if (typeof bridge.lock === 'function') {
+                bridge.lock();
+            }
+        } catch (_) {
+            // ignore timer bridge failures
+        }
+    }
+
+    // 续做：把页面计时与 UI 计时恢复到上次用时
+    function restorePageElapsed(elapsedSeconds) {
+        const elapsed = Math.max(0, Math.floor(Number(elapsedSeconds) || 0));
+        if (!elapsed) {
+            return;
+        }
+        state.pageStartTime = Date.now() - elapsed * 1000;
+        state.pagePausedAtMs = null;
+        state.pagePausedOffsetMs = 0;
+        const bridge = global[PRACTICE_TIMER_BRIDGE_KEY];
+        if (bridge && typeof bridge.setElapsedSeconds === 'function') {
+            try {
+                bridge.setElapsedSeconds(elapsed);
+            } catch (_) {
+                // ignore timer bridge failures
+            }
+        }
+    }
+
     function syncSimulationDraftSnapshot(reason = 'periodic') {
         if (!state.simulationMode || state.readOnly || !state.suiteSessionId) {
             return;
@@ -2095,6 +2474,8 @@
             return;
         }
         persistSimulationDraftMirror(mirroredDraft);
+        // 额外写一份到 localStorage（套题单篇草稿，关页不丢失）
+        saveSuiteDraft(reason);
         postMessage('SIMULATION_DRAFT_SYNC', {
             draft: mirroredDraft,
             elapsed: getPageElapsedSeconds()
@@ -2258,6 +2639,9 @@
         if (node.dataset && node.dataset.hlType === 'note') {
             return 'note';
         }
+        if (node.dataset && node.dataset.hlType === 'pink') {
+            return 'pink';
+        }
         return 'highlight';
     }
 
@@ -2268,6 +2652,8 @@
         node.classList.add('hl');
         if (kind === 'note') {
             node.dataset.hlType = 'note';
+        } else if (kind === 'pink') {
+            node.dataset.hlType = 'pink';
         } else {
             delete node.dataset.hlType;
         }
@@ -2357,7 +2743,9 @@
         if (!root) return;
         const fullText = String(root.textContent || '');
         if (!fullText) return;
-        const highlightKind = record.kind === 'note' ? 'note' : 'highlight';
+        const highlightKind = record.kind === 'note'
+            ? 'note'
+            : (record.kind === 'pink' ? 'pink' : 'highlight');
         const normalizedRecordText = String(record.text || '').replace(/\s+/g, ' ').trim();
         const startOffset = Number(record.startOffset);
         const endOffset = Number(record.endOffset);
@@ -2505,6 +2893,18 @@
             stopSimulationDraftSync();
             clearSimulationDraftMirror();
             state.simulationDraftFingerprint = '';
+        }
+        // 单篇模式：提交后标记完成并清除本地草稿（不再自动保存）
+        if (!state.simulationMode) {
+            state.submitted = true;
+            if (state.singleDraftSaveTimer) {
+                global.clearTimeout(state.singleDraftSaveTimer);
+                state.singleDraftSaveTimer = null;
+            }
+            clearSingleDraft();
+        } else {
+            // 套题模式：清除当前篇的草稿
+            clearSuiteDraft();
         }
     }
 
@@ -2801,7 +3201,15 @@
         attachPracticeTimerBridge();
         syncSuiteModeState();
         updateNavStatuses();
+        // 回顾只读模式：加载即应用只读（设 body 类，禁用输入/高亮），等回放数据到达再冻结计时
+        if (state.reviewMode || state.readOnly) {
+            setReadOnlyMode(true);
+        }
         refreshSimulationDraftSyncLifecycle();
+        // 单篇模式：检测本地草稿并询问续做
+        initSingleDraftFlow().catch((error) => {
+            console.warn('[SingleDraft] 续做流程初始化失败:', error);
+        });
         startInitLoop();
     }
 

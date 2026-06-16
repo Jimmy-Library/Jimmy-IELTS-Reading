@@ -694,7 +694,57 @@
                 if (global.sessionStorage) {
                     global.sessionStorage.setItem('ielts_sim_session', JSON.stringify(snapshot));
                 }
+                // 额外持久化到 localStorage，供关页后在「练习历史 · 未完成」里继续做题
+                if (global.localStorage && session.id && session.status !== 'completed') {
+                    const answeredCount = this._countSuiteAnswered(session);
+                    const elapsed = this._sumSuiteElapsed(session);
+                    const firstTitle = (session.sequence && session.sequence[0]
+                        && session.sequence[0].exam && session.sequence[0].exam.title) || '';
+                    const progress = Object.assign({}, snapshot, {
+                        kind: 'suite',
+                        title: '套题练习（' + (session.sequence ? session.sequence.length : 0) + '篇）'
+                            + (firstTitle ? ' · ' + firstTitle : ''),
+                        answeredCount: answeredCount,
+                        totalQuestions: 0,
+                        elapsed: elapsed,
+                        updatedAt: Date.now()
+                    });
+                    const key = 'ielts_suite_progress::' + session.id;
+                    this._persistedSuiteProgressKey = key;
+                    global.localStorage.setItem(key, JSON.stringify(progress));
+                }
             } catch (_) { /* file:// may not support */ }
+        },
+
+        // 统计套题已作答题数（各篇草稿答案合计）
+        _countSuiteAnswered(session) {
+            let count = 0;
+            const drafts = session && session.draftsByExam ? session.draftsByExam : {};
+            Object.keys(drafts).forEach((examId) => {
+                const answers = drafts[examId] && drafts[examId].answers;
+                if (answers && typeof answers === 'object') {
+                    Object.keys(answers).forEach((k) => {
+                        const v = answers[k];
+                        if (v !== null && v !== undefined && String(v).trim() !== '') {
+                            count += 1;
+                        }
+                    });
+                }
+            });
+            return count;
+        },
+
+        // 统计套题累计用时（各篇 elapsed 合计，秒）
+        _sumSuiteElapsed(session) {
+            let total = 0;
+            const map = session && session.elapsedByExam ? session.elapsedByExam : {};
+            Object.keys(map).forEach((examId) => {
+                const v = Number(map[examId]);
+                if (Number.isFinite(v) && v > 0) {
+                    total += v;
+                }
+            });
+            return Math.round(total);
         },
 
         _restoreSessionFromStorage() {
@@ -713,7 +763,128 @@
                 if (global.sessionStorage) {
                     global.sessionStorage.removeItem('ielts_sim_session');
                 }
+                // 清除 localStorage 中的套题进度（套题完成/中止时）
+                if (global.localStorage) {
+                    let key = this._persistedSuiteProgressKey;
+                    if (!key && this.currentSuiteSession && this.currentSuiteSession.id) {
+                        key = 'ielts_suite_progress::' + this.currentSuiteSession.id;
+                    }
+                    if (key) {
+                        global.localStorage.removeItem(key);
+                    }
+                    // 同时清除所有单篇草稿
+                    const suiteId = this.currentSuiteSession && this.currentSuiteSession.id;
+                    if (suiteId) {
+                        const prefix = 'ielts_suite_draft::' + suiteId + '::';
+                        const toRemove = [];
+                        for (let i = 0; i < global.localStorage.length; i += 1) {
+                            const k = global.localStorage.key(i);
+                            if (k && k.indexOf(prefix) === 0) toRemove.push(k);
+                        }
+                        toRemove.forEach(k => global.localStorage.removeItem(k));
+                    }
+                    this._persistedSuiteProgressKey = null;
+                }
             } catch (_) { /* ignore */ }
+        },
+
+        // 从「未完成」列表继续做未完成的套题
+        async resumeSuiteDraft(suiteSessionId) {
+            if (!suiteSessionId) return false;
+            let snapshot = null;
+            try {
+                const raw = global.localStorage && global.localStorage.getItem('ielts_suite_progress::' + suiteSessionId);
+                snapshot = raw ? JSON.parse(raw) : null;
+            } catch (_) { snapshot = null; }
+            if (!snapshot || !Array.isArray(snapshot.sequence) || !snapshot.sequence.length) {
+                window.showMessage && window.showMessage('未找到可继续的套题进度。', 'warning');
+                return false;
+            }
+            if (this.currentSuiteSession && this.currentSuiteSession.status === 'active') {
+                window.showMessage && window.showMessage('套题练习正在进行中，请先完成当前套题。', 'warning');
+                return false;
+            }
+            if (typeof this.openExam !== 'function') {
+                return false;
+            }
+
+            const normalizedSequence = snapshot.sequence.filter(item => item && item.examId && item.exam);
+            if (!normalizedSequence.length) {
+                window.showMessage && window.showMessage('套题题目数据缺失，无法继续。', 'warning');
+                return false;
+            }
+            const resumeIndex = Number.isInteger(snapshot.currentIndex)
+                ? Math.min(Math.max(0, snapshot.currentIndex), normalizedSequence.length - 1)
+                : 0;
+
+            // 续做时间不计入关页时段：把全局计时锚点前移到「保存时已过的时长」
+            const savedElapsedMs = (snapshot.updatedAt && snapshot.globalTimerAnchorMs)
+                ? Math.max(0, snapshot.updatedAt - snapshot.globalTimerAnchorMs)
+                : 0;
+            const resumedAnchorMs = Date.now() - savedElapsedMs;
+
+            const suiteWindowName = 'ielts-suite-mode-tab';
+            const session = {
+                id: snapshot.id || suiteSessionId,
+                status: 'initializing',
+                startTime: snapshot.startTime || Date.now(),
+                sequence: normalizedSequence,
+                currentIndex: resumeIndex,
+                results: Array.isArray(snapshot.results) ? snapshot.results : [],
+                draftsByExam: snapshot.draftsByExam || {},
+                elapsedByExam: snapshot.elapsedByExam || {},
+                globalTimerAnchorMs: resumedAnchorMs,
+                flowMode: snapshot.flowMode || 'simulation',
+                frequencyScope: 'all',
+                autoAdvanceAfterSubmit: typeof snapshot.autoAdvanceAfterSubmit === 'boolean'
+                    ? snapshot.autoAdvanceAfterSubmit
+                    : true,
+                windowRef: null,
+                windowName: suiteWindowName
+            };
+
+            this.currentSuiteSession = session;
+            if (typeof this._registerSuiteSequence === 'function') {
+                this._registerSuiteSequence(session);
+            }
+            if (typeof this._clearSuiteHandshakes === 'function') {
+                this._clearSuiteHandshakes();
+            }
+
+            const entry = normalizedSequence[resumeIndex];
+            window.showMessage && window.showMessage('正在继续套题练习，打开第 ' + (resumeIndex + 1) + ' 篇。', 'info');
+
+            let examWindow = null;
+            try {
+                examWindow = await this.openExam(entry.examId, {
+                    target: 'tab',
+                    windowName: suiteWindowName,
+                    suiteSessionId: session.id,
+                    suiteFlowMode: session.flowMode,
+                    sequenceIndex: resumeIndex,
+                    sequenceTotal: normalizedSequence.length
+                });
+            } catch (err) {
+                console.error('[SuitePractice] 继续套题失败:', err);
+                examWindow = null;
+            }
+            if (!examWindow || examWindow.closed) {
+                window.showMessage && window.showMessage('无法打开套题窗口，请重试。', 'error');
+                if (this.currentSuiteSession === session) {
+                    this.currentSuiteSession = null;
+                }
+                return false;
+            }
+            session.windowRef = examWindow;
+            if (typeof this._ensureSuiteWindowGuard === 'function') {
+                this._ensureSuiteWindowGuard(session, session.windowRef);
+            }
+            session.status = 'active';
+            session.activeExamId = entry.examId;
+            if (typeof this._focusSuiteWindow === 'function') {
+                this._focusSuiteWindow(session.windowRef);
+            }
+            return true;
         },
 
         _sendSimulationContext(session, examId, targetWindow) {
