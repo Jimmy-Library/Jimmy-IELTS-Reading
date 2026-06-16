@@ -918,6 +918,26 @@
 
         infoContent.appendChild(title);
         infoContent.appendChild(meta);
+
+        // 已做过的题目：显示最近一次用时 + 作答题数
+        if (status && (status.duration > 0 || status.answeredCount > 0)) {
+            var statParts = [];
+            if (status.duration > 0) {
+                statParts.push('用时 ' + this._formatPracticeDuration(status.duration));
+            }
+            if (status.answeredCount > 0 || status.totalQuestions > 0) {
+                var total = status.totalQuestions > 0 ? status.totalQuestions : status.answeredCount;
+                statParts.push('已做 ' + status.answeredCount + '/' + total + ' 题');
+            }
+            if (statParts.length) {
+                var practiceStat = this._createElement('div', {
+                    className: 'exam-practice-stat',
+                    style: 'font-size:0.72rem;opacity:0.7;margin-top:2px;'
+                }, '上次 ' + statParts.join(' · '));
+                infoContent.appendChild(practiceStat);
+            }
+        }
+
         info.appendChild(infoContent);
         if (isSelecting && currentCategory) {
             info.appendChild(this._createElement('div', { className: 'suite-custom-selection-badge' }, currentCategory + ' Pending'));
@@ -1233,6 +1253,13 @@
         }
     };
 
+    LegacyExamListView.prototype._formatPracticeDuration = function _formatPracticeDuration(seconds) {
+        var s = Math.max(0, Math.floor(Number(seconds) || 0));
+        var m = Math.floor(s / 60);
+        var rem = s % 60;
+        return m + ':' + (rem < 10 ? '0' + rem : String(rem));
+    };
+
     LegacyExamListView.prototype._getCompletionStatus = function _getCompletionStatus(exam) {
         var source = (typeof global.getPracticeRecordsState === 'function')
             ? global.getPracticeRecordsState()
@@ -1247,9 +1274,48 @@
             return getRecordTimestamp(b) - getRecordTimestamp(a);
         });
         var latest = records[0] || {};
+
+        // 最近一次用时（秒）
+        var duration = Number(
+            latest.duration
+            || (latest.results && latest.results.duration)
+            || (latest.realData && latest.realData.duration)
+            || 0
+        );
+
+        // 最近一次作答题数：优先实际作答的答案数，回退到总题数
+        var answers = latest.answers
+            || (latest.realData && latest.realData.answers)
+            || (latest.results && latest.results.answers)
+            || null;
+        var answeredCount = 0;
+        if (answers && typeof answers === 'object' && !Array.isArray(answers)) {
+            answeredCount = Object.keys(answers).filter(function (key) {
+                var val = answers[key];
+                return val !== null && val !== undefined && String(val).trim() !== '';
+            }).length;
+        } else if (Array.isArray(answers)) {
+            answeredCount = answers.filter(function (item) {
+                if (item == null) return false;
+                var val = (typeof item === 'object') ? (item.userAnswer != null ? item.userAnswer : item.answer) : item;
+                return val !== null && val !== undefined && String(val).trim() !== '';
+            }).length;
+        }
+        var totalQuestions = Number(
+            latest.totalQuestions
+            || (latest.results && latest.results.totalQuestions)
+            || 0
+        );
+        if (!answeredCount && totalQuestions) {
+            answeredCount = totalQuestions;
+        }
+
         return {
             percentage: typeof latest.percentage === 'number' ? latest.percentage : 0,
-            date: latest.date || latest.endTime || latest.timestamp || latest.createdAt || null
+            date: latest.date || latest.endTime || latest.timestamp || latest.createdAt || null,
+            duration: duration,
+            answeredCount: answeredCount,
+            totalQuestions: totalQuestions
         };
     };
 

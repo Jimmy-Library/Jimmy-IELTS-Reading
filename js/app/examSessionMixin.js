@@ -133,6 +133,10 @@
                 if (guardOptions.suiteSessionId && readingLaunch && readingLaunch.mode === 'unified_html') {
                     examUrl = this._appendSuiteContextToExamUrl(examUrl, guardOptions);
                 }
+                // 回顾模式：在 URL 上标记 review=1，让阅读页加载即知是只读回顾（不弹续做、禁高亮、冻结计时）
+                if (options && options.reviewMode && readingLaunch && readingLaunch.mode === 'unified_html') {
+                    examUrl += (examUrl.indexOf('?') >= 0 ? '&' : '?') + 'review=1';
+                }
                 let examWindow = this.openExamWindow(examUrl, exam, guardOptions);
 
                 try {
@@ -2171,6 +2175,57 @@
             return { examPrefix, questionKey };
         },
 
+        // 将标准化答案数组（[{questionId, answer, correctAnswer}, ...]）转成 { questionId: 值 } 映射
+        // field: 'answer'（用户作答）或 'correctAnswer'（正确答案）
+        _answerArrayToReplayMap(arr, field = 'answer') {
+            const map = {};
+            if (!Array.isArray(arr)) {
+                return map;
+            }
+            arr.forEach((item, index) => {
+                if (!item || typeof item !== 'object') {
+                    return;
+                }
+                const questionId = item.questionId || item.id || `q${index + 1}`;
+                const value = item[field];
+                if (value !== undefined && value !== null && String(value) !== '') {
+                    map[questionId] = value;
+                }
+            });
+            return map;
+        },
+
+        // 兼容映射 / 数组两种答案形态，统一成 { questionId: 用户答案 } 映射
+        _coerceReplayAnswerSource(value, field = 'answer') {
+            if (this._isReplayObject(value)) {
+                return value;
+            }
+            if (Array.isArray(value)) {
+                return this._answerArrayToReplayMap(value, field);
+            }
+            return {};
+        },
+
+        // 从多种可能的存储位置解析练习高亮，返回数组
+        _resolveReplayHighlights(entry, entryMetadata, record, recordMetadata) {
+            const candidates = [
+                entry && entry.highlights,
+                entry && entry.realData && entry.realData.highlights,
+                entryMetadata && entryMetadata.highlights,
+                record && record.highlights,
+                record && record.realData && record.realData.highlights,
+                record && record.realData && record.realData.metadata && record.realData.metadata.highlights,
+                record && record.results && record.results.metadata && record.results.metadata.highlights,
+                recordMetadata && recordMetadata.highlights
+            ];
+            for (let i = 0; i < candidates.length; i += 1) {
+                if (Array.isArray(candidates[i]) && candidates[i].length) {
+                    return candidates[i].slice();
+                }
+            }
+            return [];
+        },
+
         _normalizeReplayAnswerMap(rawMap, targetExamId = '', allowUnprefixed = true) {
             const normalized = {};
             if (!this._isReplayObject(rawMap)) {
@@ -2390,13 +2445,19 @@
             const hasSuiteEntries = Array.isArray(record.suiteEntries) && record.suiteEntries.length > 0;
             const baseEntries = hasSuiteEntries ? record.suiteEntries : [record];
             const isAggregated = baseEntries.length > 1;
-            const recordAnswersSource = this._isReplayObject(record.answers) ? record.answers : (this._isReplayObject(record.realData?.answers) ? record.realData.answers : {});
+            const recordAnswersSource = this._isReplayObject(record.realData?.answers)
+                ? record.realData.answers
+                : this._coerceReplayAnswerSource(record.answers, 'answer');
             const recordComparisonSource = this._isReplayObject(record.answerComparison) ? record.answerComparison : (this._isReplayObject(record.realData?.answerComparison) ? record.realData.answerComparison : {});
-            const recordCorrectSource = this._isReplayObject(record.correctAnswerMap)
+            let recordCorrectSource = this._isReplayObject(record.correctAnswerMap)
                 ? record.correctAnswerMap
                 : (this._isReplayObject(record.correctAnswers)
                     ? record.correctAnswers
                     : (this._isReplayObject(record.realData?.correctAnswers) ? record.realData.correctAnswers : {}));
+            // 回退：从标准化答案数组的 correctAnswer 字段派生正确答案映射
+            if (Object.keys(recordCorrectSource).length === 0 && Array.isArray(record.answers)) {
+                recordCorrectSource = this._answerArrayToReplayMap(record.answers, 'correctAnswer');
+            }
             const recordDetailSource = record.scoreInfo?.details
                 || record.realData?.scoreInfo?.details
                 || null;
@@ -2416,7 +2477,9 @@
                 }
 
                 let answers = this._normalizeReplayAnswerMap(
-                    this._isReplayObject(entry.answers) ? entry.answers : (this._isReplayObject(entry.realData?.answers) ? entry.realData.answers : {}),
+                    this._isReplayObject(entry.realData?.answers)
+                        ? entry.realData.answers
+                        : this._coerceReplayAnswerSource(entry.answers, 'answer'),
                     entryExamId,
                     true
                 );
@@ -2483,13 +2546,7 @@
                         : (Array.isArray(entryMetadata.markedQuestions)
                             ? entryMetadata.markedQuestions.slice()
                             : (Array.isArray(recordMetadata.markedQuestions) ? recordMetadata.markedQuestions.slice() : [])),
-                    highlights: Array.isArray(entry.highlights)
-                        ? entry.highlights.slice()
-                        : (Array.isArray(entry.realData && entry.realData.highlights)
-                            ? entry.realData.highlights.slice()
-                            : (Array.isArray(entryMetadata.highlights)
-                                ? entryMetadata.highlights.slice()
-                                : (Array.isArray(recordMetadata.highlights) ? recordMetadata.highlights.slice() : []))),
+                    highlights: this._resolveReplayHighlights(entry, entryMetadata, record, recordMetadata),
                     metadata: mergedMetadata
                 };
                 built.allQuestionIds = this._collectReplayQuestionIds(built);

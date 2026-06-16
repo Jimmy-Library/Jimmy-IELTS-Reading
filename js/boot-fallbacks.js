@@ -1026,13 +1026,12 @@
 
       var body = create('div', { className: 'modal-body library-loader-body' }, [
         create('div', { className: 'library-loader-grid' }, [
-          createLoaderCard('reading', '📖 阅读题库加载', '支持全量重载与增量更新。请上传包含题目HTML/PDF的根文件夹。', '💡 推荐结构：任意根目录/分类目录/题目目录/HTML 或 PDF'),
-          createLoaderCard('listening', '🎧 听力题库加载', '支持全量重载与增量更新。请上传包含题目HTML/PDF/音频的根文件夹。', '💡 建议路径：ListeningPractice/P3 或 ListeningPractice/P4')
+          createLoaderCard('reading', '📖 阅读题库加载', '支持全量重载与增量更新。请上传包含题目HTML/PDF的根文件夹。', '💡 推荐结构：任意根目录/分类目录/题目目录/HTML 或 PDF')
         ]),
         create('div', { className: 'library-loader-instructions' }, [
           create('div', { className: 'library-loader-instructions-title' }, '📋 操作说明'),
           create('ul', { className: 'library-loader-instructions-list' }, [
-            create('li', null, '全量重载会替换当前配置中对应类型（阅读/听力）的全部索引，并保留另一类型原有数据。'),
+            create('li', null, '全量重载会替换当前配置中阅读题库的全部索引。'),
             create('li', null, '增量更新会将新文件生成的新索引追加到当前配置。若当前为默认配置，则会自动复制为新配置后再追加，确保默认配置不被影响。')
           ])
         ])

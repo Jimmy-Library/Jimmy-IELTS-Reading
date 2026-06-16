@@ -28,6 +28,7 @@
             id: 'default',
             filters: [
                 { id: 'all', label: '全部', type: 'all' },
+                { id: 'new-june-2026', label: '2026.6月新增', newOnly: true },
                 { id: 'p1', label: 'P1', category: 'P1' },
                 { id: 'p2', label: 'P2', category: 'P2' },
                 { id: 'p3', label: 'P3', category: 'P3' }
@@ -215,7 +216,9 @@
             if (config.filterLogic === 'type-based') {
                 // 默认模式：根据筛选项配置按分类(P1/P2/P3)或类型筛选
                 const filter = config.filters.find(f => f.id === filterId);
-                if (filter && filter.category) {
+                if (filter && filter.newOnly) {
+                    this.filterByNewOnly();
+                } else if (filter && filter.category) {
                     this.filterByCategory(filter.category);
                 } else {
                     this.filterByType((filter && filter.type) || filterId);
@@ -231,11 +234,35 @@
          * @param {string} type - 类型 (all | reading | listening)
          */
         filterByType(type) {
+            // 清除"2026.6月新增"筛选标记
+            global.__browseNewOnly = false;
             // 调用全局的 filterByType 函数
             if (typeof global.filterByType === 'function') {
                 global.filterByType(type);
             } else {
                 console.warn('[BrowseController] filterByType 函数未定义');
+            }
+        }
+
+        /**
+         * 仅显示 2026.6 月新增题目
+         */
+        filterByNewOnly() {
+            global.__browseFilterMode = 'default';
+            global.__browsePath = null;
+            global.__browseNewOnly = true;
+
+            if (typeof global.setBrowseFilterState === 'function') {
+                global.setBrowseFilterState('all', 'reading');
+            }
+            if (typeof global.setBrowseTitle === 'function') {
+                global.setBrowseTitle('2026.6月新增');
+            }
+
+            if (typeof global.loadExamList === 'function') {
+                global.loadExamList();
+            } else {
+                console.warn('[BrowseController] loadExamList 函数未定义');
             }
         }
 
@@ -247,6 +274,7 @@
             // 清除频率模式残留，确保走默认筛选逻辑
             global.__browseFilterMode = 'default';
             global.__browsePath = null;
+            global.__browseNewOnly = false;
 
             // 更新筛选状态：分类为 P1/P2/P3，类型固定为阅读
             if (typeof global.setBrowseFilterState === 'function') {

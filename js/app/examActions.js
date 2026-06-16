@@ -86,9 +86,21 @@
         });
     }
 
+    const JUNE_2026_NEW_IDS = [
+        'p1-high-229', 'p1-high-230', 'p1-high-231',
+        'p2-high-232', 'p2-high-233', 'p2-high-234',
+        'p2-high-235', 'p2-high-236', 'p2-high-239',
+        'p3-high-221', 'p3-high-229'
+    ];
+    global.__JUNE_2026_NEW_IDS = JUNE_2026_NEW_IDS;
+
     function applyBrowsePostFilters(exams) {
-        const deduplicated = deduplicateExams(exams);
-        return applyExamSort(deduplicated);
+        let result = deduplicateExams(exams);
+        if (global.__browseNewOnly) {
+            const set = new Set(JUNE_2026_NEW_IDS);
+            result = result.filter((exam) => exam && set.has(exam.id));
+        }
+        return applyExamSort(result);
     }
 
     function escapeHtml(value) {
@@ -1142,6 +1154,33 @@
     global.setupExamActionHandlers = setupExamActionHandlers;
     global.exportAllData = exportAllData;
     global.exportPracticeData = exportPracticeData;
+
+    global.filterByNewJune2026 = function () {
+        if (global.browseController && typeof global.browseController.filterByNewOnly === 'function') {
+            if (!global.browseController.buttonContainer) {
+                global.browseController.initialize('type-filter-buttons');
+            }
+            global.browseController.activeFilter = 'new-june-2026';
+            if (typeof global.browseController.updateButtonStates === 'function') {
+                global.browseController.updateButtonStates();
+            }
+            global.browseController.filterByNewOnly();
+            return;
+        }
+        // 降级：直接设置标记并刷新
+        global.__browseFilterMode = 'default';
+        global.__browsePath = null;
+        global.__browseNewOnly = true;
+        if (typeof global.setBrowseFilterState === 'function') {
+            global.setBrowseFilterState('all', 'reading');
+        }
+        if (typeof global.setBrowseTitle === 'function') {
+            global.setBrowseTitle('2026.6月新增');
+        }
+        if (typeof global.loadExamList === 'function') {
+            global.loadExamList();
+        }
+    };
 
     console.log('[ExamActions] 模块已加载 (Phase 2)');
 
