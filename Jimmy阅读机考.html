@@ -267,9 +267,9 @@
                         <button class="btn btn-sm shui-filter-btn active" type="button" aria-pressed="true"
                             data-filter-status="all" onclick="filterRecordsByStatus('all')">全部</button>
                         <button class="btn btn-sm shui-filter-btn" type="button" aria-pressed="false"
-                            data-filter-status="incomplete" onclick="filterRecordsByStatus('incomplete')">未完成</button>
+                            data-filter-status="completed" onclick="filterRecordsByStatus('completed')">已完成</button>
                         <button class="btn btn-sm shui-filter-btn" type="button" aria-pressed="false"
-                            data-filter-type="reading" onclick="filterRecordsByType('reading')">阅读</button>
+                            data-filter-status="incomplete" onclick="filterRecordsByStatus('incomplete')">未完成</button>
                     </div>
                     <div class="record-time-filter-wrapper">
                         <select id="record-time-filter-select" class="record-time-filter-select"
@@ -288,7 +288,7 @@
                         </div>
                     </div>
                     <div class="hero-panel__actions">
-                        <button class="btn btn-secondary hero-btn hero-btn--ghost"
+                        <button class="btn btn-secondary hero-btn hero-btn--ghost" id="export-practice-pdf-btn"
                             onclick="window.AppActions && window.AppActions.exportPracticePdf()">📄
                             导出PDF</button>
                         <button class="btn btn-info hero-btn" onclick="toggleBulkDelete()" id="bulk-delete-btn">

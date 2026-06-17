@@ -278,17 +278,6 @@ window.completeExamIndex = [
         pdfFilename: 'ReadingPractice/PDF/120. P2 - Will Eating Less Make You Live Longer 节食与长寿.pdf',
     },
     {
-        id: 'p2-high-26',
-        title: '（无题目） Muscle Loss 肌肉流失',
-        category: 'P2',
-        frequency: 'high',
-        path: '睡着过项目组/2. 所有文章(11.20)[192篇]/121.（无题目） P2 - Muscle Loss 肌肉流失【高】/',
-        filename: '',
-        hasHtml: false,
-        hasPdf: true,
-        pdfFilename: 'ReadingPractice/PDF/121. P2(仅原文无题) - Muscle Loss 肌肉流失.pdf',
-    },
-    {
         id: 'p1-high-27',
         title: 'Footprints in the Mud 恐龙脚印',
         category: 'P1',

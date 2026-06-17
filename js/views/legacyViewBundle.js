@@ -490,14 +490,25 @@
 
         item.appendChild(selection);
         var infoClass = 'record-info' + (bulkDeleteMode ? ' record-info-selectable' : '');
+        // 套题练习记录：在标题后标注「套题」徽标，与「未完成」列表的套题标识保持一致
+        var isSuiteRecord = !!(record && (record.suiteMode === true
+            || record.frequency === 'suite'
+            || (record.metadata && record.metadata.category === '套题练习')));
+        var titleChildren = [
+            createNode('strong', null, record && record.title ? record.title : '无标题')
+        ];
+        if (isSuiteRecord) {
+            titleChildren.push(createNode('span', {
+                className: 'suite-badge',
+                style: { fontSize: '0.7rem', color: '#8b5cf6', border: '1px solid #8b5cf6', borderRadius: '4px', padding: '0 5px', marginLeft: '6px' }
+            }, '套题'));
+        }
         var info = createNode('div', { className: infoClass }, [
             createNode('a', {
                 href: '#',
                 className: 'practice-record-title',
                 dataset: { recordAction: 'details', recordId: recordId }
-            }, [
-                createNode('strong', null, record && record.title ? record.title : '无标题')
-            ]),
+            }, titleChildren),
             createNode('div', { className: 'record-meta-line' }, [
                 createNode('small', { className: 'record-date' }, record && record.date ? new Date(record.date).toLocaleString() : '未知时间'),
                 createNode('small', { className: 'record-duration-value' }, [

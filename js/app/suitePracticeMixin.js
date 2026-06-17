@@ -1491,6 +1491,111 @@
             return aggregated;
         },
 
+        // 将套题会话（完整或部分完成）聚合为「一套题」记录，供完成/中断时统一保存，避免拆成单篇片段
+        async _buildSuiteRecord(session) {
+            const completionTime = Date.now();
+            const suiteEntries = session.results.map(entry => ({
+                examId: entry.examId,
+                title: entry.title,
+                category: entry.category,
+                duration: entry.duration,
+                scoreInfo: entry.scoreInfo,
+                answers: entry.answers,
+                answerComparison: entry.answerComparison,
+                markedQuestions: Array.isArray(entry.markedQuestions) ? entry.markedQuestions.slice() : [],
+                rawData: entry.rawData || {}
+            }));
+
+            const entryDurations = session.results.map(entry => Number.isFinite(entry.duration) ? entry.duration : 0);
+            const summedDuration = entryDurations.reduce((sum, value) => sum + value, 0);
+            const startTimestamp = session.startTime || completionTime;
+            const elapsedMs = Math.max(0, completionTime - startTimestamp);
+            const elapsedSeconds = Math.max(0, Math.round(elapsedMs / 1000));
+            const totalDuration = elapsedSeconds > 0 ? Math.max(summedDuration, elapsedSeconds) : summedDuration;
+            const totalCorrect = session.results.reduce((sum, entry) => sum + entry.scoreInfo.correct, 0);
+            const totalQuestions = session.results.reduce((sum, entry) => sum + entry.scoreInfo.total, 0);
+            const accuracy = totalQuestions > 0 ? (totalCorrect / totalQuestions) : 0;
+            const percentage = Math.round(accuracy * 100);
+
+            const aggregatedAnswers = {};
+            const aggregatedComparison = {};
+            session.results.forEach(entry => {
+                const prefix = entry.examId ? entry.examId + '::' : '';
+                const answersSource = entry.answers && typeof entry.answers === 'object'
+                    ? entry.answers
+                    : Array.isArray(entry.answers)
+                        ? entry.answers.reduce((map, item) => {
+                            if (item && item.questionId) {
+                                map[item.questionId] = item.answer || item.userAnswer || '';
+                            }
+                            return map;
+                        }, {})
+                        : {};
+                Object.keys(answersSource || {}).forEach(questionId => {
+                    aggregatedAnswers[prefix + questionId] = answersSource[questionId];
+                });
+
+                const comparisonSource = entry.answerComparison && typeof entry.answerComparison === 'object'
+                    ? entry.answerComparison
+                    : {};
+                Object.keys(comparisonSource).forEach(questionId => {
+                    aggregatedComparison[prefix + questionId] = comparisonSource[questionId];
+                });
+            });
+
+            const startTime = startTimestamp;
+            const startTimeIso = new Date(startTime).toISOString();
+            const endTimeIso = new Date(completionTime).toISOString();
+            const suiteSequence = await this._resolveSuiteSequenceNumber(startTime);
+            const dateLabel = this._formatSuiteDateLabel(startTime);
+            const displayTitle = dateLabel + '套题练习' + suiteSequence;
+
+            return {
+                id: session.id,
+                examId: 'suite-' + session.id,
+                title: displayTitle,
+                type: 'reading',
+                suiteMode: true,
+                date: endTimeIso,
+                startTime: startTimeIso,
+                endTime: endTimeIso,
+                duration: totalDuration,
+                totalQuestions,
+                // 顶层 score 为练习仓库校验所必需（与单篇记录一致），缺失会导致保存落入会丢弃 suiteEntries 的兜底分支
+                score: totalCorrect,
+                correctAnswers: totalCorrect,
+                accuracy,
+                percentage,
+                scoreInfo: { correct: totalCorrect, total: totalQuestions, accuracy, percentage },
+                answers: aggregatedAnswers,
+                answerComparison: aggregatedComparison,
+                suiteEntries,
+                frequency: 'suite',
+                metadata: {
+                    examTitle: displayTitle,
+                    category: '套题练习',
+                    frequency: 'suite',
+                    suiteSequence,
+                    suiteDisplayDate: dateLabel,
+                    suiteSessionId: session.id,
+                    suiteEntries,
+                    startedAt: startTimeIso,
+                    completedAt: endTimeIso
+                },
+                realData: {
+                    isRealData: true,
+                    source: 'suite_mode',
+                    duration: totalDuration,
+                    correct: totalCorrect,
+                    total: totalQuestions,
+                    accuracy,
+                    percentage,
+                    suiteEntries
+                },
+                sessionId: session.id
+            };
+        },
+
         async finalizeSuiteRecord(session) {
             if (!session || !session.results || !session.results.length) {
                 await this._teardownSuiteSession(session);
@@ -1500,105 +1605,7 @@
             session.status = 'finalizing';
 
             try {
-                const completionTime = Date.now();
-                const suiteEntries = session.results.map(entry => ({
-                    examId: entry.examId,
-                    title: entry.title,
-                    category: entry.category,
-                    duration: entry.duration,
-                    scoreInfo: entry.scoreInfo,
-                    answers: entry.answers,
-                    answerComparison: entry.answerComparison,
-                    markedQuestions: Array.isArray(entry.markedQuestions) ? entry.markedQuestions.slice() : [],
-                    rawData: entry.rawData || {}
-                }));
-
-                const entryDurations = session.results.map(entry => Number.isFinite(entry.duration) ? entry.duration : 0);
-                const summedDuration = entryDurations.reduce((sum, value) => sum + value, 0);
-                const startTimestamp = session.startTime || completionTime;
-                const elapsedMs = Math.max(0, completionTime - startTimestamp);
-                const elapsedSeconds = Math.max(0, Math.round(elapsedMs / 1000));
-                const totalDuration = elapsedSeconds > 0 ? Math.max(summedDuration, elapsedSeconds) : summedDuration;
-                const totalCorrect = session.results.reduce((sum, entry) => sum + entry.scoreInfo.correct, 0);
-                const totalQuestions = session.results.reduce((sum, entry) => sum + entry.scoreInfo.total, 0);
-                const accuracy = totalQuestions > 0 ? (totalCorrect / totalQuestions) : 0;
-                const percentage = Math.round(accuracy * 100);
-
-                const aggregatedAnswers = {};
-                const aggregatedComparison = {};
-                session.results.forEach(entry => {
-                    const prefix = entry.examId ? entry.examId + '::' : '';
-                    const answersSource = entry.answers && typeof entry.answers === 'object'
-                        ? entry.answers
-                        : Array.isArray(entry.answers)
-                            ? entry.answers.reduce((map, item) => {
-                                if (item && item.questionId) {
-                                    map[item.questionId] = item.answer || item.userAnswer || '';
-                                }
-                                return map;
-                            }, {})
-                            : {};
-                    Object.keys(answersSource || {}).forEach(questionId => {
-                        aggregatedAnswers[prefix + questionId] = answersSource[questionId];
-                    });
-
-                    const comparisonSource = entry.answerComparison && typeof entry.answerComparison === 'object'
-                        ? entry.answerComparison
-                        : {};
-                    Object.keys(comparisonSource).forEach(questionId => {
-                        aggregatedComparison[prefix + questionId] = comparisonSource[questionId];
-                    });
-                });
-
-                const startTime = startTimestamp;
-                const startTimeIso = new Date(startTime).toISOString();
-                const endTimeIso = new Date(completionTime).toISOString();
-                const suiteSequence = await this._resolveSuiteSequenceNumber(startTime);
-                const dateLabel = this._formatSuiteDateLabel(startTime);
-                const displayTitle = dateLabel + '套题练习' + suiteSequence;
-
-                const record = {
-                    id: session.id,
-                    examId: 'suite-' + session.id,
-                    title: displayTitle,
-                    type: 'reading',
-                    suiteMode: true,
-                    date: endTimeIso,
-                    startTime: startTimeIso,
-                    endTime: endTimeIso,
-                    duration: totalDuration,
-                    totalQuestions,
-                    correctAnswers: totalCorrect,
-                    accuracy,
-                    percentage,
-                    scoreInfo: { correct: totalCorrect, total: totalQuestions, accuracy, percentage },
-                    answers: aggregatedAnswers,
-                    answerComparison: aggregatedComparison,
-                    suiteEntries,
-                    frequency: 'suite',
-                    metadata: {
-                        examTitle: displayTitle,
-                        category: '套题练习',
-                        frequency: 'suite',
-                        suiteSequence,
-                        suiteDisplayDate: dateLabel,
-                        suiteSessionId: session.id,
-                        suiteEntries,
-                        startedAt: startTimeIso,
-                        completedAt: endTimeIso
-                    },
-                    realData: {
-                        isRealData: true,
-                        source: 'suite_mode',
-                        duration: totalDuration,
-                        correct: totalCorrect,
-                        total: totalQuestions,
-                        accuracy,
-                        percentage,
-                        suiteEntries
-                    },
-                    sessionId: session.id
-                };
+                const record = await this._buildSuiteRecord(session);
 
                 await this._saveSuitePracticeRecord(record);
                 await this._updatePracticeRecordsState();
@@ -1607,8 +1614,8 @@
                 session.status = 'completed';
             } catch (error) {
                 console.error('[SuitePractice] 保存套题记录失败:', error);
-                window.showMessage && window.showMessage('套题记录保存失败，系统将尝试恢复到普通模式。', 'error');
-                await this._savePartialSuiteAsIndividual(session);
+                window.showMessage && window.showMessage('套题记录保存失败，正在重试保存整套记录。', 'error');
+                await this._savePartialSuiteRecord(session);
                 session.status = 'error';
             } finally {
                 await this._teardownSuiteSession(session);
@@ -1995,6 +2002,8 @@
                 this._ensureSuiteWindowGuard(session, session.windowRef);
                 session.status = 'active';
                 session.activeExamId = firstEntry.examId;
+                // 启动后立即把套题进度写入 localStorage，保证「尚未提交」的套题也出现在「未完成」记录中、可随时续做
+                this._mirrorSessionToStorage(session);
                 this._focusSuiteWindow(session.windowRef);
                 return true;
             } catch (error) {
@@ -2366,18 +2375,20 @@
             return count + 1;
         },
 
-        async _savePartialSuiteAsIndividual(session) {
+        // 兜底保存：将已完成篇目整体保存为「一套题」记录（不再拆成单篇片段）
+        async _savePartialSuiteRecord(session) {
             if (!session || !session.results || !session.results.length) {
                 return;
             }
 
-            for (const entry of session.results) {
-                try {
-                    await this.saveRealPracticeData(entry.examId, entry.rawData, { forceIndividualSave: true });
+            try {
+                const record = await this._buildSuiteRecord(session);
+                await this._saveSuitePracticeRecord(record);
+                session.results.forEach((entry) => {
                     this.updateExamStatus && this.updateExamStatus(entry.examId, 'completed');
-                } catch (error) {
-                    console.error('[SuitePractice] 保存单篇记录失败:', error);
-                }
+                });
+            } catch (error) {
+                console.error('[SuitePractice] 兜底保存整套记录失败:', error);
             }
 
             await this._updatePracticeRecordsState();
@@ -2469,17 +2480,20 @@
             this._clearSuiteHandshakes();
 
             const skipExamId = options.skipExamId;
+            if (skipExamId && Array.isArray(session.results)) {
+                // 排除未真正完成的篇目（如打开失败的那一篇），其余整体聚合
+                session.results = session.results.filter((entry) => entry && entry.examId !== skipExamId);
+            }
+            // 套题中断：将已完成篇目整体保存为「一套题」记录，而不是拆成单篇片段
             if (session.results && session.results.length) {
-                for (const entry of session.results) {
-                    if (skipExamId && entry.examId === skipExamId) {
-                        continue;
-                    }
-                    try {
-                        await this.saveRealPracticeData(entry.examId, entry.rawData, { forceIndividualSave: true });
+                try {
+                    const record = await this._buildSuiteRecord(session);
+                    await this._saveSuitePracticeRecord(record);
+                    session.results.forEach((entry) => {
                         this.updateExamStatus && this.updateExamStatus(entry.examId, 'completed');
-                    } catch (error) {
-                        console.error('[SuitePractice] 套题中断时保存记录失败:', error);
-                    }
+                    });
+                } catch (error) {
+                    console.error('[SuitePractice] 套题中断时保存记录失败:', error);
                 }
                 await this._updatePracticeRecordsState();
                 this.refreshOverviewData && this.refreshOverviewData();

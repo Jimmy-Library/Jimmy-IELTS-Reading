@@ -1494,6 +1494,24 @@ function setupPracticeHistoryInteractions() {
             handleDelete(this.dataset.recordId, event);
         });
 
+        // 未完成草稿：继续做题 / 删除草稿
+        // 注意：必须在 .history-item 委托之前注册。DOM.delegate 的派发会在首个匹配的选择器处 break，
+        // 而草稿按钮位于 .history-item 内部，若 .history-item 先匹配会吞掉点击，导致按钮“点了没反应”。
+        window.DOM.delegate('click', '.practice-history-list [data-record-action="resume-draft"], #history-list [data-record-action="resume-draft"]', function (event) {
+            event.preventDefault();
+            event.stopPropagation();
+            if (typeof window.resumeIncompleteDraft === 'function') {
+                window.resumeIncompleteDraft(this.dataset.draftId);
+            }
+        });
+        window.DOM.delegate('click', '.practice-history-list [data-record-action="delete-draft"], #history-list [data-record-action="delete-draft"]', function (event) {
+            event.preventDefault();
+            event.stopPropagation();
+            if (typeof window.deleteIncompleteDraft === 'function') {
+                window.deleteIncompleteDraft(this.dataset.draftId);
+            }
+        });
+
         window.DOM.delegate('click', '.practice-history-list .history-item, #history-list .history-item', function (event) {
             const actionTarget = event.target.closest('[data-record-action]');
             if (actionTarget) return;
@@ -1510,22 +1528,6 @@ function setupPracticeHistoryInteractions() {
 
         window.DOM.delegate('change', '.practice-history-list input[data-record-id], #history-list input[data-record-id]', function (event) {
             handleCheckbox(this.dataset.recordId, event);
-        });
-
-        // 未完成草稿：继续做题 / 删除草稿
-        window.DOM.delegate('click', '.practice-history-list [data-record-action="resume-draft"], #history-list [data-record-action="resume-draft"]', function (event) {
-            event.preventDefault();
-            event.stopPropagation();
-            if (typeof window.resumeIncompleteDraft === 'function') {
-                window.resumeIncompleteDraft(this.dataset.draftId);
-            }
-        });
-        window.DOM.delegate('click', '.practice-history-list [data-record-action="delete-draft"], #history-list [data-record-action="delete-draft"]', function (event) {
-            event.preventDefault();
-            event.stopPropagation();
-            if (typeof window.deleteIncompleteDraft === 'function') {
-                window.deleteIncompleteDraft(this.dataset.draftId);
-            }
         });
     } else {
         container.addEventListener('click', (event) => {
@@ -1683,6 +1685,14 @@ function updatePracticeView() {
     let recordsToShow = stats && typeof stats.sortByDateDesc === 'function'
         ? stats.sortByDateDesc(records)
         : records.slice().sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    // 「已完成」筛选：仅保留正常提交完成的记录（排除中断记录；缺少 status 的旧记录按已完成处理）
+    if (statusFilter === 'completed') {
+        recordsToShow = recordsToShow.filter((record) => {
+            const recordStatus = String((record && record.status) || 'completed').trim().toLowerCase();
+            return recordStatus === 'completed';
+        });
+    }
 
     const examType = getCurrentExamType();
     if (examType !== 'all') {
@@ -2194,7 +2204,8 @@ if (typeof window !== 'undefined') {
 // 练习历史「已提交 / 未完成」筛选
 function filterRecordsByStatus(status) {
     const normalized = String(status || 'all').trim().toLowerCase();
-    window.__practiceHistoryStatusFilter = normalized === 'incomplete' ? 'incomplete' : 'all';
+    const allowedStatuses = ['all', 'completed', 'incomplete'];
+    window.__practiceHistoryStatusFilter = allowedStatuses.indexOf(normalized) >= 0 ? normalized : 'all';
     // 同步按钮高亮
     try {
         document.querySelectorAll('#record-type-filter-buttons [data-filter-status]').forEach((btn) => {
@@ -2351,22 +2362,41 @@ function resumeIncompleteDraft(draftId) {
         return;
     }
     if (draft.kind === 'single' && draft.examId) {
-        // 标记强制续做，阅读页打开后直接恢复、不再弹窗
+        // 标记强制续做：URL 参数 resume=1 为主信道，sessionStorage 作跨窗口失效时的兜底
         try { sessionStorage.setItem('ielts_force_resume::' + draft.examId, '1'); } catch (_) { }
         if (typeof window.openExam === 'function') {
-            window.openExam(draft.examId);
+            window.openExam(draft.examId, { forceResume: true });
         }
     } else if (draft.kind === 'suite-passage' && draft.examId) {
         // 套题片段：按单篇方式打开，套题上下文已丢失
         try { sessionStorage.setItem('ielts_force_resume::' + draft.examId, '1'); } catch (_) { }
         if (typeof window.openExam === 'function') {
-            window.openExam(draft.examId);
+            window.openExam(draft.examId, { forceResume: true });
         }
     } else if (draft.kind === 'suite') {
-        if (typeof window.resumeSuiteDraft === 'function') {
-            window.resumeSuiteDraft(draft.suiteSessionId);
-        } else if (typeof window.showMessage === 'function') {
-            window.showMessage('套题续做模块未就绪', 'warning');
+        // 套题续做能力（resumeSuiteDraft）来自 suitePracticeMixin，属于 session-suite 懒加载组。
+        // 从「未完成」列表点继续时该组通常尚未加载，需先确保加载并挂载到 app 实例后再恢复，
+        // 否则会落到 window.resumeSuiteDraft 的兜底分支提示“套题续做模块未就绪”。
+        const resumeSuite = function () {
+            if (window.app && typeof window.app.resumeSuiteDraft === 'function') {
+                return window.app.resumeSuiteDraft(draft.suiteSessionId);
+            }
+            if (typeof window.resumeSuiteDraft === 'function') {
+                return window.resumeSuiteDraft(draft.suiteSessionId);
+            }
+            if (typeof window.showMessage === 'function') {
+                window.showMessage('套题续做模块未就绪', 'warning');
+            }
+            return undefined;
+        };
+        const suiteModuleReady = window.app && typeof window.app.resumeSuiteDraft === 'function';
+        if (!suiteModuleReady && window.AppLazyLoader && typeof window.AppLazyLoader.ensureGroup === 'function') {
+            window.AppLazyLoader.ensureGroup('session-suite').then(resumeSuite).catch((err) => {
+                console.error('[main.js] 加载套题续做模块失败:', err);
+                resumeSuite();
+            });
+        } else {
+            resumeSuite();
         }
     }
 }

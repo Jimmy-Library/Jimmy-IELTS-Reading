@@ -1604,6 +1604,13 @@ class PracticeRecorder {
             // 元数据
             metadata,
 
+            // 套题信息：兜底保存时同样保留整套 3 篇的分篇做题记录，避免丢失明细
+            ...(recordData.suiteMode || Array.isArray(recordData.suiteEntries) ? {
+                suiteMode: recordData.suiteMode === true,
+                suiteEntries: Array.isArray(recordData.suiteEntries) ? recordData.suiteEntries : [],
+                frequency: recordData.frequency || 'suite'
+            } : {}),
+
             // 系统信息
             version: '1.0.0',
             createdAt: recordData.createdAt || now,

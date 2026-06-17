@@ -13,79 +13,82 @@
     LAST_SHOWN: 'onboardingLastShown'
   };
 
-  // 默认步骤配置
+  // 默认步骤配置：聚焦学生最常用的三件事 —— ① 怎么做题 ② 查看记录 ③ 导出记录
   const DEFAULT_STEPS = [
     {
       id: 'welcome',
       target: null,
-      title: '👋 欢迎使用 IELTS 机考练习系统',
-      content: '这是 Jimmy 开发的雅思机考练习平台，参照官方机考界面，提供阅读、听力练习与词汇背诵等功能。让我们快速了解一下各项功能吧！',
+      title: '👋 欢迎使用 Jimmy 雅思阅读机考系统',
+      content: '本引导用一分钟带你掌握三件最常用的事：① 怎么做题；② 怎么查看练习记录；③ 怎么导出记录。准备好就开始吧！',
       position: 'center',
       showSkip: false,
       showPrev: false,
-      nextText: '开始探索',
+      nextText: '开始',
       activateView: null
     },
+
+    // ===== ① 怎么做题 =====
     {
-      id: 'navigation',
-      target: '.main-nav',
-      title: '📍 导航栏',
-      content: '顶部导航栏包含 4 个主要功能区：总览、题库浏览、练习记录与系统设置。点击即可切换不同功能。',
-      position: 'bottom',
-      showSkip: true,
-      showPrev: true,
-      nextText: '下一步',
-      activateView: null
-    },
-    {
-      id: 'overview',
-      target: '#overview-view',
-      title: '📊 学习总览',
-      content: '这里显示您的学习数据统计，包括分类卡片、练习进度和成绩趋势。帮助您全面了解学习情况。',
-      position: 'right',
-      showSkip: true,
-      showPrev: true,
-      nextText: '下一步',
-      activateView: 'overview'
-    },
-    {
-      id: 'browse',
+      id: 'how-to-practice',
       target: '#browse-view',
-      title: '📚 题库浏览',
-      content: '浏览所有可用题目，支持搜索、筛选和排序功能。点击题目即可开始练习或查看解析。',
+      title: '①　怎么做题',
+      content: '做题从「题库浏览」开始。这里汇集了全部可练习的题目，支持搜索、排序与筛选。',
       position: 'right',
       showSkip: true,
       showPrev: true,
       nextText: '下一步',
-      activateView: 'browse'
+      activateView: 'browse',
+      subSteps: [
+        {
+          id: 'practice-search',
+          target: '#exam-search-input',
+          title: '🔎 找到想练的题',
+          content: '在搜索框输入关键词（如 P1、剑桥真题名），或用右侧排序快速定位你想练的题目。',
+          position: 'bottom',
+          nextText: '下一步',
+          lockScroll: true,
+          disableHighlightPointer: true
+        },
+        {
+          id: 'practice-start',
+          target: '#exam-list-container',
+          title: '🖱️ 开始做题',
+          content: '点击题目卡片上的「开始练习」，系统会在新窗口打开机考做题界面。做题时：选择答案、可长按高亮原文做笔记，全部完成后点「提交」即可查看成绩与解析。',
+          position: 'top',
+          nextText: '我知道了',
+          lockScroll: true,
+          disableHighlightPointer: true
+        }
+      ]
     },
+
+    // ===== ② 查看记录 + 导出记录(PDF) =====
     {
-      id: 'practice',
+      id: 'practice-records',
       target: '#practice-view',
-      title: '📝 练习记录',
-      content: '查看您的练习历史、成绩统计和学习时长，追踪学习进度和成长轨迹。',
-      position: 'right',
-      showSkip: true,
-      showPrev: true,
-      nextText: '下一步',
-      activateView: 'practice'
-    },
-    {
-      id: 'review-mode',
-      title: '📖 回顾模式',
-      content: '接下来我们将学习如何使用回顾模式查看练习解析。',
+      title: '②　查看与导出练习记录',
+      content: '每次提交后，成绩都会自动保存到「练习记录」。在这里可以追踪进度、回看每次作答，也能把记录导出成 PDF。',
       position: 'right',
       showSkip: true,
       showPrev: true,
       nextText: '下一步',
       activateView: 'practice',
-      // 子步骤流程
       subSteps: [
+        {
+          id: 'export-pdf',
+          target: '#export-practice-pdf-btn',
+          title: '📄 导出记录（PDF）',
+          content: '点击「导出PDF」，可把当前练习记录整理成 PDF，方便保存、打印或复盘。',
+          position: 'bottom',
+          nextText: '下一步',
+          lockScroll: true,
+          disableHighlightPointer: true
+        },
         {
           id: 'inject-demo-record',
           action: 'injectDemoRecord',
           title: '📝 示例记录已添加',
-          content: '我们已为您添加了一条示例练习记录，请点击“我知道了”继续。',
+          content: '我们为你添加了一条示例练习记录，下面用它演示如何查看记录详情。点击“我知道了”继续。',
           target: '.history-item[data-record-id="demo-onboarding-record"]',
           position: 'right',
           nextText: '我知道了',
@@ -94,7 +97,7 @@
         },
         {
           id: 'click-history-item',
-          title: '👆 点击记录标题进入详情',
+          title: '👆 点击记录标题查看详情',
           content: '点击下方这条示例记录的标题，可以打开练习记录详情页。',
           target: '#history-list .history-record-item[data-record-id="demo-onboarding-record"] .practice-record-title',
           position: 'right',
@@ -106,7 +109,7 @@
         {
           id: 'modal-opened',
           title: '📋 练习记录详情',
-          content: '这里是练习记录详情弹窗，您可以看到本次练习的详细信息和成绩。',
+          content: '这里是练习记录详情，你可以看到本次练习的成绩、用时与每题作答情况。',
           target: '#practice-record-modal .modal-container',
           position: 'right',
           nextText: '下一步',
@@ -117,7 +120,7 @@
         {
           id: 'click-review-mode',
           title: '📖 进入回顾模式',
-          content: '点击上方标题（回顾模式触发器），可以进入该记录的回放/回顾模式。',
+          content: '点击上方标题（回顾模式触发器），即可进入该记录的回放/回顾模式，逐题查看原文与解析。',
           target: '#practice-record-modal .record-summary-replay-trigger',
           position: 'bottom',
           nextText: '下一步',
@@ -128,7 +131,7 @@
         {
           id: 'review-mode-active',
           title: '👋 小贴士',
-          content: '该练习记录缺少数据哦，等待您的数据后即可使用回顾模式。',
+          content: '这是一条示例记录，暂无作答数据。完成真实练习后，这里就能逐题回顾你的原文高亮与解析啦。',
           target: null,
           position: 'center',
           nextText: '我知道了',
@@ -136,21 +139,13 @@
         }
       ]
     },
+
+    // ===== ③ 导出记录(数据备份/迁移) =====
     {
-      id: 'settings',
-      target: '#settings-view',
-      title: '⚙️ 系统设置',
-      content: '管理主题切换、数据备份导入导出、题库配置等系统选项。个性化您的学习体验！',
-      position: 'right',
-      showSkip: true,
-      showPrev: true,
-      nextText: '下一步',
-      activateView: 'settings'
-    },
-    {
-      id: 'data-management',
-      title: '💾 数据迁移与管理',
-      content: '这里是数据安全的核心。当系统发布新版本时，您可以通过导出和导入功能轻松搬家。',
+      id: 'data-backup',
+      target: '.data-management-panel',
+      title: '③　备份与迁移你的记录',
+      content: '想换设备，或升级到新版本时，可在「系统设置 → 数据管理」里把全部练习记录整体导出备份，再一键导入找回。',
       position: 'right',
       showSkip: true,
       showPrev: true,
@@ -158,19 +153,10 @@
       activateView: 'settings',
       subSteps: [
         {
-          id: 'data-mgmt-intro',
-          target: '.data-management-panel',
-          title: '📂 数据管理面板',
-          content: '集中管理您的练习资产。在转移到新版本前，请务必先备份或导出。',
-          position: 'right',
-          nextText: '下一步',
-          lockScroll: true
-        },
-        {
           id: 'export-data',
           target: '#export-data-btn',
-          title: '📤 导出数据',
-          content: '点击“导出数据”，系统会生成包含所有练习历史的 JSON 文件。请妥善保存此文件，它是您迁移到新版本的通行证。',
+          title: '📤 导出数据（备份）',
+          content: '点击「导出数据」，系统会生成包含所有练习历史的 JSON 文件。请妥善保存，它是你迁移到新版本/新设备的通行证。',
           position: 'top',
           nextText: '下一步',
           lockScroll: true,
@@ -180,32 +166,21 @@
         {
           id: 'import-data',
           target: '#import-data-btn',
-          title: '📥 导入数据',
-          content: '在下载并运行新版本后，点击“导入数据”并选择之前导出的 JSON 文件，即可一键找回所有练习历史。',
+          title: '📥 导入数据（找回）',
+          content: '在新版本或新设备上点「导入数据」，选择之前导出的 JSON 文件，即可一键找回所有练习记录。',
           position: 'top',
-          nextText: '下一步',
+          nextText: '完成',
           lockScroll: true,
           disableHighlightPointer: true
         }
       ]
     },
-    {
-      id: 'theme-switcher-guide',
-      target: '#theme-switcher-btn-entry',
-      title: '🎨 主题切换',
-      content: '当您使用动态背景遇到卡顿时可切换为静态主题',
-      position: 'top',
-      showSkip: true,
-      showPrev: true,
-      nextText: '下一步',
-      activateView: 'settings',
-      disableHighlightPointer: true
-    },
+
     {
       id: 'completion',
       target: null,
-      title: '🎉 恭喜完成！',
-      content: '您已了解系统的所有核心功能。现在开始您的雅思备考之旅吧！祝您取得理想的成绩。',
+      title: '🎉 全部搞定！',
+      content: '现在你已经会：做题 → 查看记录 → 导出记录。开始你的雅思阅读之旅吧，祝早日分手雅思！',
       position: 'center',
       showSkip: false,
       showPrev: true,
@@ -561,17 +536,14 @@
       const htmlExams = stats.htmlExams || totalExams;
       const pdfExams = stats.pdfExams || totalExams;
 
-      // 动态更新欢迎步骤
-      const welcomeStep = this._steps.find(s => s.id === 'welcome');
-      if (welcomeStep) {
-        welcomeStep.content = '这是 Jimmy 开发的雅思机考练习平台，参照官方机考界面，提供阅读、听力练习与词汇背诵等功能。'
-          + `当前题库共有 ${totalExams} 套题目（其中 HTML 版 ${htmlExams} 套、PDF 版 ${pdfExams} 套），让我们快速了解一下各项功能吧！`;
-      }
-
-      // 动态更新题库浏览步骤
-      const browseStep = this._steps.find(s => s.id === 'browse');
-      if (browseStep) {
-        browseStep.content = `浏览全部 ${totalExams} 套可用题目，支持搜索、筛选和排序功能。点击题目即可开始练习或查看解析。`;
+      // 动态更新「开始做题」子步骤里的题库规模提示
+      const practiceStep = this._steps.find(s => s.id === 'how-to-practice');
+      if (practiceStep && Array.isArray(practiceStep.subSteps)) {
+        const startSub = practiceStep.subSteps.find(s => s.id === 'practice-start');
+        if (startSub) {
+          startSub.content = `当前题库共有 ${totalExams} 套题目。点击题目卡片上的「开始练习」，系统会在新窗口打开机考做题界面。`
+            + '做题时：选择答案、可长按高亮原文做笔记，全部完成后点「提交」即可查看成绩与解析。';
+        }
       }
     }
 
@@ -614,6 +586,7 @@
       this._isActive = false;
       this._unlockScroll();
       this._unlockPointer();
+      this._closeRecordModal();
       this._renderer.destroy();
 
       if (this._boundKeyHandler) {
@@ -694,8 +667,23 @@
       this._steps = steps;
     }
 
+    _closeRecordModal() {
+      try {
+        if (window.practiceRecordModal && typeof window.practiceRecordModal.hide === 'function') {
+          window.practiceRecordModal.hide();
+        }
+      } catch (e) {
+        // ignore modal close failures
+      }
+    }
+
     _activateView(viewId) {
       if (!viewId) return;
+
+      // 离开「练习记录」视图前，关闭演示时打开的记录详情弹窗，避免遮挡后续步骤目标
+      if (viewId !== 'practice') {
+        this._closeRecordModal();
+      }
 
       // 方法 1: 尝试点击对应的导航按钮
       const navMap = {
