@@ -872,7 +872,14 @@
                             ? target.closest('.hl')
                             : null;
 
-                    if (clickedHighlight) {
+                    const activeSel = window.getSelection();
+                    const hasLiveSelection = !!(activeSel && activeSel.rangeCount && !activeSel.isCollapsed);
+
+                    if (clickedHighlight && hasLiveSelection) {
+                        // 用户在高亮内部拖选了一段文字：保留选区，交给 updateSelbar 定位，
+                        // 以便后续把选中的那部分单词局部升级为粉色（不要清除选区）。
+                        currentHlNode = clickedHighlight;
+                    } else if (clickedHighlight) {
                         currentHlNode = clickedHighlight;
                         lastRange = null;
                         positionSelbarForRect(clickedHighlight.getBoundingClientRect());
