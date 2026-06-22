@@ -507,6 +507,62 @@
             node.dataset.hlType = 'note';
         }
 
+        // 计算 range 端点在 hlNode 文本中的偏移量（从节点开头算起的字符数）
+        function offsetWithinNode(node, container, offset) {
+            try {
+                const r = document.createRange();
+                r.setStart(node, 0);
+                r.setEnd(container, offset);
+                return r.toString().length;
+            } catch (_) {
+                return -1;
+            }
+        }
+
+        // 把已存在高亮里被选中的那部分单词单独升级为粉色，其余保持原样（棕色）
+        // 返回 true 表示成功做了局部拆分
+        function highlightPartialAsPink(hlNode, range) {
+            if (!(hlNode instanceof HTMLElement) || !range) return false;
+            if (!hlNode.contains(range.startContainer) || !hlNode.contains(range.endContainer)) {
+                return false;
+            }
+            const full = hlNode.textContent || '';
+            let start = offsetWithinNode(hlNode, range.startContainer, range.startOffset);
+            let end = offsetWithinNode(hlNode, range.endContainer, range.endOffset);
+            if (start < 0 || end < 0) return false;
+            if (end < start) { const t = start; start = end; end = t; }
+            start = Math.max(0, Math.min(start, full.length));
+            end = Math.max(0, Math.min(end, full.length));
+            if (end <= start) return false;
+
+            const baseKind = hlNode.dataset && hlNode.dataset.hlType ? hlNode.dataset.hlType : '';
+            // 已是粉色且整体被选中——无需拆分
+            if (baseKind === 'pink' && start === 0 && end === full.length) {
+                return false;
+            }
+            const before = full.slice(0, start);
+            const middle = full.slice(start, end);
+            const after = full.slice(end);
+            const parent = hlNode.parentNode;
+            if (!parent) return false;
+
+            const makeSpan = (text, kind) => {
+                const span = document.createElement('span');
+                span.className = 'hl';
+                if (kind) span.dataset.hlType = kind;
+                span.textContent = text;
+                return span;
+            };
+
+            const frag = document.createDocumentFragment();
+            if (before) frag.appendChild(makeSpan(before, baseKind));
+            frag.appendChild(makeSpan(middle, 'pink'));
+            if (after) frag.appendChild(makeSpan(after, baseKind));
+            parent.replaceChild(frag, hlNode);
+            parent.normalize();
+            return true;
+        }
+
         function updateSelbar() {
             if (!selbar) return;
             const sel = window.getSelection();
@@ -560,7 +616,29 @@
             // 已存在高亮：第二次点击 Highlight 把棕色升级为粉色（不影响蓝色笔记）
             if (currentHlNode instanceof HTMLElement) {
                 const existingKind = currentHlNode.dataset && currentHlNode.dataset.hlType;
-                if (existingKind !== 'note' && existingKind !== 'pink') {
+                if (existingKind === 'note') {
+                    // 蓝色笔记不参与粉色升级
+                    currentHlNode = null;
+                    sel?.removeAllRanges();
+                    selbar.style.display = 'none';
+                    return;
+                }
+                // 若当前存在一段“高亮内部的子选区”，只把选中的那部分单词升级为粉色
+                const liveRange = (sel && sel.rangeCount && !sel.isCollapsed) ? sel.getRangeAt(0) : null;
+                const full = currentHlNode.textContent || '';
+                let handled = false;
+                if (liveRange
+                    && currentHlNode.contains(liveRange.startContainer)
+                    && currentHlNode.contains(liveRange.endContainer)) {
+                    const s = offsetWithinNode(currentHlNode, liveRange.startContainer, liveRange.startOffset);
+                    const e = offsetWithinNode(currentHlNode, liveRange.endContainer, liveRange.endOffset);
+                    const coversAll = (Math.min(s, e) <= 0 && Math.max(s, e) >= full.length);
+                    if (!coversAll) {
+                        handled = highlightPartialAsPink(currentHlNode, liveRange);
+                    }
+                }
+                // 没有子选区（例如直接点击整段高亮）：整段升级为粉色
+                if (!handled && existingKind !== 'pink') {
                     currentHlNode.dataset.hlType = 'pink';
                 }
                 currentHlNode = null;
