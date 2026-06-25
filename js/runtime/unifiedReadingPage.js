@@ -34,6 +34,7 @@
         reviewMode: false,
         reviewViewMode: null,
         readOnly: false,
+        forceResume: false,
         reviewContext: null,
         suiteReviewMode: false,
         pageStartTime: Date.now(),
@@ -137,6 +138,12 @@
         if (reviewFlag === '1' || reviewFlag.toLowerCase() === 'true') {
             state.reviewMode = true;
             state.readOnly = true;
+        }
+        // 续做模式：URL 带 resume=1 时，从「未完成」列表进入，直接恢复草稿不再弹窗
+        // （sessionStorage 在跨窗口打开时不可靠，URL 参数才是可靠信道）
+        const resumeFlag = decodeParam(params.get('resume')).trim();
+        if (resumeFlag === '1' || resumeFlag.toLowerCase() === 'true') {
+            state.forceResume = true;
         }
         const suiteSessionId = decodeParam(params.get('suiteSessionId')) || null;
         if (suiteSessionId) {
@@ -1480,8 +1487,66 @@
                 </thead>
                 <tbody>${rows}</tbody>
             </table>
+            ${buildContactBlock()}
         `;
         dom.results.style.display = 'block';
+        wireContactCopy();
+    }
+
+    // 提交后在答案下方展示「添加微信 / 二维码」联系卡片
+    function buildContactBlock() {
+        return `
+            <div class="contact-card">
+                <p class="contact-title">更多学习资料或课程咨询，欢迎添加微信 👇</p>
+                <img class="contact-qr" src="../../../assets/images/wechat-qr.png" alt="微信二维码" loading="lazy" onerror="this.style.display='none'">
+                <p class="contact-wechat">微信号：<button type="button" class="wechat-id-copy" data-wechat="-4_Alarm_Fire-" title="点击复制微信号">-4_Alarm_Fire-</button></p>
+                <p class="contact-hint">（点击微信号即可复制）</p>
+            </div>
+        `;
+    }
+
+    function wireContactCopy() {
+        if (!dom.results) return;
+        const btn = dom.results.querySelector('.wechat-id-copy');
+        if (!btn || btn.dataset.bound === '1') return;
+        btn.dataset.bound = '1';
+        btn.addEventListener('click', () => {
+            const value = btn.dataset.wechat || '';
+            const onDone = () => {
+                const original = btn.textContent;
+                btn.textContent = '已复制 ✓';
+                btn.classList.add('copied');
+                global.setTimeout(() => {
+                    btn.textContent = original;
+                    btn.classList.remove('copied');
+                }, 1500);
+            };
+            try {
+                if (global.navigator && global.navigator.clipboard && global.navigator.clipboard.writeText) {
+                    global.navigator.clipboard.writeText(value).then(onDone).catch(() => fallbackCopy(value, onDone));
+                } else {
+                    fallbackCopy(value, onDone);
+                }
+            } catch (_) {
+                fallbackCopy(value, onDone);
+            }
+        });
+    }
+
+    function fallbackCopy(value, onDone) {
+        try {
+            const temp = document.createElement('textarea');
+            temp.value = value;
+            temp.style.position = 'fixed';
+            temp.style.opacity = '0';
+            document.body.appendChild(temp);
+            temp.select();
+            document.execCommand('copy');
+            document.body.removeChild(temp);
+            if (typeof onDone === 'function') onDone();
+        } catch (_) {
+            // ignore copy failures
+        }
     }
 
     function escapeSelector(value) {
@@ -2383,15 +2448,16 @@
             return;
         }
         // 从「未完成」列表点「继续做题」进入：带强制续做标记，直接恢复、不再弹窗
+        // 优先信任 URL 参数 resume=1（跨窗口可靠），同时兼容旧的 sessionStorage 信道
         const forceKey = `ielts_force_resume::${state.examId}`;
-        let forceResume = false;
+        let forceResume = Boolean(state.forceResume);
         try {
-            forceResume = global.sessionStorage && global.sessionStorage.getItem(forceKey) === '1';
-            if (forceResume) {
+            if (global.sessionStorage && global.sessionStorage.getItem(forceKey) === '1') {
+                forceResume = true;
                 global.sessionStorage.removeItem(forceKey);
             }
         } catch (_) {
-            forceResume = false;
+            // ignore sessionStorage access failures
         }
         if (forceResume) {
             try {
