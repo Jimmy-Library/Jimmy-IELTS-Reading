@@ -1230,3 +1230,43 @@ body.hero-body {
         flex-wrap: wrap;
     }
 }
+
+/* ============ 皮肤：亮橙粉 (Orange & Pink) ============ */
+:root[data-theme="orange-pink"] {
+    --shui-panel-border: rgba(249, 115, 22, 0.22);
+    --shui-surface-bg: rgba(255, 245, 240, 0.92);
+    --shui-surface-border: rgba(236, 72, 153, 0.18);
+    --shui-text-strong: #7c2d12;
+    --shui-text-muted: rgba(124, 45, 18, 0.65);
+    --shui-accent: #f97316;
+    --shui-accent-alt: #ec4899;
+    --shui-gradient-start: #f97316;
+    --shui-gradient-end: #ec4899;
+    --ielts-topbar-bg: linear-gradient(135deg, #f97316 0%, #ec4899 70%, #db2777 100%);
+    --ielts-topbar-accent: #ffe082;
+    --ielts-paper-bg: #fffaf5;
+    --ielts-rule-line: #fcd0b0;
+    --bauhaus-text-main: #7c2d12;
+    --bauhaus-text-muted: #c2410c;
+    --bauhaus-accent-blue: #f97316;
+    --bauhaus-accent-dark: #ea580c;
+    --bauhaus-glass-border: rgba(249, 115, 22, 0.30);
+    --cbt-tint-bg: #fff5f0;
+    --cbt-tint-border: #fcd0b0;
+    --cbt-nav-text: #9a3412;
+    --cbt-overlay-bg: rgba(124, 45, 18, 0.88);
+    --cbt-boot-border: rgba(255, 224, 130, 0.45);
+}
+
+/* main.css brand override for orange-pink */
+:root[data-theme="orange-pink"] {
+    --color-brand-primary: #f97316;
+    --color-brand-secondary: #ec4899;
+    --color-brand-tertiary: #c2410c;
+    --color-brand-light: #fff0e6;
+    --color-brand-paper: #fffaf5;
+    --color-brand-gradient: linear-gradient(135deg, #f97316 0%, #ec4899 100%);
+    --color-brand-gradient-deep: linear-gradient(135deg, #ea580c 0%, #db2777 100%);
+    --color-info: #f97316;
+    --color-info-bg: #fff7ed;
+}
