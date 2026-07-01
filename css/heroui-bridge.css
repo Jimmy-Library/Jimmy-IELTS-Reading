@@ -36,6 +36,94 @@
     --bauhaus-accent-dark: #14532d;
     --bauhaus-glass-border: rgba(31, 122, 77, 0.25);
     --bauhaus-glass-shadow: 0 6px 24px rgba(15, 53, 35, 0.10);
+
+    /* 皮肤系统 — 供 CBT 界面细节引用，默认跟随绿色主题 */
+    --cbt-tint-bg: #ecf6ef;
+    --cbt-tint-border: #bcd8c5;
+    --cbt-nav-text: #2b4d3b;
+    --cbt-overlay-bg: rgba(13, 58, 35, 0.85);
+    --cbt-boot-border: rgba(255, 213, 74, 0.4);
+}
+
+/* ============ 皮肤：橙色亮丽 ============ */
+:root[data-theme="orange"] {
+    --shui-panel-border: rgba(249, 115, 22, 0.20);
+    --shui-surface-bg: rgba(255, 247, 237, 0.92);
+    --shui-surface-border: rgba(249, 115, 22, 0.20);
+    --shui-text-strong: #7c2d12;
+    --shui-text-muted: rgba(124, 45, 18, 0.65);
+    --shui-accent: #f97316;
+    --shui-accent-alt: #fb923c;
+    --shui-gradient-start: #f97316;
+    --shui-gradient-end: #fb923c;
+    --ielts-topbar-bg: linear-gradient(180deg, #c2410c 0%, #f97316 100%);
+    --ielts-topbar-accent: #ffd54a;
+    --ielts-paper-bg: #fff8f2;
+    --ielts-rule-line: #f6c9a0;
+    --bauhaus-text-main: #7c2d12;
+    --bauhaus-text-muted: #b45309;
+    --bauhaus-accent-blue: #f97316;
+    --bauhaus-accent-dark: #c2410c;
+    --bauhaus-glass-border: rgba(249, 115, 22, 0.28);
+    --cbt-tint-bg: #fff1e6;
+    --cbt-tint-border: #f6c9a0;
+    --cbt-nav-text: #9a3412;
+    --cbt-overlay-bg: rgba(124, 45, 18, 0.85);
+    --cbt-boot-border: rgba(255, 213, 74, 0.4);
+}
+
+/* ============ 皮肤：亮黄色 ============ */
+:root[data-theme="yellow"] {
+    --shui-panel-border: rgba(234, 179, 8, 0.22);
+    --shui-surface-bg: rgba(255, 253, 240, 0.92);
+    --shui-surface-border: rgba(234, 179, 8, 0.22);
+    --shui-text-strong: #7a5b00;
+    --shui-text-muted: rgba(122, 91, 0, 0.65);
+    --shui-accent: #eab308;
+    --shui-accent-alt: #fde047;
+    --shui-gradient-start: #eab308;
+    --shui-gradient-end: #fde047;
+    --ielts-topbar-bg: linear-gradient(180deg, #a16207 0%, #eab308 100%);
+    --ielts-topbar-accent: #ff8a3d;
+    --ielts-paper-bg: #fffdf0;
+    --ielts-rule-line: #f0da70;
+    --bauhaus-text-main: #7a5b00;
+    --bauhaus-text-muted: #92720a;
+    --bauhaus-accent-blue: #eab308;
+    --bauhaus-accent-dark: #a16207;
+    --bauhaus-glass-border: rgba(234, 179, 8, 0.30);
+    --cbt-tint-bg: #fff9db;
+    --cbt-tint-border: #f0da70;
+    --cbt-nav-text: #7a5b00;
+    --cbt-overlay-bg: rgba(122, 91, 0, 0.85);
+    --cbt-boot-border: rgba(255, 138, 61, 0.4);
+}
+
+/* ============ 皮肤：粉色 ============ */
+:root[data-theme="pink"] {
+    --shui-panel-border: rgba(236, 72, 153, 0.20);
+    --shui-surface-bg: rgba(253, 242, 248, 0.92);
+    --shui-surface-border: rgba(236, 72, 153, 0.20);
+    --shui-text-strong: #831843;
+    --shui-text-muted: rgba(131, 24, 67, 0.65);
+    --shui-accent: #ec4899;
+    --shui-accent-alt: #f472b6;
+    --shui-gradient-start: #ec4899;
+    --shui-gradient-end: #f472b6;
+    --ielts-topbar-bg: linear-gradient(180deg, #9d174d 0%, #ec4899 100%);
+    --ielts-topbar-accent: #ffd166;
+    --ielts-paper-bg: #fff5fa;
+    --ielts-rule-line: #f9c9de;
+    --bauhaus-text-main: #831843;
+    --bauhaus-text-muted: #be185d;
+    --bauhaus-accent-blue: #ec4899;
+    --bauhaus-accent-dark: #9d174d;
+    --bauhaus-glass-border: rgba(236, 72, 153, 0.28);
+    --cbt-tint-bg: #fdf2f8;
+    --cbt-tint-border: #f9c9de;
+    --cbt-nav-text: #9d174d;
+    --cbt-overlay-bg: rgba(131, 24, 67, 0.85);
+    --cbt-boot-border: rgba(255, 209, 102, 0.4);
 }
 
 body.hero-body {
@@ -43,7 +131,7 @@ body.hero-body {
     position: relative;
     z-index: 0;
     isolation: isolate;
-    background: #f6faf7;
+    background: var(--ielts-paper-bg);
     animation: none;
 }
 
@@ -861,14 +949,14 @@ body.hero-body {
 
 .ielts-topbar__logo {
     background: #ffffff;
-    color: #14532d;
+    color: var(--bauhaus-accent-dark);
     font-weight: 800;
     font-size: 1rem;
     letter-spacing: 0.18em;
     padding: 8px 14px;
     border-radius: 3px;
-    border: 2px solid #ffd54a;
-    box-shadow: inset 0 -3px 0 #ffd54a;
+    border: 2px solid var(--ielts-topbar-accent);
+    box-shadow: inset 0 -3px 0 var(--ielts-topbar-accent);
 }
 
 .ielts-topbar__titles {
@@ -918,7 +1006,7 @@ body.hero-body {
 
 .ielts-topbar__badge {
     background: var(--ielts-topbar-accent);
-    color: #14532d;
+    color: var(--bauhaus-accent-dark);
     padding: 6px 12px;
     border-radius: 3px;
     font-weight: 700;
@@ -935,9 +1023,9 @@ body.hero-body {
     letter-spacing: 0.18em;
     text-transform: uppercase;
     vertical-align: middle;
-    color: #1f7a4d;
-    background: #ecf6ef;
-    border: 1px solid #bcd8c5;
+    color: var(--bauhaus-accent-blue);
+    background: var(--cbt-tint-bg);
+    border: 1px solid var(--cbt-tint-border);
     border-radius: 3px;
 }
 
@@ -951,9 +1039,9 @@ body.hero-body {
     padding: 16px 18px;
     text-align: center;
     border-top: 1px dashed var(--ielts-rule-line);
-    background: #ecf6ef;
+    background: var(--cbt-tint-bg);
     border-radius: 4px;
-    color: #14532d;
+    color: var(--bauhaus-accent-dark);
     font-family: var(--font-family-primary);
 }
 
@@ -971,11 +1059,11 @@ body.hero-body {
 }
 
 .ielts-footer-credit__author strong {
-    color: #1f7a4d;
+    color: var(--bauhaus-accent-blue);
     background: #ffffff;
     padding: 2px 10px;
     border-radius: 3px;
-    border: 1px solid #bcd8c5;
+    border: 1px solid var(--cbt-tint-border);
 }
 
 /* 让整体界面更接近 IELTS 官方 CBT — 更方正、低圆角、更高对比 */
@@ -1009,7 +1097,7 @@ body.hero-body {
     border-radius: 3px;
     font-family: var(--font-family-primary);
     font-weight: 600;
-    color: #2b4d3b;
+    color: var(--cbt-nav-text);
 }
 
 .hero-nav__btn.active {
@@ -1019,8 +1107,8 @@ body.hero-body {
 }
 
 .hero-nav__btn:hover {
-    background: #ecf6ef;
-    color: #14532d;
+    background: var(--cbt-tint-bg);
+    color: var(--bauhaus-accent-dark);
 }
 
 .hero-nav.hero-nav--liquid-ready .hero-nav__liquid-indicator {
@@ -1031,18 +1119,18 @@ body.hero-body {
 .hero-panel .btn:not(.hero-btn),
 .shui-filter-btn {
     border-radius: 4px;
-    background-image: linear-gradient(180deg, #1f7a4d 0%, #14532d 100%);
+    background-image: linear-gradient(180deg, var(--bauhaus-accent-blue) 0%, var(--bauhaus-accent-dark) 100%);
     color: #ffffff;
     font-weight: 600;
     letter-spacing: 0.02em;
     box-shadow: 0 2px 4px rgba(15, 53, 35, 0.18);
-    border: 1px solid #14532d;
+    border: 1px solid var(--bauhaus-accent-dark);
 }
 
 .hero-btn:hover,
 .hero-panel .btn:not(.hero-btn):hover,
 .shui-filter-btn:hover {
-    background-image: linear-gradient(180deg, #2c9760 0%, #1f7a4d 100%);
+    background-image: linear-gradient(180deg, var(--shui-gradient-end) 0%, var(--bauhaus-accent-blue) 100%);
     box-shadow: 0 4px 8px rgba(15, 53, 35, 0.22);
     transform: translateY(-1px);
 }
@@ -1052,16 +1140,16 @@ body.hero-body {
 .shui-filter-btn[data-tone="ghost"] {
     background: #ffffff;
     background-image: none;
-    border: 1px solid #bcd8c5;
-    color: #1f7a4d;
+    border: 1px solid var(--cbt-tint-border);
+    color: var(--bauhaus-accent-blue);
     box-shadow: none;
 }
 
 .shui-filter-btn.active,
 .shui-filter-btn[aria-pressed="true"] {
-    background-image: linear-gradient(180deg, #1f7a4d 0%, #14532d 100%) !important;
+    background-image: linear-gradient(180deg, var(--bauhaus-accent-blue) 0%, var(--bauhaus-accent-dark) 100%) !important;
     color: #ffffff !important;
-    border-color: #14532d !important;
+    border-color: var(--bauhaus-accent-dark) !important;
 }
 
 /* 设置页 — 沿用同一套绿色 */
@@ -1083,17 +1171,17 @@ body.hero-body {
 #settings-view #force-refresh-btn:hover,
 #settings-view #theme-switcher-btn-entry:hover,
 #settings-view #show-onboarding-btn:hover {
-    background: #1f7a4d;
+    background: var(--bauhaus-accent-blue);
 }
 
 #settings-view .data-mgmt-btn {
     background: #ffffff;
-    color: #14532d !important;
-    border: 1px solid #bcd8c5;
+    color: var(--bauhaus-accent-dark) !important;
+    border: 1px solid var(--cbt-tint-border);
 }
 
 #settings-view .data-mgmt-btn:hover {
-    background: #14532d;
+    background: var(--bauhaus-accent-dark);
     color: #ffffff !important;
     box-shadow: 0 6px 14px rgba(20, 83, 45, 0.20);
 }
@@ -1101,33 +1189,33 @@ body.hero-body {
 #settings-view h2,
 #settings-view h3 {
     font-family: var(--font-family-primary);
-    color: #14532d;
+    color: var(--bauhaus-accent-dark);
 }
 
-/* 启动屏 — 也用绿色 */
+/* 启动屏 — 跟随当前皮肤 */
 #boot-overlay {
-    background: rgba(13, 58, 35, 0.85);
+    background: var(--cbt-overlay-bg);
 }
 
 .boot-panel {
     border-radius: 6px;
     background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 213, 74, 0.4);
+    border: 1px solid var(--cbt-boot-border);
 }
 
 .boot-logo {
-    color: #ffd54a;
+    color: var(--ielts-topbar-accent);
     font-weight: 800;
 }
 
 .boot-progress__bar {
-    background: linear-gradient(90deg, #ffd54a, #ffffff);
+    background: linear-gradient(90deg, var(--ielts-topbar-accent), #ffffff);
 }
 
 /* 题库浏览的视图：纸张白底 */
 .view {
     background: #ffffff;
-    border-color: #bcd8c5;
+    border-color: var(--cbt-tint-border);
     border-radius: 6px;
 }
 

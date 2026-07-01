@@ -70,6 +70,9 @@ function applyTheme(theme) {
         root.setAttribute('data-theme', theme);
         localStorage.setItem('theme', theme);
         themePreferenceController.recordInternalTheme(theme);
+        if (typeof window.switchBgTheme === 'function') {
+            window.switchBgTheme(theme);
+        }
     } catch (e) {}
 }
 
@@ -79,6 +82,9 @@ function applyDefaultTheme() {
         root.removeAttribute('data-theme');
         localStorage.removeItem('theme');
         themePreferenceController.recordInternalTheme('default');
+        if (typeof window.switchBgTheme === 'function') {
+            window.switchBgTheme('forest-green');
+        }
     } catch (e) {}
 }
 

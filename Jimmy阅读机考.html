@@ -9,6 +9,14 @@
     <link rel="stylesheet" href="css/main.css">
     <link rel="stylesheet" href="css/heroui-bridge.css">
     <link rel="stylesheet" href="css/onboarding.css">
+    <script>
+        (function () {
+            try {
+                var savedSkin = localStorage.getItem('theme');
+                if (savedSkin) document.documentElement.setAttribute('data-theme', savedSkin);
+            } catch (e) {}
+        })();
+    </script>
 </head>
 
 <body class="hero-body boot-active" data-theme="heroui">
@@ -471,6 +479,30 @@
                             content: ''; position: absolute; top: 40%; left: 10%; width: 120px; height: 100px;
                             background: radial-gradient(circle, #ff6b4a 0%, rgba(255,107,74,0) 65%); opacity: 0.8; filter: blur(5px);
                         }
+                        /* 橙色亮丽皮肤色彩抽象 */
+                        .theme-bg-orange { background: linear-gradient(150deg, #fff1e6 0%, #ffc98a 35%, #f97316 70%, #c2410c 100%); }
+                        .theme-bg-orange::after {
+                            content: ''; position: absolute; top: 15%; left: 25%; width: 100px; height: 100px;
+                            background: radial-gradient(circle, #ffe8cc 0%, rgba(255,232,204,0) 65%); opacity: 0.85;
+                        }
+                        /* 亮黄色皮肤色彩抽象 */
+                        .theme-bg-yellow { background: linear-gradient(150deg, #fffdf0 0%, #fff3a0 35%, #eab308 70%, #a16207 100%); }
+                        .theme-bg-yellow::after {
+                            content: ''; position: absolute; top: 15%; left: 25%; width: 100px; height: 100px;
+                            background: radial-gradient(circle, #fffbe0 0%, rgba(255,251,224,0) 65%); opacity: 0.85;
+                        }
+                        /* 粉色皮肤色彩抽象 */
+                        .theme-bg-pink { background: linear-gradient(150deg, #fff5fa 0%, #fbcfe8 35%, #ec4899 70%, #9d174d 100%); }
+                        .theme-bg-pink::after {
+                            content: ''; position: absolute; top: 15%; left: 25%; width: 100px; height: 100px;
+                            background: radial-gradient(circle, #ffe3f0 0%, rgba(255,227,240,0) 65%); opacity: 0.85;
+                        }
+                        /* 默认清新绿皮肤色彩抽象 */
+                        .theme-bg-default { background: linear-gradient(150deg, #f6faf7 0%, #d1ead8 35%, #2c9760 70%, #14532d 100%); }
+                        .theme-bg-default::after {
+                            content: ''; position: absolute; top: 15%; left: 25%; width: 100px; height: 100px;
+                            background: radial-gradient(circle, #e8f3eb 0%, rgba(232,243,235,0) 65%); opacity: 0.85;
+                        }
                         /* 液态玻璃模糊层 */
                         .theme-card-glass-layer {
                             position: relative; z-index: 2; padding: 16px;
@@ -541,6 +573,70 @@
                                 <div class="theme-card-footer">
                                     <span class="theme-card-tag">静态</span>
                                     <button class="theme-card-btn" onclick="window.switchBgTheme('floral-bloom')">应用</button>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- 默认清新绿 -->
+                        <div class="theme-card">
+                            <div class="theme-card-bg theme-bg-default"></div>
+                            <div class="theme-card-glass-layer">
+                                <div class="theme-card-header">
+                                    <h4 class="theme-card-title">默认清新绿</h4>
+                                    <div class="theme-card-subtitle">
+                                        <span style="opacity:0.6;">🌿 IELTS CBT Green</span>
+                                    </div>
+                                </div>
+                                <div class="theme-card-footer">
+                                    <span class="theme-card-tag">皮肤</span>
+                                    <button class="theme-card-btn" onclick="window.applyDefaultTheme()">应用</button>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- 橙色亮丽 -->
+                        <div class="theme-card">
+                            <div class="theme-card-bg theme-bg-orange"></div>
+                            <div class="theme-card-glass-layer">
+                                <div class="theme-card-header">
+                                    <h4 class="theme-card-title">橙色亮丽</h4>
+                                    <div class="theme-card-subtitle">
+                                        <span style="opacity:0.6;">🧡 Vibrant Orange</span>
+                                    </div>
+                                </div>
+                                <div class="theme-card-footer">
+                                    <span class="theme-card-tag">皮肤</span>
+                                    <button class="theme-card-btn" onclick="window.applyTheme('orange')">应用</button>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- 亮黄色 -->
+                        <div class="theme-card">
+                            <div class="theme-card-bg theme-bg-yellow"></div>
+                            <div class="theme-card-glass-layer">
+                                <div class="theme-card-header">
+                                    <h4 class="theme-card-title">亮黄色</h4>
+                                    <div class="theme-card-subtitle">
+                                        <span style="opacity:0.6;">💛 Bright Yellow</span>
+                                    </div>
+                                </div>
+                                <div class="theme-card-footer">
+                                    <span class="theme-card-tag">皮肤</span>
+                                    <button class="theme-card-btn" onclick="window.applyTheme('yellow')">应用</button>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- 粉色 -->
+                        <div class="theme-card">
+                            <div class="theme-card-bg theme-bg-pink"></div>
+                            <div class="theme-card-glass-layer">
+                                <div class="theme-card-header">
+                                    <h4 class="theme-card-title">粉色</h4>
+                                    <div class="theme-card-subtitle">
+                                        <span style="opacity:0.6;">💗 Pink</span>
+                                    </div>
+                                </div>
+                                <div class="theme-card-footer">
+                                    <span class="theme-card-tag">皮肤</span>
+                                    <button class="theme-card-btn" onclick="window.applyTheme('pink')">应用</button>
                                 </div>
                             </div>
                         </div>
