@@ -1,0 +1,20 @@
+# 统一换行符：仓库内一律存 LF，避免 Windows 的 core.autocrlf 造成整文件级伪差异
+* text=auto eol=lf
+
+# 明确按二进制处理，杜绝被当成文本而损坏
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.avif binary
+*.webp binary
+*.pdf binary
+*.zip binary
+*.rar binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary
+*.mp3 binary
+*.mp4 binary
