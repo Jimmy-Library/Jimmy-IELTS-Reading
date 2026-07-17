@@ -102,6 +102,214 @@
             user-select: none;
         }
 
+        /* 套题模式 */
+        .suite-intro {
+            margin: 6px 0 0;
+            font-size: 0.88rem;
+            opacity: 0.75;
+            line-height: 1.6;
+        }
+
+        .suite-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 14px;
+            margin-top: 18px;
+        }
+
+        .suite-empty {
+            opacity: 0.7;
+            padding: 24px 0;
+        }
+
+        .suite-card {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding: 14px;
+            border: 1px solid rgba(148, 163, 184, 0.35);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.6);
+            cursor: pointer;
+            transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+        }
+
+        .suite-card:hover {
+            transform: translateY(-2px);
+            border-color: rgba(37, 99, 235, 0.55);
+            box-shadow: 0 6px 18px rgba(15, 23, 42, 0.1);
+        }
+
+        .suite-card__header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .suite-card__no {
+            font-weight: 700;
+            font-size: 0.95rem;
+        }
+
+        .suite-card__best {
+            font-size: 0.75rem;
+            padding: 2px 8px;
+            border-radius: 999px;
+            background: rgba(34, 197, 94, 0.16);
+            color: #15803d;
+            white-space: nowrap;
+        }
+
+        .suite-card__best em {
+            font-style: normal;
+            opacity: 0.75;
+        }
+
+        .suite-card__best--empty {
+            background: rgba(148, 163, 184, 0.2);
+            color: #64748b;
+        }
+
+        .suite-card__parts {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .suite-card__part {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 0;
+        }
+
+        .suite-card__part-tag {
+            flex: 0 0 auto;
+            font-size: 0.7rem;
+            font-weight: 700;
+            padding: 1px 6px;
+            border-radius: 4px;
+            background: rgba(37, 99, 235, 0.12);
+            color: #1d4ed8;
+        }
+
+        .suite-card__part-title {
+            flex: 1 1 auto;
+            min-width: 0;
+            font-size: 0.82rem;
+            opacity: 0.85;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .suite-card__footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            margin-top: 2px;
+        }
+
+        .suite-card__meta {
+            font-size: 0.78rem;
+            opacity: 0.65;
+        }
+
+        /* 模式选择弹窗 */
+        .suite-mode-modal[hidden] {
+            display: none;
+        }
+
+        .suite-mode-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .suite-mode-modal__backdrop {
+            position: absolute;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.5);
+        }
+
+        .suite-mode-modal__panel {
+            position: relative;
+            width: min(92vw, 460px);
+            padding: 22px;
+            border-radius: 14px;
+            background: var(--panel-bg, #fff);
+            color: inherit;
+            box-shadow: 0 20px 50px rgba(15, 23, 42, 0.3);
+        }
+
+        .suite-mode-modal__title {
+            margin: 0 0 4px;
+            font-size: 1.05rem;
+        }
+
+        .suite-mode-modal__subtitle {
+            margin: 0 0 16px;
+            font-size: 0.82rem;
+            opacity: 0.7;
+        }
+
+        .suite-mode-modal__options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .suite-mode-option {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            padding: 14px;
+            text-align: left;
+            border: 1px solid rgba(148, 163, 184, 0.5);
+            border-radius: 10px;
+            background: transparent;
+            color: inherit;
+            cursor: pointer;
+            transition: border-color 0.15s ease, background 0.15s ease;
+        }
+
+        .suite-mode-option:hover {
+            border-color: rgba(37, 99, 235, 0.7);
+            background: rgba(37, 99, 235, 0.08);
+        }
+
+        .suite-mode-option--mock:hover {
+            border-color: rgba(234, 88, 12, 0.7);
+            background: rgba(234, 88, 12, 0.08);
+        }
+
+        .suite-mode-option__name {
+            font-weight: 700;
+            font-size: 0.95rem;
+        }
+
+        .suite-mode-option__desc {
+            font-size: 0.8rem;
+            opacity: 0.7;
+        }
+
+        .suite-mode-modal__cancel {
+            display: block;
+            width: 100%;
+            margin-top: 14px;
+            padding: 9px;
+            border: none;
+            border-radius: 8px;
+            background: rgba(148, 163, 184, 0.18);
+            color: inherit;
+            cursor: pointer;
+        }
+
         /* 练习记录 · 按时间筛选下拉框 */
         .record-time-filter-wrapper {
             position: relative;
@@ -163,6 +371,7 @@
 
         <nav class="main-nav hero-nav" data-nav-controller="legacy">
             <button class="nav-btn hero-nav__btn active" type="button" data-view="overview">📊 总览</button>
+            <button class="nav-btn hero-nav__btn" type="button" data-view="suite">🎯 套题模式</button>
             <button class="nav-btn hero-nav__btn" type="button" data-view="browse">📚 题库浏览</button>
             <button class="nav-btn hero-nav__btn" type="button" data-view="practice">📝 练习记录</button>
             <a class="nav-btn hero-nav__btn" href="https://jimmy-grammar.netlify.app/#/vocab" target="_blank" rel="noopener noreferrer">📖 单词背诵</a>
@@ -176,6 +385,18 @@
             <div class="category-grid" id="category-overview">
                 <!-- 分类卡片将通过JavaScript动态生成 -->
             </div>
+        </div>
+
+        <!-- 套题模式页面 -->
+        <div id="suite-view" class="view hero-panel hero-section">
+            <div class="browse-title-bar hero-panel__header">
+                <h2 id="suite-title">🎯 套题模式</h2>
+                <p class="suite-intro">
+                    由题库现有 P1 / P2 / P3 组合成 <strong id="suite-total-count">100</strong> 套完整套题，
+                    每套 40 题。做完自动统计正确率并按雅思学术类阅读分数表换算分数。
+                </p>
+            </div>
+            <div id="suite-list" class="suite-list"></div>
         </div>
 
         <!-- 题库浏览页面 -->
@@ -687,6 +908,10 @@
     <script src="js/core/resourceCore.js"></script>
     <script src="assets/generated/reading-exams/manifest.js"></script>
     <script src="assets/generated/reading-question-types.js"></script>
+    <script src="assets/generated/reading-question-counts.js"></script>
+    <script src="js/utils/ieltsBandScore.js"></script>
+    <script src="js/data/suiteCatalog.js"></script>
+    <script src="js/views/suiteModeView.js" defer></script>
     <script src="js/utils/stateSerializer.js"></script>
     <script src="js/utils/simpleStorageWrapper.js"></script>
 

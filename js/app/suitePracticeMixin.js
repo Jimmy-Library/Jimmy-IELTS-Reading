@@ -60,6 +60,83 @@
             }
         },
 
+        /**
+         * 启动套题目录中的固定套题（套题模式）
+         * @param {string} suiteId 套题目录 ID
+         * @param {string} examMode 'free' 自由模式（正计时不限时）| 'mock' 模考模式（倒计时 60 分钟）
+         */
+        async startCatalogSuite(suiteId, examMode = 'free') {
+            const suiteWindowName = 'ielts-suite-mode-tab';
+            const MOCK_LIMIT_SECONDS = 60 * 60;
+
+            try {
+                if (!this._suiteModeReady) {
+                    this.initializeSuiteMode();
+                }
+                if (this.currentSuiteSession && this.currentSuiteSession.status === 'active') {
+                    window.showMessage && window.showMessage('套题练习正在进行中，请先完成当前套题。', 'warning');
+                    return false;
+                }
+                if (!global.SuiteCatalog || typeof global.SuiteCatalog.getSuite !== 'function') {
+                    window.showMessage && window.showMessage('套题目录未就绪，请刷新页面重试。', 'error');
+                    return false;
+                }
+
+                const suite = global.SuiteCatalog.getSuite(suiteId);
+                if (!suite) {
+                    window.showMessage && window.showMessage('未找到该套题。', 'warning');
+                    return false;
+                }
+
+                // 套题目录只存 examId，这里补齐题库索引里的完整信息供后续流程使用
+                const examIndex = await this._fetchSuiteExamIndex();
+                const byId = new Map(
+                    (examIndex || [])
+                        .filter((item) => item && item.id != null)
+                        .map((item) => [String(item.id), item])
+                );
+
+                const sequence = [];
+                for (const entry of suite.entries) {
+                    const exam = byId.get(String(entry.id));
+                    if (!exam) {
+                        window.showMessage && window.showMessage('套题中的题目「' + entry.id + '」不在题库中，无法开始。', 'error');
+                        return false;
+                    }
+                    sequence.push({
+                        examId: exam.id,
+                        exam: Object.assign({}, exam, { type: 'reading' })
+                    });
+                }
+
+                const isMock = String(examMode).toLowerCase() === 'mock';
+                const started = await this._launchSuiteSessionFromSequence(sequence, {
+                    // 复用经典流程：提交后自动进入下一篇
+                    flowMode: 'classic',
+                    frequencyScope: 'all',
+                    suiteWindowName,
+                    launchLabel: suite.name + '·' + (isMock ? '模考模式' : '自由模式'),
+                    suiteTimerMode: isMock ? 'countdown' : 'elapsed',
+                    suiteTimerLimitSeconds: isMock ? MOCK_LIMIT_SECONDS : null,
+                    catalogSuiteId: suite.id,
+                    catalogSuiteName: suite.name,
+                    suiteExamMode: isMock ? 'mock' : 'free'
+                });
+
+                if (!started && this.currentSuiteSession) {
+                    await this._abortSuiteSession(this.currentSuiteSession, { reason: 'startup_failed' });
+                }
+                return started;
+            } catch (error) {
+                console.error('[SuiteCatalog] 启动套题失败:', error);
+                window.showMessage && window.showMessage('套题启动失败，请稍后重试。', 'error');
+                if (this.currentSuiteSession) {
+                    await this._abortSuiteSession(this.currentSuiteSession, { reason: 'startup_failed' });
+                }
+                return false;
+            }
+        },
+
         async startSuitePractice(options = {}) {
             const suiteWindowName = 'ielts-suite-mode-tab';
 
@@ -1548,7 +1625,30 @@
             const endTimeIso = new Date(completionTime).toISOString();
             const suiteSequence = await this._resolveSuiteSequenceNumber(startTime);
             const dateLabel = this._formatSuiteDateLabel(startTime);
-            const displayTitle = dateLabel + '套题练习' + suiteSequence;
+            const catalogName = session.catalogSuiteName || '';
+            const displayTitle = catalogName
+                ? (catalogName + '·' + (session.suiteExamMode === 'mock' ? '模考' : '自由'))
+                : (dateLabel + '套题练习' + suiteSequence);
+
+            // 雅思学术类阅读分数换算（40 题标准表）
+            const bandInfo = global.IeltsBandScore && typeof global.IeltsBandScore.scoreSuite === 'function'
+                ? global.IeltsBandScore.scoreSuite(totalCorrect, totalQuestions)
+                : null;
+
+            if (session.catalogSuiteId && bandInfo && global.SuiteModeView
+                && typeof global.SuiteModeView.recordSuiteResult === 'function') {
+                try {
+                    global.SuiteModeView.recordSuiteResult(session.catalogSuiteId, {
+                        band: bandInfo.band,
+                        bandLabel: bandInfo.bandLabel,
+                        correct: totalCorrect,
+                        total: totalQuestions,
+                        mode: session.suiteExamMode || ''
+                    });
+                } catch (bestError) {
+                    console.warn('[SuitePractice] 记录套题最好成绩失败:', bestError);
+                }
+            }
 
             return {
                 id: session.id,
@@ -1567,6 +1667,8 @@
                 accuracy,
                 percentage,
                 scoreInfo: { correct: totalCorrect, total: totalQuestions, accuracy, percentage },
+                ieltsBand: bandInfo ? bandInfo.band : null,
+                ieltsBandLabel: bandInfo ? bandInfo.bandLabel : '',
                 answers: aggregatedAnswers,
                 answerComparison: aggregatedComparison,
                 suiteEntries,
@@ -1579,6 +1681,12 @@
                     suiteDisplayDate: dateLabel,
                     suiteSessionId: session.id,
                     suiteEntries,
+                    catalogSuiteId: session.catalogSuiteId || '',
+                    catalogSuiteName: catalogName,
+                    suiteExamMode: session.suiteExamMode || '',
+                    ieltsBand: bandInfo ? bandInfo.band : null,
+                    ieltsBandLabel: bandInfo ? bandInfo.bandLabel : '',
+                    ieltsBandEstimated: bandInfo ? !!bandInfo.estimated : false,
                     startedAt: startTimeIso,
                     completedAt: endTimeIso
                 },
@@ -1956,22 +2064,38 @@
                 const lockedAutoAdvance = flowMode === 'stationary'
                     ? false
                     : true;
+                const startedAt = Date.now();
                 const session = {
                     id: suiteSessionId,
                     status: 'initializing',
-                    startTime: Date.now(),
+                    startTime: startedAt,
                     sequence: normalizedSequence,
                     currentIndex: 0,
                     results: [],
                     draftsByExam: {},
                     elapsedByExam: {},
-                    globalTimerAnchorMs: Date.now(),
+                    globalTimerAnchorMs: startedAt,
                     flowMode,
                     frequencyScope,
                     autoAdvanceAfterSubmit: lockedAutoAdvance,
                     windowRef: null,
                     windowName: suiteWindowName
                 };
+
+                // 套题模式（自由/模考）：整套共用一个计时锚点，
+                // _resolveSuiteTimerContext 会从 session 回退读取这两个字段
+                if (options.suiteTimerMode) {
+                    session.suiteTimerMode = options.suiteTimerMode;
+                    session.suiteTimerAnchorMs = startedAt;
+                }
+                if (options.suiteTimerLimitSeconds != null) {
+                    session.suiteTimerLimitSeconds = options.suiteTimerLimitSeconds;
+                }
+                if (options.catalogSuiteId) {
+                    session.catalogSuiteId = options.catalogSuiteId;
+                    session.catalogSuiteName = options.catalogSuiteName || '';
+                    session.suiteExamMode = options.suiteExamMode || '';
+                }
 
                 this.currentSuiteSession = session;
                 this._registerSuiteSequence(session);

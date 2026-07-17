@@ -51,6 +51,13 @@
         var t = document.getElementById('browse-title'); if (t) t.textContent = '题库浏览';
       }
       if (normalized === 'browse' && typeof window.loadExamList === 'function') window.loadExamList();
+      if (normalized === 'suite' && window.SuiteModeView && typeof window.SuiteModeView.initialize === 'function') {
+        try {
+          window.SuiteModeView.initialize();
+        } catch (suiteError) {
+          console.error('[Fallback] 初始化套题模式视图失败:', suiteError);
+        }
+      }
       if (normalized === 'practice' && window.AppActions && typeof window.AppActions.ensurePracticeSuite === 'function') {
         window.AppActions.ensurePracticeSuite();
       }

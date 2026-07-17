@@ -58,6 +58,15 @@
                 case 'overview':
                     this.refreshOverviewData();
                     break;
+                case 'suite':
+                    if (window.SuiteModeView && typeof window.SuiteModeView.initialize === 'function') {
+                        try {
+                            window.SuiteModeView.initialize();
+                        } catch (error) {
+                            console.error('[App] 初始化套题模式视图失败:', error);
+                        }
+                    }
+                    break;
                 case 'browse':
                     // 如果存在待应用的筛选，则优先应用而不重置
                     if (window.__pendingBrowseFilter && typeof window.applyBrowseFilter === 'function') {

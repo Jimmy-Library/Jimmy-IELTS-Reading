@@ -274,6 +274,31 @@ class PracticeRecordModal {
             `;
         }
 
+        // 套题练习：展示按雅思学术类阅读分数表换算的分数与练习模式
+        const bandLabel = record.ieltsBandLabel || (record.metadata && record.metadata.ieltsBandLabel) || '';
+        const bandEstimated = !!(record.metadata && record.metadata.ieltsBandEstimated);
+        const suiteExamMode = record.metadata && record.metadata.suiteExamMode;
+        const examModeLabel = suiteExamMode === 'mock'
+            ? '模考模式'
+            : (suiteExamMode === 'free' ? '自由模式' : '');
+        let bandInfo = '';
+        if (bandLabel) {
+            bandInfo += `
+                <div class="meta-item">
+                    <span class="meta-label">雅思分数：</span>
+                    <span class="meta-value record-band">${bandLabel}${bandEstimated ? ' <em class="record-band__note">(折算)</em>' : ''}</span>
+                </div>
+            `;
+        }
+        if (examModeLabel) {
+            bandInfo += `
+                <div class="meta-item">
+                    <span class="meta-label">练习模式：</span>
+                    <span class="meta-value">${examModeLabel}</span>
+                </div>
+            `;
+        }
+
         const answerSection = this.generateAnswerTable(record);
 
         return `
@@ -316,6 +341,7 @@ class PracticeRecordModal {
                                     <span class="meta-value unanswered-count">${unansweredCount}</span>
                                 </div>
                                 ${multiSuiteInfo}
+                                ${bandInfo}
                             </div>
                         </div>
                         <div class="answer-details">
