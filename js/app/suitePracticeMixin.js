@@ -1727,7 +1727,10 @@
                 await this._savePartialSuiteRecord(session);
                 session.status = 'error';
             } finally {
-                await this._teardownSuiteSession(session);
+                // 套题模式（目录套题）做完后保留做题窗口，供就地回顾三篇与导出合并 PDF
+                await this._teardownSuiteSession(session, {
+                    keepWindow: !!session.catalogSuiteId && session.status === 'completed'
+                });
             }
         },
 
@@ -2552,14 +2555,21 @@
             }
         },
 
-        async _teardownSuiteSession(session) {
+        async _teardownSuiteSession(session, options = {}) {
             if (!session) {
                 return;
             }
 
             this._clearSuiteHandshakes();
 
-            if (session.windowRef && !session.windowRef.closed && typeof session.windowRef.postMessage === 'function') {
+            // 套题模式正常做完时保留窗口，让用户留在做题页回顾三篇；
+            // 中止/异常仍照常关闭，避免残留窗口
+            const keepWindow = options.keepWindow === true;
+
+            if (!keepWindow
+                && session.windowRef
+                && !session.windowRef.closed
+                && typeof session.windowRef.postMessage === 'function') {
                 try {
                     session.windowRef.postMessage({
                         type: 'SUITE_FORCE_CLOSE',
@@ -2573,7 +2583,9 @@
             }
 
             this._releaseSuiteWindowGuard(session.windowRef);
-            this._safelyCloseWindow(session.windowRef);
+            if (!keepWindow) {
+                this._safelyCloseWindow(session.windowRef);
+            }
 
             if (session.sequence && session.sequence.length) {
                 const cleanupTasks = session.sequence.map(item => this.cleanupExamSession ? this.cleanupExamSession(item.examId) : Promise.resolve());

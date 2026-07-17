@@ -59,6 +59,8 @@
         singleDraftSaveTimer: null,
         singleDraftHandlersBound: false,
         suiteSequenceExamIds: [],
+        // 交卷后的本地三篇回顾：{ summary, answersByExam }
+        suiteLocalReview: null,
         suiteBlueprint: null,
         suiteBlueprintKey: '',
         lastInitSignature: '',
@@ -329,6 +331,9 @@
             return null;
         }
 
+        // 作答快照：交卷后草稿镜像会被清除，这里留存供「停留在页面回顾三篇」与导出使用
+        const answersByExam = {};
+
         const sections = blueprint.passages.map((passage) => {
             const dataset = passage.dataset || (passage.isCurrent ? state.dataset : null);
             const answerKey = (dataset && dataset.answerKey) || {};
@@ -336,6 +341,7 @@
                 ? dataset.questionOrder
                 : Object.keys(answerKey);
             const answers = getAnswersForExam(passage.examId);
+            answersByExam[passage.examId] = answers;
 
             let correct = 0;
             let total = 0;
@@ -371,6 +377,7 @@
         const totalQuestions = sections.reduce((sum, s) => sum + s.total, 0);
         return {
             sections,
+            answersByExam,
             correct: totalCorrect,
             total: totalQuestions,
             percentage: totalQuestions > 0 ? Math.round((totalCorrect / totalQuestions) * 100) : 0
@@ -411,10 +418,13 @@
             }
         }));
 
+        const answersByExam = {};
+
         const sections = entries.map((entry, index) => {
             const examId = String(entry.examId || '');
             const passage = blueprintById.get(examId);
             const dataset = datasetById.get(examId) || null;
+            answersByExam[examId] = normalizeReplayMap(entry.answers || {});
 
             const comparison = normalizeReplayMap(entry.answerComparison || {});
             const answers = normalizeReplayMap(entry.answers || {});
@@ -473,10 +483,68 @@
         const totalQuestions = sections.reduce((sum, s) => sum + s.total, 0);
         return {
             sections,
+            answersByExam,
             correct: totalCorrect,
             total: totalQuestions,
             percentage: totalQuestions > 0 ? Math.round((totalCorrect / totalQuestions) * 100) : 0
         };
+    }
+
+    /**
+     * 交卷后转入「本地三篇回顾」：题号导航改为就地切换小节，
+     * 不再向主页面派发跳转（此时套题会话已结算，消息无人接收）。
+     */
+    function enterLocalSuiteReview(summary) {
+        state.suiteLocalReview = {
+            summary,
+            answersByExam: (summary && summary.answersByExam) || {}
+        };
+        setReadOnlyMode(true);
+        state.reviewViewMode = 'review';
+    }
+
+    /** 就地切换到套题中的某一篇（仅交卷后的本地回顾使用） */
+    async function renderSuitePassageLocally(targetIndex) {
+        const blueprint = state.suiteBlueprint;
+        const local = state.suiteLocalReview;
+        if (!blueprint || !local || !Array.isArray(blueprint.passages)) return;
+        const passage = blueprint.passages[targetIndex];
+        if (!passage) return;
+
+        let dataset = passage.dataset;
+        if (!dataset) {
+            try {
+                dataset = await loadDatasetFor(passage.examId);
+                passage.dataset = dataset;
+            } catch (error) {
+                console.error('[UnifiedReadingPage] 回顾载入小节失败:', passage.examId, error);
+                return;
+            }
+        }
+
+        // 切换当前篇：渲染其文章与题目，并回填该篇作答
+        state.examId = passage.examId;
+        state.dataKey = passage.examId;
+        state.dataset = dataset;
+        renderDataset(dataset);
+
+        const answers = local.answersByExam[passage.examId] || {};
+        applyReplayAnswersToDom(answers);
+        setReadOnlyMode(true);
+
+        blueprint.passages.forEach((item, index) => {
+            item.isCurrent = index === targetIndex;
+        });
+        navStatus.clear();
+        buildQuestionNav();
+
+        // 结果面板保持三篇合计，切换小节不应把它冲掉
+        renderSuiteResults(local.summary);
+        try {
+            await renderExplanations();
+        } catch (_) {
+            // 解析渲染失败不影响回顾
+        }
     }
 
     function suiteResultRowsHtml(rows) {
@@ -989,7 +1057,12 @@
         if (passageTrigger) {
             const targetIndex = Number(passageTrigger.dataset.passageIndex);
             if (Number.isInteger(targetIndex)) {
-                dispatchSimulationNavigateTo(targetIndex);
+                // 交卷后套题会话已结算，跳转消息无人接收，改为就地切换
+                if (state.suiteLocalReview) {
+                    renderSuitePassageLocally(targetIndex);
+                } else {
+                    dispatchSimulationNavigateTo(targetIndex);
+                }
             }
             return;
         }
@@ -3232,6 +3305,8 @@
         }
         if (suiteSummary) {
             renderSuiteResults(suiteSummary);
+            // 交卷后留在本页：题号导航可就地切换三篇，回看文章、题目与作答
+            enterLocalSuiteReview(suiteSummary);
         } else {
             renderResults(results);
         }
@@ -3310,12 +3385,99 @@
         updateNavStatuses();
     }
 
-    function handleExportPdf() {
-        // 利用浏览器打印导出整页（文章 + 题目 + 作答 + 高亮 + 练习详情）为 PDF
+    /**
+     * 套题：把三篇（文章 + 该篇答案对照）拼成一份打印内容。
+     * 不直接打印页面，因为页面同一时刻只渲染一篇。
+     */
+    async function buildSuitePrintContainer(local) {
+        const summary = local.summary;
+        const blueprint = state.suiteBlueprint;
+        if (!summary || !blueprint || !Array.isArray(blueprint.passages)) return null;
+
+        const container = document.createElement('div');
+        container.id = 'suite-print-root';
+
+        const bandInfo = global.IeltsBandScore && typeof global.IeltsBandScore.scoreSuite === 'function'
+            ? global.IeltsBandScore.scoreSuite(summary.correct, summary.total)
+            : null;
+        const head = document.createElement('div');
+        head.className = 'suite-print__head';
+        head.innerHTML = `
+            <h1>IELTS 阅读套题 · 三篇合并</h1>
+            <p>总分 ${summary.correct} / ${summary.total} · ${summary.percentage}%${bandInfo && bandInfo.bandLabel ? ' · 雅思 ' + bandInfo.bandLabel : ''}</p>
+        `;
+        container.appendChild(head);
+
+        for (let i = 0; i < blueprint.passages.length; i += 1) {
+            const passage = blueprint.passages[i];
+            let dataset = passage.dataset;
+            if (!dataset) {
+                try {
+                    dataset = await loadDatasetFor(passage.examId);
+                    passage.dataset = dataset;
+                } catch (_) {
+                    continue;
+                }
+            }
+            const section = summary.sections.find((s) => s.examId === passage.examId);
+            const passageHtml = (dataset.passage?.blocks || [])
+                .map((block) => block?.bodyHtml || block?.html || '')
+                .join('\n');
+
+            const block = document.createElement('section');
+            block.className = 'suite-print__passage';
+            block.innerHTML = `
+                <h2 class="suite-print__title">
+                    <span class="suite-print__tag">${passage.label}</span>
+                    ${dataset.meta?.title || passage.examId}
+                    ${section ? `<span class="suite-print__score">${section.correct}/${section.total} · ${section.percentage}%</span>` : ''}
+                </h2>
+                <div class="suite-print__article">${passageHtml}</div>
+                ${section ? `
+                <table class="results-table suite-print__answers">
+                    <thead><tr><th>题号</th><th>你的答案</th><th>正确答案</th><th>结果</th></tr></thead>
+                    <tbody>${suiteResultRowsHtml(section.rows)}</tbody>
+                </table>` : ''}
+            `;
+            container.appendChild(block);
+        }
+        return container;
+    }
+
+    async function handleExportPdf() {
+        const local = state.suiteLocalReview;
+        // 单篇：直接打印整页（文章 + 题目 + 作答 + 高亮 + 练习详情）
+        if (!local) {
+            try {
+                window.print();
+            } catch (error) {
+                console.warn('[UnifiedReading] 导出 PDF 失败:', error);
+            }
+            return;
+        }
+
+        let container = null;
         try {
+            container = await buildSuitePrintContainer(local);
+            if (!container) {
+                window.print();
+                return;
+            }
+            document.body.appendChild(container);
+            document.body.classList.add('suite-printing');
             window.print();
         } catch (error) {
-            console.warn('[UnifiedReading] 导出 PDF 失败:', error);
+            console.error('[UnifiedReading] 导出套题 PDF 失败:', error);
+            try {
+                window.print();
+            } catch (_) {
+                // 已尽力
+            }
+        } finally {
+            document.body.classList.remove('suite-printing');
+            if (container && container.parentNode) {
+                container.parentNode.removeChild(container);
+            }
         }
     }
 

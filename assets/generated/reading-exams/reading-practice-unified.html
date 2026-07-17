@@ -359,6 +359,11 @@
         }
 
         /* ---- 导出 PDF：整页打印（文章 + 题目 + 作答 + 高亮 + 详情）---- */
+        /* 套题合并打印：屏幕上不显示，仅打印时启用 */
+        #suite-print-root {
+            display: none;
+        }
+
         @media print {
             html, body {
                 background: #fff !important;
@@ -366,6 +371,81 @@
                 print-color-adjust: exact;
                 height: auto !important;
                 overflow: visible !important;
+            }
+
+            /* 套题导出：只打印三篇合并内容，隐藏只渲染单篇的实时页面 */
+            body.suite-printing .shell,
+            body.suite-printing .header,
+            body.suite-printing #results,
+            body.suite-printing #question-nav {
+                display: none !important;
+            }
+
+            body.suite-printing #suite-print-root {
+                display: block !important;
+            }
+
+            #suite-print-root .suite-print__head h1 {
+                font-size: 18pt;
+                margin: 0 0 4px;
+            }
+
+            #suite-print-root .suite-print__head p {
+                margin: 0 0 16px;
+                font-weight: 700;
+            }
+
+            #suite-print-root .suite-print__passage {
+                page-break-before: always;
+                break-before: page;
+            }
+
+            #suite-print-root .suite-print__passage:first-of-type {
+                page-break-before: auto;
+                break-before: auto;
+            }
+
+            #suite-print-root .suite-print__title {
+                font-size: 14pt;
+                margin: 0 0 10px;
+                padding-bottom: 6px;
+                border-bottom: 2px solid #1f7a4d;
+            }
+
+            #suite-print-root .suite-print__tag {
+                display: inline-block;
+                margin-right: 8px;
+                padding: 1px 8px;
+                border-radius: 4px;
+                background: #1f7a4d;
+                color: #fff;
+                font-size: 11pt;
+            }
+
+            #suite-print-root .suite-print__score {
+                float: right;
+                font-size: 12pt;
+                color: #1f7a4d;
+            }
+
+            #suite-print-root .suite-print__article {
+                margin-bottom: 14px;
+                line-height: 1.7;
+            }
+
+            #suite-print-root .suite-print__answers {
+                width: 100%;
+                border-collapse: collapse;
+                page-break-inside: avoid;
+                break-inside: avoid;
+            }
+
+            #suite-print-root .suite-print__answers th,
+            #suite-print-root .suite-print__answers td {
+                border: 1px solid #cfd8dc;
+                padding: 5px 8px;
+                text-align: center;
+                font-size: 10pt;
             }
 
             /* 隐藏交互/悬浮元素 */

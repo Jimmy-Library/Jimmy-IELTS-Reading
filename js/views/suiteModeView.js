@@ -113,9 +113,6 @@
         const best = readBestScores();
         listEl.innerHTML = catalog.map((s) => suiteCardHtml(s, best[s.id])).join('');
         rendered = true;
-
-        const countEl = document.getElementById('suite-total-count');
-        if (countEl) countEl.textContent = String(catalog.length);
     }
 
     function ensureModal() {
