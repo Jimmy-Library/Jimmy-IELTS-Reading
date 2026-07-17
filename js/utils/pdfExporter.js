@@ -542,6 +542,36 @@ class PdfExporter {
         background: #ffd54a;
         color: var(--ink);
     }
+    .record-title .tag.band {
+        background: #1f7a4d;
+        color: #ffffff;
+    }
+    /* 套题：逐篇小节 */
+    .suite-section {
+        margin: 10px 0 14px;
+        padding-left: 10px;
+        border-left: 3px solid #cfe3d6;
+        break-inside: avoid;
+        page-break-inside: avoid;
+    }
+    .suite-section-head {
+        display: flex;
+        align-items: baseline;
+        gap: 8px;
+        margin-bottom: 6px;
+    }
+    .suite-section-title {
+        font-size: 10.5pt;
+        font-weight: 700;
+        color: var(--ink);
+        flex: 1 1 auto;
+    }
+    .suite-section-score {
+        font-size: 9.5pt;
+        color: var(--green);
+        font-weight: 700;
+        white-space: nowrap;
+    }
     .record-score {
         font-size: 11pt;
         color: var(--green);
@@ -752,16 +782,32 @@ class PdfExporter {
         const startTime = this.formatTime(record.startTime || record.date);
         const duration = typeof record.duration === 'number' ? this.formatDuration(record.duration) : '未记录';
 
+        // 套题记录：按 P1/P2/P3 分篇输出，而不是并成一张扁平表
+        const suiteEntries = this.getSuiteEntries(record);
         const hasDetails = this.markdown.hasAnswerDetails(record);
-        const bodyHtml = hasDetails
-            ? this.buildAnswerTableHtml(record)
-            : `<p class="no-detail">本次记录没有题级答题对比数据。<br>分数 ${metrics.correct}/${metrics.total} · 正确率 ${metrics.percentage}% · 用时 ${duration}。</p>`;
+        let bodyHtml;
+        if (suiteEntries.length) {
+            bodyHtml = this.buildSuiteSectionsHtml(suiteEntries);
+        } else if (hasDetails) {
+            bodyHtml = this.buildAnswerTableHtml(record);
+        } else {
+            bodyHtml = `<p class="no-detail">本次记录没有题级答题对比数据。<br>分数 ${metrics.correct}/${metrics.total} · 正确率 ${metrics.percentage}% · 用时 ${duration}。</p>`;
+        }
+
+        const bandLabel = record.ieltsBandLabel || metadata.ieltsBandLabel || '';
+        const bandHtml = bandLabel
+            ? `<span class="tag band">雅思 ${this.escapeHtml(bandLabel)}</span>`
+            : '';
+        const suiteMetaHtml = suiteEntries.length
+            ? `<span>篇数:${suiteEntries.length}</span>`
+            : '';
 
         return `<article class="record">
             <div class="record-head">
                 <div class="record-title">
                     <span class="tag">${this.escapeHtml(category)}</span>
                     <span class="tag freq">${this.escapeHtml(frequency)}</span>
+                    ${bandHtml}
                     ${this.escapeHtml(title)}
                 </div>
                 <div class="record-score">${metrics.correct}/${metrics.total} · ${metrics.percentage}%</div>
@@ -770,9 +816,45 @@ class PdfExporter {
                 <span>开始时间:${this.escapeHtml(startTime)}</span>
                 <span>用时:${this.escapeHtml(duration)}</span>
                 <span>题目数:${metrics.total}</span>
+                ${suiteMetaHtml}
             </div>
             ${bodyHtml}
         </article>`;
+    }
+
+    getSuiteEntries(record) {
+        if (!record || !Array.isArray(record.suiteEntries)) {
+            return [];
+        }
+        return record.suiteEntries.filter(Boolean);
+    }
+
+    /** 套题：逐篇渲染标题 + 该篇得分 + 该篇答题表 */
+    buildSuiteSectionsHtml(suiteEntries) {
+        return suiteEntries.map((entry, index) => {
+            const score = entry.scoreInfo || {};
+            const correct = Number(score.correct) || 0;
+            const total = Number(score.total) || 0;
+            const percentage = total > 0 ? Math.round((correct / total) * 100) : 0;
+            const category = entry.category || ('Part ' + (index + 1));
+            const title = entry.title || entry.examId || ('第 ' + (index + 1) + ' 篇');
+            const duration = typeof entry.duration === 'number' ? this.formatDuration(entry.duration) : '未记录';
+
+            // 每篇自带 answerComparison / answers，可直接复用单篇渲染
+            const entryRecord = Object.assign({}, entry, { metadata: { examTitle: title, category } });
+            const detail = this.markdown.hasAnswerDetails(entryRecord)
+                ? this.buildAnswerTableHtml(entryRecord)
+                : '<p class="no-detail">本篇没有题级答题对比数据。</p>';
+
+            return `<section class="suite-section">
+                <div class="suite-section-head">
+                    <span class="tag">${this.escapeHtml(category)}</span>
+                    <span class="suite-section-title">${this.escapeHtml(title)}</span>
+                    <span class="suite-section-score">${correct}/${total} · ${percentage}% · ${this.escapeHtml(duration)}</span>
+                </div>
+                ${detail}
+            </section>`;
+        }).join('');
     }
 
     buildAnswerTableHtml(record) {

@@ -111,8 +111,9 @@
 
                 const isMock = String(examMode).toLowerCase() === 'mock';
                 const started = await this._launchSuiteSessionFromSequence(sequence, {
-                    // 复用经典流程：提交后自动进入下一篇
-                    flowMode: 'classic',
+                    // 模拟模式：三篇共用一个会话与计时，题号导航跨篇可自由切换，
+                    // 最后一篇提交后汇总三篇结果（与真实机考一致）
+                    flowMode: 'simulation',
                     frequencyScope: 'all',
                     suiteWindowName,
                     launchLabel: suite.name + '·' + (isMock ? '模考模式' : '自由模式'),
