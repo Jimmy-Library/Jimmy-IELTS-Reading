@@ -2627,6 +2627,20 @@
                 readOnly: session.readOnly !== false,
                 entry: this._cloneReviewData(entry)
             };
+            // 套题回顾：额外附带全部小节，供题目页一次性呈现三篇结果
+            if (session.entries.length > 1) {
+                replayPayload.suiteReviewEntries = session.entries.map((item, index) => ({
+                    examId: item.examId || '',
+                    title: item.title || (item.metadata && item.metadata.examTitle) || item.examId || '',
+                    category: item.category || (item.metadata && item.metadata.category) || '',
+                    index,
+                    isCurrent: index === safeIndex,
+                    answers: this._cloneReviewData(item.answers || {}),
+                    answerComparison: this._cloneReviewData(item.answerComparison || {}),
+                    correctAnswers: this._cloneReviewData(item.correctAnswers || {}),
+                    scoreInfo: this._cloneReviewData(item.scoreInfo || {})
+                }));
+            }
             const contextPayload = this._buildReviewContextPayload(session, safeIndex);
             try {
                 targetWindow.postMessage({ type: 'REPLAY_PRACTICE_RECORD', data: replayPayload }, '*');

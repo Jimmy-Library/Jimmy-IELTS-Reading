@@ -468,6 +468,60 @@
             font-weight: 700;
         }
 
+        /* 套题结果：三篇分节呈现 */
+        .suite-result-total {
+            font-size: 1.02rem;
+            font-weight: 700;
+            margin: 6px 0 4px;
+        }
+
+        .suite-result-band {
+            display: inline-block;
+            margin-left: 8px;
+            padding: 2px 10px;
+            border-radius: 999px;
+            background: var(--success);
+            color: #fff;
+            font-size: 0.86rem;
+        }
+
+        .suite-result-section {
+            margin-top: 16px;
+            padding-top: 12px;
+            border-top: 1px solid var(--line);
+        }
+
+        .suite-result-section__head {
+            display: flex;
+            align-items: baseline;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .suite-result-section__tag {
+            flex: 0 0 auto;
+            font-weight: 700;
+            font-size: 0.78rem;
+            padding: 2px 8px;
+            border-radius: 4px;
+            background: rgba(37, 99, 235, 0.12);
+            color: #1d4ed8;
+        }
+
+        .suite-result-section__title {
+            flex: 1 1 auto;
+            min-width: 0;
+            font-size: 0.92rem;
+            opacity: 0.85;
+        }
+
+        .suite-result-section__score {
+            flex: 0 0 auto;
+            font-weight: 700;
+            color: var(--success);
+            white-space: nowrap;
+        }
+
         /* 提交后展示的微信 / 二维码联系卡片 */
         .contact-card {
             margin-top: 20px;
@@ -1269,6 +1323,8 @@
     <script src="./manifest.js"></script>
     <script src="../../../js/utils/answerMatchCore.js"></script>
     <script src="../../../js/practice-page-ui.js"></script>
+    <!-- 套题交卷后按雅思分数表换算三篇合计成绩 -->
+    <script src="../../../js/utils/ieltsBandScore.js"></script>
     <script src="../../../js/runtime/unifiedReadingPage.js"></script>
 </body>
 

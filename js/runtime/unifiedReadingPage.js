@@ -294,6 +294,247 @@
         return set;
     }
 
+    /**
+     * 读取套题中某一篇的完整作答（当前篇直接从 DOM 收集，其余篇取草稿镜像）。
+     * 注意：镜像会在交卷后被 clearSimulationDraftMirror 清除，需在此之前调用。
+     */
+    function getAnswersForExam(examId) {
+        const targetExamId = examId ? String(examId).trim() : '';
+        const currentExamId = state.examId ? String(state.examId).trim() : '';
+        if (targetExamId && targetExamId === currentExamId) {
+            return collectAnswers();
+        }
+        const suiteSessionId = state.suiteSessionId ? String(state.suiteSessionId).trim() : '';
+        if (!suiteSessionId || !targetExamId || !global.sessionStorage) {
+            return {};
+        }
+        try {
+            const raw = global.sessionStorage.getItem(`ielts_sim_draft::${suiteSessionId}::${targetExamId}`);
+            if (!raw) return {};
+            const parsed = JSON.parse(raw);
+            const answers = parsed && parsed.draft && parsed.draft.answers;
+            return answers && typeof answers === 'object' ? answers : {};
+        } catch (_) {
+            return {};
+        }
+    }
+
+    /**
+     * 逐篇计算套题成绩，返回可直接渲染的小节数组。
+     * 每篇用自己的 answerKey 与 questionOrder，题号沿用该篇的显示编号。
+     */
+    function buildSuiteResultSections() {
+        const blueprint = state.suiteBlueprint;
+        if (!blueprint || !Array.isArray(blueprint.passages) || blueprint.passages.length <= 1) {
+            return null;
+        }
+
+        const sections = blueprint.passages.map((passage) => {
+            const dataset = passage.dataset || (passage.isCurrent ? state.dataset : null);
+            const answerKey = (dataset && dataset.answerKey) || {};
+            const order = Array.isArray(dataset && dataset.questionOrder)
+                ? dataset.questionOrder
+                : Object.keys(answerKey);
+            const answers = getAnswersForExam(passage.examId);
+
+            let correct = 0;
+            let total = 0;
+            const rows = order.map((questionId) => {
+                const userAnswer = answers[questionId] || '';
+                const correctAnswer = answerKey[questionId];
+                const isCorrect = compareAnswers(userAnswer, correctAnswer);
+                const weight = questionWeight(correctAnswer);
+                total += weight;
+                if (isCorrect) correct += weight;
+                return {
+                    questionId,
+                    label: labelFromDataset(dataset, questionId),
+                    userAnswer,
+                    correctAnswer,
+                    isCorrect
+                };
+            });
+
+            return {
+                examId: passage.examId,
+                label: passage.label,
+                title: passage.title || '',
+                isCurrent: passage.isCurrent,
+                rows,
+                correct,
+                total,
+                percentage: total > 0 ? Math.round((correct / total) * 100) : 0
+            };
+        });
+
+        const totalCorrect = sections.reduce((sum, s) => sum + s.correct, 0);
+        const totalQuestions = sections.reduce((sum, s) => sum + s.total, 0);
+        return {
+            sections,
+            correct: totalCorrect,
+            total: totalQuestions,
+            percentage: totalQuestions > 0 ? Math.round((totalCorrect / totalQuestions) * 100) : 0
+        };
+    }
+
+    /**
+     * 回顾模式：把主页面下发的三篇小节整理成与交卷时一致的结构。
+     * 题号沿用各篇自己的显示编号；该篇数据集未载入时退回原始 questionId。
+     */
+    async function buildSuiteSummaryFromReviewEntries(entries) {
+        const blueprintById = new Map();
+        if (state.suiteBlueprint && Array.isArray(state.suiteBlueprint.passages)) {
+            state.suiteBlueprint.passages.forEach((passage) => {
+                blueprintById.set(String(passage.examId), passage);
+            });
+        }
+
+        // 回顾模式不走 simulation，blueprint 通常为空；按需载入各篇数据集，
+        // 以还原真实题号（P1 1-13 / P2 14-26 / P3 27-40）与题目顺序
+        const datasetById = new Map();
+        await Promise.all(entries.map(async (entry) => {
+            const examId = String(entry.examId || '');
+            if (!examId) return;
+            const passage = blueprintById.get(examId);
+            if (passage && passage.dataset) {
+                datasetById.set(examId, passage.dataset);
+                return;
+            }
+            if (examId === String(state.examId || '') && state.dataset) {
+                datasetById.set(examId, state.dataset);
+                return;
+            }
+            try {
+                datasetById.set(examId, await loadDatasetFor(examId));
+            } catch (error) {
+                console.warn('[UnifiedReadingPage] 回顾载入数据集失败:', examId, error);
+            }
+        }));
+
+        const sections = entries.map((entry, index) => {
+            const examId = String(entry.examId || '');
+            const passage = blueprintById.get(examId);
+            const dataset = datasetById.get(examId) || null;
+
+            const comparison = normalizeReplayMap(entry.answerComparison || {});
+            const answers = normalizeReplayMap(entry.answers || {});
+            const correctAnswers = normalizeReplayMap(entry.correctAnswers || {});
+            const order = Array.isArray(dataset && dataset.questionOrder) && dataset.questionOrder.length
+                ? dataset.questionOrder
+                : Object.keys(comparison);
+
+            let correct = 0;
+            let total = 0;
+            const rows = order.map((questionId) => {
+                const raw = comparison[questionId];
+                const cmp = (raw && typeof raw === 'object' && !Array.isArray(raw)) ? raw : {};
+                const userAnswer = Object.prototype.hasOwnProperty.call(cmp, 'userAnswer')
+                    ? cmp.userAnswer
+                    : (answers[questionId] || '');
+                const correctAnswer = Object.prototype.hasOwnProperty.call(cmp, 'correctAnswer')
+                    ? cmp.correctAnswer
+                    : (correctAnswers[questionId] != null
+                        ? correctAnswers[questionId]
+                        : (dataset && dataset.answerKey ? dataset.answerKey[questionId] : ''));
+                const isCorrect = typeof cmp.isCorrect === 'boolean'
+                    ? cmp.isCorrect
+                    : compareAnswers(userAnswer, correctAnswer);
+                total += 1;
+                if (isCorrect) correct += 1;
+                return {
+                    questionId,
+                    label: dataset ? labelFromDataset(dataset, questionId) : String(questionId).replace(/^q/i, ''),
+                    userAnswer,
+                    correctAnswer,
+                    isCorrect
+                };
+            });
+
+            // 记录里已有得分时以其为准，避免与保存时的判定口径不一致
+            const scored = entry.scoreInfo || {};
+            const finalCorrect = Number.isFinite(Number(scored.correct)) ? Number(scored.correct) : correct;
+            const finalTotal = Number.isFinite(Number(scored.total)) && Number(scored.total) > 0
+                ? Number(scored.total)
+                : total;
+
+            return {
+                examId,
+                label: (passage && passage.label) || entry.category || ('Part ' + (index + 1)),
+                title: entry.title || (passage && passage.title) || '',
+                isCurrent: entry.isCurrent === true,
+                rows,
+                correct: finalCorrect,
+                total: finalTotal,
+                percentage: finalTotal > 0 ? Math.round((finalCorrect / finalTotal) * 100) : 0
+            };
+        });
+
+        const totalCorrect = sections.reduce((sum, s) => sum + s.correct, 0);
+        const totalQuestions = sections.reduce((sum, s) => sum + s.total, 0);
+        return {
+            sections,
+            correct: totalCorrect,
+            total: totalQuestions,
+            percentage: totalQuestions > 0 ? Math.round((totalCorrect / totalQuestions) * 100) : 0
+        };
+    }
+
+    function suiteResultRowsHtml(rows) {
+        return rows.map((row) => {
+            const userAnswer = Array.isArray(row.userAnswer)
+                ? row.userAnswer.join(', ')
+                : (row.userAnswer || '未作答');
+            const correctAnswer = Array.isArray(row.correctAnswer)
+                ? row.correctAnswer.join(', ')
+                : (row.correctAnswer || '');
+            return `
+                <tr>
+                    <td>${row.label}</td>
+                    <td>${userAnswer}</td>
+                    <td>${correctAnswer}</td>
+                    <td class="${row.isCorrect ? 'result-correct' : 'result-incorrect'}">${row.isCorrect ? '✓' : '✗'}</td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    /** 交卷后按 P1/P2/P3 分篇呈现三篇结果，并给出总分与雅思分数 */
+    function renderSuiteResults(summary) {
+        if (!dom.results || !summary || !Array.isArray(summary.sections)) return;
+
+        const bandInfo = global.IeltsBandScore && typeof global.IeltsBandScore.scoreSuite === 'function'
+            ? global.IeltsBandScore.scoreSuite(summary.correct, summary.total)
+            : null;
+        const bandHtml = bandInfo && bandInfo.bandLabel
+            ? `<span class="suite-result-band">雅思 ${bandInfo.bandLabel}${bandInfo.estimated ? '（折算）' : ''}</span>`
+            : '';
+
+        const sectionsHtml = summary.sections.map((section) => `
+            <section class="suite-result-section${section.isCurrent ? ' is-current' : ''}">
+                <div class="suite-result-section__head">
+                    <span class="suite-result-section__tag">${section.label}</span>
+                    <span class="suite-result-section__title">${section.title}</span>
+                    <span class="suite-result-section__score">${section.correct}/${section.total} · ${section.percentage}%</span>
+                </div>
+                <table class="results-table">
+                    <thead>
+                        <tr><th>题号</th><th>你的答案</th><th>正确答案</th><th>结果</th></tr>
+                    </thead>
+                    <tbody>${suiteResultRowsHtml(section.rows)}</tbody>
+                </table>
+            </section>
+        `).join('');
+
+        dom.results.innerHTML = `
+            <h4>套题结果 · 三篇合计</h4>
+            <p class="suite-result-total">得分 ${summary.correct} / ${summary.total} · ${summary.percentage}% ${bandHtml}</p>
+            ${sectionsHtml}
+            ${buildContactBlock()}
+        `;
+        dom.results.style.display = 'block';
+        wireContactCopy();
+    }
+
     function labelFromDataset(dataset, questionId) {
         const map = (dataset && dataset.questionDisplayMap) || {};
         if (map[questionId]) {
@@ -346,6 +587,9 @@
                 examId: String(examId),
                 isCurrent,
                 label: passageLabelFromDataset(dataset, index),
+                title: (dataset && dataset.meta && dataset.meta.title) || '',
+                // 保留数据集：交卷时据此就地算出三篇的成绩（含各自 answerKey）
+                dataset,
                 questions,
                 answeredSet: isCurrent ? null : getAnsweredSetForExam(examId)
             };
@@ -1967,7 +2211,21 @@
         applyReplayAnswersToDom(replayResults.answers || {});
         state.lastResults = replayResults;
         state.submitted = true;
-        renderResults(replayResults);
+
+        // 套题回顾：一次呈现三篇；单篇回顾维持原样
+        let reviewSuiteSummary = null;
+        if (Array.isArray(data.suiteReviewEntries) && data.suiteReviewEntries.length > 1) {
+            try {
+                reviewSuiteSummary = await buildSuiteSummaryFromReviewEntries(data.suiteReviewEntries);
+            } catch (suiteError) {
+                console.error('[UnifiedReadingPage] 构建套题回顾结果失败:', suiteError);
+            }
+        }
+        if (reviewSuiteSummary) {
+            renderSuiteResults(reviewSuiteSummary);
+        } else {
+            renderResults(replayResults);
+        }
         await renderExplanations();
         updateNavStatuses(replayResults);
         setReadOnlyMode(data.readOnly !== false);
@@ -2961,7 +3219,22 @@
         }
         const results = buildResults();
         state.lastResults = results;
-        renderResults(results);
+
+        // 套题最后一篇：直接呈现三篇合并结果。
+        // 必须赶在下方 clearSimulationDraftMirror 之前算，否则其余篇的作答已被清除。
+        let suiteSummary = null;
+        if (state.simulationMode && state.simulationCtx && state.simulationCtx.isLast) {
+            try {
+                suiteSummary = buildSuiteResultSections();
+            } catch (suiteError) {
+                console.error('[UnifiedReadingPage] 构建套题结果失败:', suiteError);
+            }
+        }
+        if (suiteSummary) {
+            renderSuiteResults(suiteSummary);
+        } else {
+            renderResults(results);
+        }
         await renderExplanations();
         updateNavStatuses(results);
         const messageType = state.simulationMode ? 'SIMULATION_SUBMIT' : 'PRACTICE_COMPLETE';
