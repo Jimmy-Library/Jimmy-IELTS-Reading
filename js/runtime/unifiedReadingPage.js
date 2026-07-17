@@ -191,6 +191,8 @@
         dom.results = document.getElementById('results');
         dom.nav = document.getElementById('question-nav');
         dom.submitBtn = document.getElementById('submit-btn');
+        dom.partSubmitBar = document.getElementById('part-submit-bar');
+        dom.partSubmitBtn = document.getElementById('part-submit-btn');
         dom.resetBtn = document.getElementById('reset-btn');
     }
 
@@ -2098,6 +2100,15 @@
         const ctx = state.simulationCtx && typeof state.simulationCtx === 'object' ? state.simulationCtx : null;
         const simulationEnabled = Boolean(state.simulationMode && ctx);
         syncSimulationRuntimeFlags();
+
+        // 每篇末尾的交卷按钮：仅套题练习时出现；交卷后（只读/回顾）隐藏
+        if (dom.partSubmitBar) {
+            const showPartSubmit = state.simulationMode && !state.reviewMode && !state.readOnly;
+            dom.partSubmitBar.hidden = !showPartSubmit;
+            if (dom.partSubmitBtn) {
+                dom.partSubmitBtn.disabled = state.readOnly;
+            }
+        }
         if (!simulationEnabled || state.reviewMode) {
             if (dom.submitBtn) {
                 dom.submitBtn.style.display = '';
@@ -3279,6 +3290,22 @@
         });
     }
 
+    /**
+     * 底栏主按钮：套题里非最后一篇时充当「下一题」，最后一篇才是交卷。
+     * 每篇末尾的交卷按钮不走这里，直接调 handleSubmit 结算整套。
+     */
+    async function handlePrimaryAction() {
+        if (state.readOnly) {
+            return;
+        }
+        if (state.simulationMode && state.simulationCtx && !state.simulationCtx.isLast) {
+            syncSimulationDraftSnapshot('submit');
+            dispatchSimulationNavigate('next');
+            return;
+        }
+        await handleSubmit();
+    }
+
     async function handleSubmit() {
         if (state.readOnly) {
             return;
@@ -3286,17 +3313,13 @@
         if (state.simulationMode) {
             syncSimulationDraftSnapshot('submit');
         }
-        if (state.simulationMode && state.simulationCtx && !state.simulationCtx.isLast) {
-            dispatchSimulationNavigate('next');
-            return;
-        }
         const results = buildResults();
         state.lastResults = results;
 
-        // 套题最后一篇：直接呈现三篇合并结果。
+        // 套题：无论当前在哪一篇，交卷即结算整套并呈现三篇合并结果。
         // 必须赶在下方 clearSimulationDraftMirror 之前算，否则其余篇的作答已被清除。
         let suiteSummary = null;
-        if (state.simulationMode && state.simulationCtx && state.simulationCtx.isLast) {
+        if (state.simulationMode) {
             try {
                 suiteSummary = buildSuiteResultSections();
             } catch (suiteError) {
@@ -3314,10 +3337,39 @@
         updateNavStatuses(results);
         const messageType = state.simulationMode ? 'SIMULATION_SUBMIT' : 'PRACTICE_COMPLETE';
         const timing = resolvePracticeTiming(1);
+        // 套题：随交卷一并上报三篇成绩，主页面据此直接结算整套。
+        // 只有本页持有各篇 answerKey，未访问过的篇章也只能由这里算出成绩。
+        const suitePayload = suiteSummary
+            ? {
+                finalizeSuite: true,
+                suiteSections: suiteSummary.sections.map((section) => ({
+                    examId: section.examId,
+                    title: section.title,
+                    category: section.label,
+                    answers: (suiteSummary.answersByExam && suiteSummary.answersByExam[section.examId]) || {},
+                    answerComparison: section.rows.reduce((map, row) => {
+                        map[row.questionId] = {
+                            questionId: row.questionId,
+                            userAnswer: row.userAnswer,
+                            correctAnswer: row.correctAnswer,
+                            isCorrect: row.isCorrect
+                        };
+                        return map;
+                    }, {}),
+                    scoreInfo: {
+                        correct: section.correct,
+                        total: section.total,
+                        accuracy: section.total > 0 ? section.correct / section.total : 0,
+                        percentage: section.percentage
+                    }
+                }))
+            }
+            : null;
         postMessage(messageType, Object.assign({
             duration: timing.duration,
             startTime: new Date(timing.startTimeMs).toISOString(),
-            endTime: new Date(timing.endTimeMs).toISOString(),
+            endTime: new Date(timing.endTimeMs).toISOString()
+        }, suitePayload || {}, {
             metadata: {
                 examId: state.examId,
                 examTitle: state.dataset?.meta?.title || '',
@@ -3482,7 +3534,9 @@
     }
 
     function attachActionListeners() {
-        dom.submitBtn?.addEventListener('click', handleSubmit);
+        dom.submitBtn?.addEventListener('click', handlePrimaryAction);
+        // 每篇末尾的交卷按钮：任意一篇点击即结算整套（无需先翻到最后一篇）
+        dom.partSubmitBtn?.addEventListener('click', handleSubmit);
         dom.resetBtn?.addEventListener('click', handleReset);
         const exportBtn = document.getElementById('export-pdf-btn');
         exportBtn?.addEventListener('click', handleExportPdf);

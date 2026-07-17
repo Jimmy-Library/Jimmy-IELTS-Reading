@@ -303,6 +303,38 @@
             session.lastUpdate = Date.now();
             this.updateExamStatus && this.updateExamStatus(examId, 'completed');
 
+            // 套题交卷：题目页已算出全部三篇成绩并随提交上报，
+            // 此处一次性录入并直接结算，不再要求停在最后一篇、也不需要二次点击
+            if (data && data.finalizeSuite === true && Array.isArray(data.suiteSections)) {
+                data.suiteSections.forEach((section) => {
+                    if (!section || !section.examId) return;
+                    const entry = session.sequence.find(item => item && item.examId === section.examId);
+                    if (!entry) return;
+                    const sectionResult = this._normalizeSuiteResult(entry.exam, {
+                        answers: section.answers || {},
+                        answerComparison: section.answerComparison || {},
+                        scoreInfo: section.scoreInfo || {},
+                        duration: Number.isFinite(Number(session.elapsedByExam && session.elapsedByExam[section.examId]))
+                            ? Number(session.elapsedByExam[section.examId])
+                            : 0
+                    });
+                    this._upsertSuiteResult(session, section.examId, sectionResult);
+                    this.updateExamStatus && this.updateExamStatus(section.examId, 'completed');
+                });
+                // 结果按提交先后入列，这里重排回 P1/P2/P3 的套题顺序，
+                // 否则从第三篇交卷时记录里的三篇会错序
+                const orderOf = new Map(session.sequence.map((item, index) => [String(item.examId), index]));
+                session.results.sort((a, b) => (
+                    (orderOf.has(String(a.examId)) ? orderOf.get(String(a.examId)) : 999)
+                    - (orderOf.has(String(b.examId)) ? orderOf.get(String(b.examId)) : 999)
+                ));
+                session.currentIndex = session.sequence.length;
+                session.pendingAdvance = null;
+                this._mirrorSessionToStorage(session);
+                await this.finalizeSuiteRecord(session);
+                return true;
+            }
+
             // Save draft snapshot for this passage
             session.draftsByExam[examId] = {
                 answers: data.answers || {},

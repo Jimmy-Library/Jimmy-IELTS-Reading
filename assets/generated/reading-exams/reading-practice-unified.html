@@ -548,6 +548,39 @@
             font-weight: 700;
         }
 
+        /* 套题：每篇题目末尾的交卷条 */
+        #part-submit-bar[hidden] {
+            display: none;
+        }
+
+        #part-submit-bar {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 16px;
+            padding-top: 14px;
+            border-top: 1px solid var(--line);
+        }
+
+        #part-submit-btn {
+            border: none;
+            border-radius: 8px;
+            background: var(--accent);
+            color: #fff;
+            padding: 10px 26px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        #part-submit-btn:hover {
+            filter: brightness(1.08);
+        }
+
+        #part-submit-btn:disabled {
+            opacity: 0.5;
+            cursor: default;
+        }
+
         /* 套题结果：三篇分节呈现 */
         .suite-result-total {
             font-size: 1.02rem;
@@ -1377,6 +1410,10 @@
         <div id="divider"></div>
         <section class="pane" id="right">
             <div id="question-groups"></div>
+            <!-- 套题模式：每一篇题目末尾的交卷按钮（右下角），一次点击结算整套 -->
+            <div id="part-submit-bar" hidden>
+                <button id="part-submit-btn" class="primary" type="button">Submit</button>
+            </div>
             <div id="results"></div>
         </section>
     </div>
