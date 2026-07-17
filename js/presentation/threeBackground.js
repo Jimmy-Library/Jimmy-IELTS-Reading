@@ -11,8 +11,9 @@
         }
     `;
 
-    // IELTS · CBT 绿色背景着色器 — 所有主题统一为绿色调
-    const forestGreenShader = `
+    // IELTS · CBT 山景背景着色器工厂 — 同一套地形数学，按皮肤换配色
+    function makeMountainShader(cMist, cLeaf, cGrass, cPine, cDeep) {
+        return `
         precision mediump float;
         varying vec2 vUv;
         uniform float uTime;
@@ -46,12 +47,12 @@
             vec2 p = vec2((vUv.x - 0.5) * aspect, vUv.y - 0.5);
             float t = uTime * 0.06;
 
-            // 顶部薄雾绿 → 中段森林绿 → 底部深林荫
-            vec3 cMist  = vec3(0.910, 0.953, 0.922);   /* #e8f3eb */
-            vec3 cLeaf  = vec3(0.820, 0.918, 0.847);   /* #d1ead8 */
-            vec3 cGrass = vec3(0.541, 0.776, 0.616);   /* #8ac69d */
-            vec3 cPine  = vec3(0.173, 0.486, 0.301);   /* #2c7c4d */
-            vec3 cDeep  = vec3(0.078, 0.325, 0.176);   /* #14532d */
+            // 顶部薄雾 → 中段主色 → 底部深色，随皮肤切换
+            vec3 cMist  = ${cMist};
+            vec3 cLeaf  = ${cLeaf};
+            vec3 cGrass = ${cGrass};
+            vec3 cPine  = ${cPine};
+            vec3 cDeep  = ${cDeep};
 
             float vertical = vUv.y;
             vec3 color = mix(cLeaf, cMist, smoothstep(0.45, 1.0, vertical));
@@ -98,13 +99,49 @@
 
             gl_FragColor = vec4(clamp(color, 0.0, 1.0), 1.0);
         }
-    `;
+        `;
+    }
+
+    const forestGreenShader = makeMountainShader(
+        'vec3(0.910, 0.953, 0.922)', /* #e8f3eb */
+        'vec3(0.820, 0.918, 0.847)', /* #d1ead8 */
+        'vec3(0.541, 0.776, 0.616)', /* #8ac69d */
+        'vec3(0.173, 0.486, 0.301)', /* #2c7c4d */
+        'vec3(0.078, 0.325, 0.176)'  /* #14532d */
+    );
+
+    const orangeShader = makeMountainShader(
+        'vec3(0.992, 0.945, 0.890)', /* #fdf1e3 */
+        'vec3(0.984, 0.863, 0.725)', /* #fbdcb9 */
+        'vec3(0.965, 0.698, 0.420)', /* #f6b26b */
+        'vec3(0.902, 0.525, 0.239)', /* #e6863d */
+        'vec3(0.639, 0.290, 0.082)'  /* #a34a15 */
+    );
+
+    const yellowShader = makeMountainShader(
+        'vec3(1.000, 0.984, 0.902)', /* #fffbe6 */
+        'vec3(1.000, 0.953, 0.690)', /* #fff3b0 */
+        'vec3(1.000, 0.878, 0.400)', /* #ffe066 */
+        'vec3(0.969, 0.788, 0.282)', /* #f7c948 */
+        'vec3(0.722, 0.525, 0.043)'  /* #b8860b */
+    );
+
+    const pinkShader = makeMountainShader(
+        'vec3(0.992, 0.949, 0.973)', /* #fdf2f8 */
+        'vec3(0.984, 0.812, 0.910)', /* #fbcfe8 */
+        'vec3(0.957, 0.447, 0.714)', /* #f472b6 */
+        'vec3(0.859, 0.153, 0.467)', /* #db2777 */
+        'vec3(0.514, 0.094, 0.263)'  /* #831843 */
+    );
 
     const shaders = {
         'forest-green': forestGreenShader,
         'misty-mountain': forestGreenShader,
         'teal-ocean': forestGreenShader,
-        'floral-bloom': forestGreenShader
+        'floral-bloom': forestGreenShader,
+        'orange': orangeShader,
+        'yellow': yellowShader,
+        'pink': pinkShader
     };
 
     function createBackground(theme = 'misty-mountain') {
@@ -220,8 +257,13 @@
     }
 
     function start(themeName = null) {
-        // 所有主题键统一指向同一绿色着色器,这里强制使用 forest-green
-        themeName = 'forest-green';
+        if (!themeName) {
+            try {
+                themeName = localStorage.getItem('three_bg_theme') || 'forest-green';
+            } catch (e) {
+                themeName = 'forest-green';
+            }
+        }
 
         try {
             if (global.SHUIThreeBackground) {

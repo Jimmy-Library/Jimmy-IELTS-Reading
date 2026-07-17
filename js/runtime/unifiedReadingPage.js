@@ -587,6 +587,28 @@
         return false;
     }
 
+    const NB_HINT_TEXT = 'NB You may use any letter more than once.';
+    // 题干里已内联的"可重复使用"说明，改由独立的 NB 行呈现，此处需先移除避免重复
+    const INLINE_REUSE_SENTENCE = /\s*You may use any (?:letter|option)[^.]*\.\s*/i;
+
+    /**
+     * 定位 NB 行的插入位置：题目正文开始前的最后一段说明文字。
+     * 题号段落形如"20 To deal with..."，据此判断正文起点。
+     */
+    function findInstructionAnchor(groupEl) {
+        const paragraphs = Array.from(groupEl.querySelectorAll('p'));
+        let anchor = null;
+        for (const p of paragraphs) {
+            const isQuestionItem = /^\s*\d+[\s.、]/.test(p.textContent || '')
+                || p.querySelector('input');
+            if (isQuestionItem) {
+                break;
+            }
+            anchor = p;
+        }
+        return anchor || groupEl.querySelector('h4, h3');
+    }
+
     function applyNbHints() {
         if (!dom.groups) return;
         const groups = Array.from(dom.groups.querySelectorAll('.unified-group'));
@@ -597,15 +619,26 @@
             if (groupEl.querySelector('.nb-hint')) {
                 return;
             }
-            const text = (groupEl.textContent || '').toUpperCase();
-            if (/\bNB\b/.test(text)) {
+
+            // 题目本身已写明 NB 的保持原样，避免改动既有排版
+            if (/\bNB\b/.test((groupEl.textContent || '').toUpperCase())) {
                 return;
             }
+
+            const anchor = findInstructionAnchor(groupEl);
+
+            // 题干内联该说明时先摘除，NB 行取而代之
+            if (anchor && INLINE_REUSE_SENTENCE.test(anchor.innerHTML || '')) {
+                anchor.innerHTML = anchor.innerHTML.replace(INLINE_REUSE_SENTENCE, '');
+            }
+
             const hint = document.createElement('p');
             hint.className = 'nb-hint';
-            hint.textContent = 'NB: 该题型允许同一选项重复使用。';
-            const anchor = groupEl.querySelector('h4, h3, p');
-            if (anchor && anchor.parentElement === groupEl) {
+            const em = document.createElement('em');
+            em.textContent = NB_HINT_TEXT;
+            hint.appendChild(em);
+
+            if (anchor) {
                 anchor.insertAdjacentElement('afterend', hint);
             } else {
                 groupEl.insertAdjacentElement('afterbegin', hint);

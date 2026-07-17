@@ -28,7 +28,8 @@
             id: 'default',
             filters: [
                 { id: 'all', label: '全部', type: 'all' },
-                { id: 'new-june-2026', label: '2026.6月新增', newOnly: true },
+                { id: 'new-june-2026', label: '2026.6月新增', newOnly: 'june-2026' },
+                { id: 'new-july-2026', label: '2026.7月新增', newOnly: 'july-2026' },
                 { id: 'p1', label: 'P1', category: 'P1' },
                 { id: 'p2', label: 'P2', category: 'P2' },
                 { id: 'p3', label: 'P3', category: 'P3' }
@@ -217,7 +218,7 @@
                 // 默认模式：根据筛选项配置按分类(P1/P2/P3)或类型筛选
                 const filter = config.filters.find(f => f.id === filterId);
                 if (filter && filter.newOnly) {
-                    this.filterByNewOnly();
+                    this.filterByNewOnly(filter.newOnly);
                 } else if (filter && filter.category) {
                     this.filterByCategory(filter.category);
                 } else {
@@ -234,7 +235,7 @@
          * @param {string} type - 类型 (all | reading | listening)
          */
         filterByType(type) {
-            // 清除"2026.6月新增"筛选标记
+            // 清除"新增"批次筛选标记
             global.__browseNewOnly = false;
             // 调用全局的 filterByType 函数
             if (typeof global.filterByType === 'function') {
@@ -245,18 +246,23 @@
         }
 
         /**
-         * 仅显示 2026.6 月新增题目
+         * 仅显示指定批次的新增题目
+         * @param {string} batchKey - 批次键 (june-2026 | july-2026)，缺省为 6 月
          */
-        filterByNewOnly() {
+        filterByNewOnly(batchKey = 'june-2026') {
+            const batch = typeof global.getNewBatch === 'function'
+                ? global.getNewBatch(batchKey)
+                : null;
+
             global.__browseFilterMode = 'default';
             global.__browsePath = null;
-            global.__browseNewOnly = true;
+            global.__browseNewOnly = batchKey;
 
             if (typeof global.setBrowseFilterState === 'function') {
                 global.setBrowseFilterState('all', 'reading');
             }
             if (typeof global.setBrowseTitle === 'function') {
-                global.setBrowseTitle('2026.6月新增');
+                global.setBrowseTitle(batch ? batch.label : '新增题目');
             }
 
             if (typeof global.loadExamList === 'function') {

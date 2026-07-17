@@ -197,6 +197,8 @@
                     <button class="btn btn-sm shui-filter-btn" type="button" aria-pressed="false"
                         data-filter-id="new-june-2026" onclick="filterByNewJune2026()">2026.6月新增</button>
                     <button class="btn btn-sm shui-filter-btn" type="button" aria-pressed="false"
+                        data-filter-id="new-july-2026" onclick="filterByNewJuly2026()">2026.7月新增</button>
+                    <button class="btn btn-sm shui-filter-btn" type="button" aria-pressed="false"
                         data-filter-id="p1" onclick="browseCategory('P1','reading')">P1</button>
                     <button class="btn btn-sm shui-filter-btn" type="button" aria-pressed="false"
                         data-filter-id="p2" onclick="browseCategory('P2','reading')">P2</button>
@@ -218,6 +220,19 @@
                                 <line x1="6" y1="6" x2="18" y2="18"></line>
                             </svg>
                         </button>
+                    </div>
+                    <div class="browse-sort-wrapper browse-qtype-wrapper">
+                        <select id="browse-qtype-select" class="browse-sort-select" aria-label="按题型筛选"
+                            onchange="filterByQuestionType(this.value)">
+                            <option value="">全部题型</option>
+                        </select>
+                        <div class="browse-sort-icon">
+                            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"
+                                xmlns="http://www.w3.org/2000/svg">
+                                <path d="M3.5 5.25L7 8.75L10.5 5.25" stroke="currentColor" stroke-width="1.5"
+                                    stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                        </div>
                     </div>
                     <div class="browse-sort-wrapper">
                         <select id="browse-sort-select" class="browse-sort-select" aria-label="题库排序">
@@ -497,16 +512,6 @@
                             content: ''; position: absolute; top: 15%; left: 25%; width: 100px; height: 100px;
                             background: radial-gradient(circle, #ffe3f0 0%, rgba(255,227,240,0) 65%); opacity: 0.85;
                         }
-                        /* 亮橙粉皮肤色彩抽象 */
-                        .theme-bg-orange-pink { background: linear-gradient(150deg, #fff5f0 0%, #ffc98a 35%, #f97316 55%, #ec4899 85%, #9d174d 100%); }
-                        .theme-bg-orange-pink::after {
-                            content: ''; position: absolute; top: 10%; left: 30%; width: 120px; height: 120px;
-                            background: radial-gradient(circle, #ffd0e0 0%, rgba(255,208,224,0) 65%); opacity: 0.75;
-                        }
-                        .theme-bg-orange-pink::before {
-                            content: ''; position: absolute; bottom: 30%; right: 15%; width: 80px; height: 80px;
-                            background: radial-gradient(circle, #ffe8cc 0%, rgba(255,232,204,0) 60%); opacity: 0.8;
-                        }
                         /* 默认清新绿皮肤色彩抽象 */
                         .theme-bg-default { background: linear-gradient(150deg, #f6faf7 0%, #d1ead8 35%, #2c9760 70%, #14532d 100%); }
                         .theme-bg-default::after {
@@ -583,22 +588,6 @@
                                 <div class="theme-card-footer">
                                     <span class="theme-card-tag">静态</span>
                                     <button class="theme-card-btn" onclick="window.switchBgTheme('floral-bloom')">应用</button>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- 亮橙粉 -->
-                        <div class="theme-card">
-                            <div class="theme-card-bg theme-bg-orange-pink"></div>
-                            <div class="theme-card-glass-layer">
-                                <div class="theme-card-header">
-                                    <h4 class="theme-card-title">亮橙粉</h4>
-                                    <div class="theme-card-subtitle">
-                                        <span style="opacity:0.6;">🍊🌸 Orange & Pink</span>
-                                    </div>
-                                </div>
-                                <div class="theme-card-footer">
-                                    <span class="theme-card-tag">皮肤</span>
-                                    <button class="theme-card-btn" onclick="window.applyTheme('orange-pink')">应用</button>
                                 </div>
                             </div>
                         </div>
@@ -697,6 +686,7 @@
     <script src="js/core/practiceCore.js"></script>
     <script src="js/core/resourceCore.js"></script>
     <script src="assets/generated/reading-exams/manifest.js"></script>
+    <script src="assets/generated/reading-question-types.js"></script>
     <script src="js/utils/stateSerializer.js"></script>
     <script src="js/utils/simpleStorageWrapper.js"></script>
 
@@ -723,6 +713,46 @@
 
     <!-- 引导流程组件 -->
     <script src="js/components/onboardingTour.js"></script>
+
+    <!-- 题型筛选下拉框：从题型分类数据填充选项 -->
+    <script>
+        (function populateQuestionTypeFilter() {
+            function fill() {
+                var select = document.getElementById('browse-qtype-select');
+                var data = window.__READING_QUESTION_TYPES__;
+                if (!select || !data || !Array.isArray(data.types)) {
+                    return;
+                }
+                // 避免重复填充
+                if (select.dataset.populated === '1') {
+                    return;
+                }
+                var counts = {};
+                var byExamId = data.byExamId || {};
+                Object.keys(byExamId).forEach(function (id) {
+                    (byExamId[id] || []).forEach(function (k) {
+                        counts[k] = (counts[k] || 0) + 1;
+                    });
+                });
+                var frag = document.createDocumentFragment();
+                data.types.forEach(function (t) {
+                    var opt = document.createElement('option');
+                    opt.value = t.key;
+                    var n = counts[t.key] || 0;
+                    opt.textContent = t.cn + '（' + n + '）';
+                    opt.title = t.en;
+                    frag.appendChild(opt);
+                });
+                select.appendChild(frag);
+                select.dataset.populated = '1';
+            }
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', fill);
+            } else {
+                fill();
+            }
+        })();
+    </script>
 
     <!-- 成就系统模态框 -->
     <div id="achievements-modal" class="theme-modal">

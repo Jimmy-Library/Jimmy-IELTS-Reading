@@ -137,6 +137,11 @@
                 if (options && options.reviewMode && readingLaunch && readingLaunch.mode === 'unified_html') {
                     examUrl += (examUrl.indexOf('?') >= 0 ? '&' : '?') + 'review=1';
                 }
+                // 续做模式：从「未完成」列表点「继续做题」进入，标记 resume=1，阅读页直接恢复草稿不再弹窗
+                // （sessionStorage 跨窗口不可靠，URL 参数才是可靠信道）
+                if (options && options.forceResume && !options.reviewMode && readingLaunch && readingLaunch.mode === 'unified_html') {
+                    examUrl += (examUrl.indexOf('?') >= 0 ? '&' : '?') + 'resume=1';
+                }
                 let examWindow = this.openExamWindow(examUrl, exam, guardOptions);
 
                 try {

@@ -94,12 +94,59 @@
     ];
     global.__JUNE_2026_NEW_IDS = JUNE_2026_NEW_IDS;
 
+    const JULY_2026_NEW_IDS = [
+        'p1-high-240', 'p2-low-240', 'p2-low-242',
+        'p3-low-240', 'p3-medium-241'
+    ];
+    global.__JULY_2026_NEW_IDS = JULY_2026_NEW_IDS;
+
+    // __browseNewOnly 存放月份键（或 false）；旧值 true 视为 6 月，保持向后兼容
+    const NEW_BATCHES = {
+        'june-2026': { ids: JUNE_2026_NEW_IDS, label: '2026.6月新增', filterId: 'new-june-2026' },
+        'july-2026': { ids: JULY_2026_NEW_IDS, label: '2026.7月新增', filterId: 'new-july-2026' }
+    };
+    global.__NEW_BATCHES = NEW_BATCHES;
+
+    function getNewBatch(key) {
+        return NEW_BATCHES[key === true ? 'june-2026' : key] || null;
+    }
+    global.getNewBatch = getNewBatch;
+
+    function getQuestionTypeMap() {
+        const data = global.__READING_QUESTION_TYPES__;
+        return data && data.byExamId && typeof data.byExamId === 'object'
+            ? data.byExamId
+            : null;
+    }
+
+    function applyQuestionTypeFilter(exams) {
+        const key = String(global.__browseQuestionType || '').trim();
+        if (!key) {
+            return exams;
+        }
+        const map = getQuestionTypeMap();
+        if (!map) {
+            return exams;
+        }
+        return exams.filter((exam) => {
+            if (!exam || exam.id == null) {
+                return false;
+            }
+            const types = map[exam.id];
+            return Array.isArray(types) && types.indexOf(key) !== -1;
+        });
+    }
+
     function applyBrowsePostFilters(exams) {
         let result = deduplicateExams(exams);
         if (global.__browseNewOnly) {
-            const set = new Set(JUNE_2026_NEW_IDS);
-            result = result.filter((exam) => exam && set.has(exam.id));
+            const batch = getNewBatch(global.__browseNewOnly);
+            if (batch) {
+                const set = new Set(batch.ids);
+                result = result.filter((exam) => exam && set.has(exam.id));
+            }
         }
+        result = applyQuestionTypeFilter(result);
         return applyExamSort(result);
     }
 
@@ -1155,31 +1202,57 @@
     global.exportAllData = exportAllData;
     global.exportPracticeData = exportPracticeData;
 
-    global.filterByNewJune2026 = function () {
+    global.filterByQuestionType = function (key) {
+        global.__browseQuestionType = String(key == null ? '' : key).trim();
+        // 题型筛选属于默认（阅读）浏览模式，退出频率模式以确保筛选生效
+        if (global.__browseQuestionType && global.__browseFilterMode && global.__browseFilterMode !== 'default') {
+            global.__browseFilterMode = 'default';
+            global.__browsePath = null;
+        }
+        if (typeof global.loadExamList === 'function') {
+            global.loadExamList();
+        }
+    };
+
+    function filterByNewBatch(batchKey) {
+        const batch = getNewBatch(batchKey);
+        if (!batch) {
+            console.warn('[ExamActions] 未知的新增批次:', batchKey);
+            return;
+        }
         if (global.browseController && typeof global.browseController.filterByNewOnly === 'function') {
             if (!global.browseController.buttonContainer) {
                 global.browseController.initialize('type-filter-buttons');
             }
-            global.browseController.activeFilter = 'new-june-2026';
+            global.browseController.activeFilter = batch.filterId;
             if (typeof global.browseController.updateButtonStates === 'function') {
                 global.browseController.updateButtonStates();
             }
-            global.browseController.filterByNewOnly();
+            global.browseController.filterByNewOnly(batchKey);
             return;
         }
         // 降级：直接设置标记并刷新
         global.__browseFilterMode = 'default';
         global.__browsePath = null;
-        global.__browseNewOnly = true;
+        global.__browseNewOnly = batchKey;
         if (typeof global.setBrowseFilterState === 'function') {
             global.setBrowseFilterState('all', 'reading');
         }
         if (typeof global.setBrowseTitle === 'function') {
-            global.setBrowseTitle('2026.6月新增');
+            global.setBrowseTitle(batch.label);
         }
         if (typeof global.loadExamList === 'function') {
             global.loadExamList();
         }
+    }
+    global.filterByNewBatch = filterByNewBatch;
+
+    global.filterByNewJune2026 = function () {
+        filterByNewBatch('june-2026');
+    };
+
+    global.filterByNewJuly2026 = function () {
+        filterByNewBatch('july-2026');
     };
 
     console.log('[ExamActions] 模块已加载 (Phase 2)');

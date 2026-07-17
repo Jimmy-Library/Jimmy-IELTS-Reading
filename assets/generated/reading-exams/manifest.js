@@ -1596,6 +1596,41 @@
     "script": "./p3-high-229.js",
     "title": "All in the family 兄弟姐妹的影响",
     "category": "P3"
+  },
+  "p1-high-240": {
+    "examId": "p1-high-240",
+    "dataKey": "p1-high-240",
+    "script": "./p1-high-240.js",
+    "title": "The Origins of Weather Forecasting 天气预报",
+    "category": "P1"
+  },
+  "p2-low-240": {
+    "examId": "p2-low-240",
+    "dataKey": "p2-low-240",
+    "script": "./p2-low-240.js",
+    "title": "Coins - the first form of money 硬币起源",
+    "category": "P2"
+  },
+  "p2-low-242": {
+    "examId": "p2-low-242",
+    "dataKey": "p2-low-242",
+    "script": "./p2-low-242.js",
+    "title": "Walking and shoes in eighteenth-century London 伦敦鞋子的发展史",
+    "category": "P2"
+  },
+  "p3-low-240": {
+    "examId": "p3-low-240",
+    "dataKey": "p3-low-240",
+    "script": "./p3-low-240.js",
+    "title": "How a prehistoric predator took to the skies 翼龙飞行",
+    "category": "P3"
+  },
+  "p3-medium-241": {
+    "examId": "p3-medium-241",
+    "dataKey": "p3-medium-241",
+    "script": "./p3-medium-241.js",
+    "title": "Who looks after the children in today's Britain? 育儿分工",
+    "category": "P3"
   }
 };
 })(typeof window !== "undefined" ? window : globalThis);

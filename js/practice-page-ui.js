@@ -284,10 +284,38 @@
         }
 
         // ===== 多笔记系统 =====
+
+        // 笔记在文章中的标注元素；标注被取消后会取不到，此时该笔记失去位置信息
+        function getNoteAnchorEl(note) {
+            if (!note || !note.id) return null;
+            return document.querySelector('.hl[data-note-id="' + note.id + '"]');
+        }
+
+        /**
+         * 按标注在文章中的先后顺序排列笔记，编号即排序后的位置。
+         * 标注已被取消的笔记没有位置可依，统一沉到末尾并保持相对次序
+         *（Array.prototype.sort 稳定，无需额外记录插入序）。
+         */
+        function sortNotesByArticleOrder() {
+            notesList.sort((a, b) => {
+                const elA = getNoteAnchorEl(a);
+                const elB = getNoteAnchorEl(b);
+                if (!elA && !elB) return 0;
+                if (!elA) return 1;
+                if (!elB) return -1;
+                const relation = elA.compareDocumentPosition(elB);
+                if (relation & Node.DOCUMENT_POSITION_FOLLOWING) return -1;
+                if (relation & Node.DOCUMENT_POSITION_PRECEDING) return 1;
+                return 0;
+            });
+        }
+
         function renderNotesList() {
             const listEl = document.getElementById('notes-list');
             const emptyEl = document.getElementById('notes-list-empty');
             if (!listEl) return;
+
+            sortNotesByArticleOrder();
 
             // 清除旧内容，保留 empty 占位
             listEl.querySelectorAll('.note-item').forEach(el => el.remove());
@@ -349,13 +377,17 @@
             });
         }
 
-        function addNote(text, part) {
+        function addNote(text, part, anchorEl) {
             const note = {
                 id: 'note-' + (++noteIdCounter),
                 text: text,
                 part: part || 'Part 1',
                 comment: ''
             };
+            // 与文章中的标注建立关联，排序据此确定笔记在文中的位置
+            if (anchorEl instanceof HTMLElement) {
+                anchorEl.dataset.noteId = note.id;
+            }
             notesList.push(note);
             renderNotesList();
             return note;
@@ -381,13 +413,6 @@
                     parent.normalize();
                 }
             });
-            renderNotesList();
-        }
-
-        function openNotesPanel() {
-            closeAllPanels();
-            notesOpen = true;
-            notesPanel.style.display = 'flex';
             renderNotesList();
         }
 
@@ -737,6 +762,8 @@
             closeAllPanels();
             notesOpen = true;
             notesPanel.style.display = 'flex';
+            // 每次打开都重新渲染，标注被增删后编号与顺序保持最新
+            renderNotesList();
             // 右侧边栏不铺遮罩，避免挡住做题区
         }
 
@@ -918,19 +945,22 @@
                 ).trim();
                 if (text) {
                     // Mark the selected text with blue note highlight
+                    let anchorEl = null;
                     if (!currentHlNode && lastRange && !lastRange.collapsed) {
                         try {
                             const span = createHighlightSpan('note');
                             lastRange.surroundContents(span);
+                            anchorEl = span;
                         } catch (e) {
                             console.error('[PracticePageUI] Note highlight failed:', e);
                         }
                     } else if (currentHlNode) {
                         markHighlightAsNote(currentHlNode);
+                        anchorEl = currentHlNode;
                     }
                     // 添加新笔记到列表
                     const part = resolveNotePartLabel();
-                    addNote(text, part);
+                    addNote(text, part, anchorEl);
                     openNotesPanel();
                 }
                 window.getSelection()?.removeAllRanges();

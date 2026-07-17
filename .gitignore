@@ -28,3 +28,9 @@ npm-debug.log*
 
 # Netlify local config
 .netlify/
+
+# Claude Code 本地配置
+.claude/
+
+# 新题来源材料（内容已合入 assets/generated，无需入库）
+7月/
