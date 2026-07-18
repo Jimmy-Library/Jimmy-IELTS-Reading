@@ -1220,8 +1220,16 @@
         });
     }
 
+    // 交卷后不再展示答案解析。数据文件（reading-explanations/）与
+    // ensureExplanationDataset 等逻辑保留，将来恢复时移除下面这行即可。
+    const SHOW_EXPLANATIONS_AFTER_SUBMIT = false;
+
     async function renderExplanations() {
+        // 仍先清理，避免切换小节/回顾时残留上一篇的解析节点
         clearExplanations();
+        if (!SHOW_EXPLANATIONS_AFTER_SUBMIT) {
+            return;
+        }
         const explanation = await ensureExplanationDataset();
         if (!explanation) {
             return;
