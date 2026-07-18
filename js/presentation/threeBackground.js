@@ -134,6 +134,15 @@
         'vec3(0.514, 0.094, 0.263)'  /* #831843 */
     );
 
+    // 冬季·白：冰雪山景，冷白 → 淡蓝 → 石板灰
+    const whiteShader = makeMountainShader(
+        'vec3(0.953, 0.973, 0.992)', /* #f3f8fd */
+        'vec3(0.859, 0.918, 0.996)', /* #dbeafe */
+        'vec3(0.722, 0.816, 0.910)', /* #b8d0e8 */
+        'vec3(0.486, 0.596, 0.722)', /* #7c98b8 */
+        'vec3(0.278, 0.333, 0.412)'  /* #475569 */
+    );
+
     const shaders = {
         'forest-green': forestGreenShader,
         'misty-mountain': forestGreenShader,
@@ -141,7 +150,8 @@
         'floral-bloom': forestGreenShader,
         'orange': orangeShader,
         'yellow': yellowShader,
-        'pink': pinkShader
+        'pink': pinkShader,
+        'white': whiteShader
     };
 
     function createBackground(theme = 'misty-mountain') {
