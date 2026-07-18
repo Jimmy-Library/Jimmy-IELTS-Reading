@@ -126,6 +126,33 @@
     --cbt-boot-border: rgba(255, 209, 102, 0.4);
 }
 
+/* ============ 皮肤：冬季·白色 ============ */
+:root[data-theme="white"] {
+    --shui-panel-border: rgba(148, 163, 184, 0.30);
+    --shui-surface-bg: rgba(248, 250, 252, 0.94);
+    --shui-surface-border: rgba(148, 163, 184, 0.28);
+    --shui-text-strong: #1e293b;
+    --shui-text-muted: rgba(30, 41, 59, 0.62);
+    --shui-accent: #3b82f6;
+    --shui-accent-alt: #93c5fd;
+    --shui-gradient-start: #60a5fa;
+    --shui-gradient-end: #bfdbfe;
+    --ielts-topbar-bg: linear-gradient(180deg, #64748b 0%, #94a3b8 100%);
+    --ielts-topbar-accent: #bfdbfe;
+    --ielts-paper-bg: #f8fafc;
+    --ielts-rule-line: #dbe4ee;
+    --bauhaus-text-main: #1e293b;
+    --bauhaus-text-muted: #475569;
+    --bauhaus-accent-blue: #3b82f6;
+    --bauhaus-accent-dark: #334155;
+    --bauhaus-glass-border: rgba(148, 163, 184, 0.32);
+    --cbt-tint-bg: #eef2f7;
+    --cbt-tint-border: #dbe4ee;
+    --cbt-nav-text: #334155;
+    --cbt-overlay-bg: rgba(30, 41, 59, 0.82);
+    --cbt-boot-border: rgba(191, 219, 254, 0.4);
+}
+
 body.hero-body {
     color: var(--shui-text-strong);
     position: relative;
