@@ -60,7 +60,7 @@
     "q3": "TRUE",
     "q4": "FALSE",
     "q5": "FALSE",
-    "q6": "NOT GIVEN",
+    "q6": "TRUE",
     "q7": "1906",
     "q8": "Australia",
     "q9": "family",

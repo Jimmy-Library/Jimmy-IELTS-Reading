@@ -84,7 +84,7 @@
         },
         {
           "questionNumber": 6,
-          "text": "(6) 题目 6：In London, Mansfield showed little interest in politics. （在伦敦，曼斯菲尔德对政治表现出很少的兴趣。）\n答案：NOT GIVEN\n解析：第三段只提到她没有积极支持妇女参政运动，但这不足以推断她对所有政治都“兴趣不大”。",
+          "text": "(6) 题目 6：In London, Mansfield showed little interest in politics. （在伦敦，曼斯菲尔德对政治表现出很少的兴趣。）\n答案：TRUE\n解析：第三段提到 “Mansfield did not actively support the suffragette movement in the UK”，说明她在伦敦期间对政治（妇女参政运动）并不积极投入，与题干“little interest in politics”一致。",
           "questionId": "q6"
         }
       ],
