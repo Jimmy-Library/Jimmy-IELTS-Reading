@@ -448,11 +448,38 @@
                 font-size: 10pt;
             }
 
-            #suite-print-root .suite-print__answers td.suite-print__q {
-                text-align: left;
-                font-size: 9pt;
-                line-height: 1.4;
-                color: #2c3e50;
+            /* 完整题目区（与单篇导出一致：文章后接全部题目） */
+            #suite-print-root .suite-print__questions {
+                margin: 6px 0 16px;
+                line-height: 1.6;
+                font-size: 10.5pt;
+            }
+
+            #suite-print-root .suite-print__questions .unified-group,
+            #suite-print-root .suite-print__questions .group {
+                margin: 0 0 14px;
+                break-inside: avoid;
+                page-break-inside: avoid;
+            }
+
+            #suite-print-root .suite-print__questions input[type="text"],
+            #suite-print-root .suite-print__questions .blank {
+                border: none;
+                border-bottom: 1px solid #555;
+                min-width: 90px;
+                background: transparent;
+            }
+
+            #suite-print-root .suite-print__answerkey {
+                margin-top: 12px;
+                break-inside: avoid;
+                page-break-inside: avoid;
+            }
+
+            #suite-print-root .suite-print__ak-title {
+                font-size: 12pt;
+                margin: 0 0 6px;
+                color: #1f7a4d;
             }
 
             /* 隐藏交互/悬浮元素 */

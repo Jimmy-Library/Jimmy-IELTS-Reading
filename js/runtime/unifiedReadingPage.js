@@ -3455,89 +3455,6 @@
     }
 
     /**
-     * 从题组 HTML 中提取每题题干纯文本(判断/填空/选择/匹配等题型),
-     * 供套题合并 PDF 的「题目」列使用。返回 Map(题号 -> 题干文本)。
-     */
-    function escapeForPrint(value) {
-        if (value == null) return '';
-        return String(value)
-            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-    }
-
-    function extractStemMap(dataset) {
-        const map = new Map();
-        if (!dataset || !Array.isArray(dataset.questionGroups) || typeof DOMParser === 'undefined') {
-            return map;
-        }
-        const parser = new DOMParser();
-        const cleanStem = (node, n) => {
-            let clone;
-            try { clone = node.cloneNode(true); } catch (_) { return ''; }
-            clone.querySelectorAll('input').forEach((inp) => {
-                const type = (inp.getAttribute('type') || '').toLowerCase();
-                if (type === 'radio' || type === 'checkbox') { inp.remove(); }
-                else { inp.replaceWith(clone.ownerDocument.createTextNode(' ______ ')); }
-            });
-            clone.querySelectorAll('select, textarea').forEach((inp) => {
-                inp.replaceWith(clone.ownerDocument.createTextNode(' ______ '));
-            });
-            clone.querySelectorAll('.match-dropzone, .dropped-items, .paragraph-dropzone, .paragraph-label, .flow-arrow')
-                .forEach((d) => d.remove());
-            let t = (clone.textContent || '').replace(/\s+/g, ' ').trim();
-            t = t.replace(new RegExp('^' + n + '\\s*[\\.\\)]?\\s+'), '');
-            t = t.replace(/\s*(TRUE\s+FALSE\s+NOT\s+GIVEN|YES\s+NO\s+NOT\s+GIVEN)\s*$/i, '').trim();
-            t = t.replace(/(?:\s*______\s*){2,}/g, ' ______ ').trim();
-            return t;
-        };
-        const lineContainer = (el, root, n) => {
-            const SEL = '.question-item, .match-question-item, li, .flow-box, tr, p, td';
-            let node = el; let fallback = null;
-            while (node && node !== root && node.nodeType === 1) {
-                if (node.matches && node.matches(SEL)) {
-                    const t = cleanStem(node, n);
-                    if (!fallback && t) fallback = node;
-                    if (t && t.length >= 3) return node;
-                }
-                node = node.parentElement;
-            }
-            return fallback;
-        };
-        dataset.questionGroups.forEach((group) => {
-            const qids = Array.isArray(group.questionIds) ? group.questionIds : [];
-            const nums = qids.map((q) => parseInt(String(q).replace(/\D/g, ''), 10)).filter((x) => Number.isFinite(x));
-            if (!nums.length) return;
-            let root;
-            try {
-                const doc = parser.parseFromString('<div id="__r">' + (group.bodyHtml || '') + '</div>', 'text/html');
-                root = doc.getElementById('__r');
-            } catch (_) { return; }
-            if (!root) return;
-            const isHeading = !!root.querySelector('.headings-pool, [data-heading]');
-            const used = [];
-            nums.forEach((n, idx) => {
-                const qid = 'q' + n;
-                let el = null;
-                for (const sel of ['[name="' + qid + '"]', '[data-question="' + qid + '"]', '#' + qid + '_input',
-                    '#' + qid + '-anchor', '[name^="' + qid + '-"]', '[name*="' + qid + '"]']) {
-                    try { el = root.querySelector(sel); } catch (_) { el = null; }
-                    if (el) break;
-                }
-                let stem = '';
-                const container = el ? lineContainer(el, root, n) : null;
-                if (container) {
-                    if (used.indexOf(container) >= 0) { map.set(n, '（同上一题)'); return; }
-                    used.push(container);
-                    stem = cleanStem(container, n);
-                }
-                if (!stem && isHeading) { stem = 'Paragraph ' + String.fromCharCode(65 + idx) + '（标题匹配)'; }
-                if (stem) { if (stem.length > 400) stem = stem.slice(0, 400) + '…'; map.set(n, stem); }
-            });
-        });
-        return map;
-    }
-
-    /**
      * 套题：把三篇（文章 + 题目 + 该篇答案对照）拼成一份打印内容。
      * 不直接打印页面，因为页面同一时刻只渲染一篇。
      */
@@ -3575,20 +3492,10 @@
             const passageHtml = (dataset.passage?.blocks || [])
                 .map((block) => block?.bodyHtml || block?.html || '')
                 .join('\n');
-
-            // 「题目」列:从该篇数据集提取每题题干,与答案对照合并成一张表
-            const stems = extractStemMap(dataset);
-            const stemFor = (row) => {
-                const n = parseInt(String(row.label).replace(/\D/g, ''), 10);
-                return (Number.isFinite(n) && stems.get(n)) || '';
-            };
-            const hasStems = section && stems.size > 0 && section.rows.some((r) => stemFor(r));
-            const rowsHtml = section ? section.rows.map((row) => {
-                const userAnswer = Array.isArray(row.userAnswer) ? row.userAnswer.join(', ') : (row.userAnswer || '未作答');
-                const correctAnswer = Array.isArray(row.correctAnswer) ? row.correctAnswer.join(', ') : (row.correctAnswer || '');
-                const stemCell = hasStems ? `<td class="suite-print__q">${escapeForPrint(stemFor(row) || '—')}</td>` : '';
-                return `<tr><td>${row.label}</td>${stemCell}<td>${escapeForPrint(userAnswer)}</td><td>${escapeForPrint(correctAnswer)}</td><td class="${row.isCorrect ? 'result-correct' : 'result-incorrect'}">${row.isCorrect ? '✓' : '✗'}</td></tr>`;
-            }).join('') : '';
+            // 完整题目：与单篇导出一致，按题组渲染全部题目（题干、选项、填空原样呈现）
+            const questionsHtml = (dataset.questionGroups || [])
+                .map((group) => createGroupMarkup(group))
+                .join('\n');
 
             const block = document.createElement('section');
             block.className = 'suite-print__passage';
@@ -3599,11 +3506,15 @@
                     ${section ? `<span class="suite-print__score">${section.correct}/${section.total} · ${section.percentage}%</span>` : ''}
                 </h2>
                 <div class="suite-print__article">${passageHtml}</div>
+                <div class="suite-print__questions" data-suite-print-questions="1">${questionsHtml}</div>
                 ${section ? `
-                <table class="results-table suite-print__answers">
-                    <thead><tr><th>题号</th>${hasStems ? '<th>题目</th>' : ''}<th>你的答案</th><th>正确答案</th><th>结果</th></tr></thead>
-                    <tbody>${rowsHtml}</tbody>
-                </table>` : ''}
+                <div class="suite-print__answerkey">
+                    <h3 class="suite-print__ak-title">参考答案 Answer Key</h3>
+                    <table class="results-table suite-print__answers">
+                        <thead><tr><th>题号</th><th>你的答案</th><th>正确答案</th><th>结果</th></tr></thead>
+                        <tbody>${suiteResultRowsHtml(section.rows)}</tbody>
+                    </table>
+                </div>` : ''}
             `;
             container.appendChild(block);
         }
