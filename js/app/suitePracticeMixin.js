@@ -687,6 +687,7 @@
                     suiteFlowMode: session.flowMode || 'simulation',
                     sequenceIndex: targetIndex,
                     sequenceTotal: session.sequence.length,
+                    sequenceExamIds: session.sequence.map(e => e && e.examId).filter(Boolean),
                     reuseWindow: targetWindow || undefined
                 });
             }
@@ -727,7 +728,8 @@
                     suiteSessionId: session.id,
                     suiteFlowMode: session.flowMode || 'simulation',
                     sequenceIndex: session.currentIndex,
-                    sequenceTotal: session.sequence.length
+                    sequenceTotal: session.sequence.length,
+                    sequenceExamIds: session.sequence.map(e => e && e.examId).filter(Boolean)
                 };
 
                 if (candidateWindow && !candidateWindow.closed) {
@@ -972,7 +974,8 @@
                     suiteSessionId: session.id,
                     suiteFlowMode: session.flowMode,
                     sequenceIndex: resumeIndex,
-                    sequenceTotal: normalizedSequence.length
+                    sequenceTotal: normalizedSequence.length,
+                    sequenceExamIds: normalizedSequence.map(e => e && e.examId).filter(Boolean)
                 });
             } catch (err) {
                 console.error('[SuitePractice] 继续套题失败:', err);
@@ -1101,6 +1104,7 @@
                     suiteFlowMode: session.flowMode || 'simulation',
                     sequenceIndex: targetIdx,
                     sequenceTotal: session.sequence.length,
+                    sequenceExamIds: session.sequence.map(e => e && e.examId).filter(Boolean),
                     reuseWindow: sourceWindow && !sourceWindow.closed ? sourceWindow : undefined
                 });
 
@@ -2147,7 +2151,8 @@
                         suiteSessionId,
                         suiteFlowMode: flowMode,
                         sequenceIndex: 0,
-                        sequenceTotal: normalizedSequence.length
+                        sequenceTotal: normalizedSequence.length,
+                        sequenceExamIds: normalizedSequence.map(e => e && e.examId).filter(Boolean)
                     });
                 } catch (openError) {
                     console.error('[SuitePractice] 打开首篇失败:', openError);

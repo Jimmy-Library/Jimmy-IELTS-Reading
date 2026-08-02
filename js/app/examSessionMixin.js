@@ -379,6 +379,15 @@
                 if (Number.isInteger(options.sequenceTotal)) {
                     parsed.searchParams.set('suiteSequenceTotal', String(options.sequenceTotal));
                 }
+                // 把整套 examId 序列写进 URL，练习页据此「打开即三篇」，避免消息时序竞态只显示一篇
+                if (Array.isArray(options.sequenceExamIds) && options.sequenceExamIds.length) {
+                    const seq = options.sequenceExamIds
+                        .map(id => (id == null ? '' : String(id).trim()))
+                        .filter(Boolean);
+                    if (seq.length) {
+                        parsed.searchParams.set('suiteSequenceExamIds', seq.join(','));
+                    }
+                }
                 return parsed.toString();
             } catch (_) {
                 return rawUrl;
