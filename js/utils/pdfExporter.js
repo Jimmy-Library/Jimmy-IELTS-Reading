@@ -74,6 +74,8 @@ class PdfExporter {
             }
 
             const grouped = await this.markdown.groupRecordsByDateAsync(scoped, examIndex);
+            // 预加载所涉题库的题干,供答题表显示"题目"列
+            try { await this.preloadStems(scoped); } catch (_) { /* 题干缺失不阻断导出 */ }
             const html = this.buildPrintHtml(grouped, scoped.length, {
                 subtitle: opts.title || (filterIds ? `选中 ${scoped.length} 条记录` : null)
             });
@@ -104,6 +106,7 @@ class PdfExporter {
 
         try {
             const enhanced = this.enrichRecordWithExam(record);
+            try { await this.preloadStems([enhanced]); } catch (_) { /* 题干缺失不阻断导出 */ }
             const innerHtml = this.buildStandaloneRecordInnerHtml(enhanced);
 
             // 离屏渲染获取实际高度
@@ -302,8 +305,9 @@ class PdfExporter {
             .ielts-export-card-root table.answers th,
             .ielts-export-card-root table.answers td { border: 1px solid #bcd8c5; padding: 5px 8px; text-align: left; vertical-align: top; }
             .ielts-export-card-root table.answers thead th { background: #e8f3eb; color: #14532d; font-weight: 700; }
-            .ielts-export-card-root table.answers td.col-num { width: 56px; text-align: center; font-weight: 600; }
-            .ielts-export-card-root table.answers td.col-res { width: 50px; text-align: center; font-weight: 700; font-size: 13px; }
+            .ielts-export-card-root table.answers td.col-num { width: 44px; text-align: center; font-weight: 600; }
+            .ielts-export-card-root table.answers td.col-q { font-size: 11px; color: #2c5a3f; line-height: 1.45; text-align: left; }
+            .ielts-export-card-root table.answers td.col-res { width: 46px; text-align: center; font-weight: 700; font-size: 13px; }
             .ielts-export-card-root table.answers td.col-res.ok { color: #1f7a4d; }
             .ielts-export-card-root table.answers td.col-res.bad { color: #c0392b; }
             .ielts-export-card-root table.answers tr.bad td { background: #fdf2ef; }
@@ -606,8 +610,10 @@ class PdfExporter {
         font-weight: 700;
         letter-spacing: 0.02em;
     }
-    table.answers td.col-num { width: 60px; text-align: center; font-weight: 600; }
-    table.answers td.col-res { width: 60px; text-align: center; font-weight: 700; font-size: 12pt; }
+    table.answers td.col-num { width: 48px; text-align: center; font-weight: 600; }
+    table.answers td.col-q { font-size: 10pt; color: var(--ink-soft); line-height: 1.45; }
+    table.answers th:nth-child(2).col-q, table.answers td.col-q { text-align: left; }
+    table.answers td.col-res { width: 52px; text-align: center; font-weight: 700; font-size: 12pt; }
     table.answers td.col-res.ok { color: #1f7a4d; }
     table.answers td.col-res.bad { color: #c0392b; }
     table.answers tr.bad td { background: #fdf2ef; }
@@ -857,6 +863,246 @@ class PdfExporter {
         }).join('');
     }
 
+    // ---------- 题干(题目内容)加载与提取 ----------
+    /**
+     * 预加载本次导出涉及的所有题库题干,建立 examId -> Map(题号 -> 题干文本)
+     * 供后续同步渲染答题表时补充"题目"列。
+     */
+    async preloadStems(records) {
+        this._stemsByExam = this._stemsByExam || new Map();
+        const ids = new Set();
+        (records || []).forEach(r => {
+            if (!r) return;
+            if (r.examId) ids.add(String(r.examId));
+            this.getSuiteEntries(r).forEach(e => {
+                if (e && e.examId) ids.add(String(e.examId));
+            });
+        });
+        await Promise.all(Array.from(ids).map(async (id) => {
+            if (this._stemsByExam.has(id)) return;
+            try {
+                const dataset = await this.ensureExamDataset(id);
+                this._stemsByExam.set(id, dataset ? this.extractQuestionStems(dataset) : new Map());
+            } catch (_) {
+                this._stemsByExam.set(id, new Map());
+            }
+        }));
+    }
+
+    loadExamScript(url) {
+        this._scriptCache = this._scriptCache || new Map();
+        if (this._scriptCache.has(url)) return this._scriptCache.get(url);
+        const promise = new Promise((resolve, reject) => {
+            const script = document.createElement('script');
+            script.src = url;
+            script.async = true;
+            script.onload = () => resolve(true);
+            script.onerror = () => reject(new Error('exam_script_failed:' + url));
+            document.head.appendChild(script);
+        });
+        this._scriptCache.set(url, promise);
+        return promise;
+    }
+
+    /** 取得某篇题库完整数据集:优先内存注册表,其次动态加载脚本,最后 fetch 解析 */
+    async ensureExamDataset(examId) {
+        if (!examId) return null;
+        const reg = window.__READING_EXAM_DATA__;
+        const fromReg = () => {
+            try { return reg && typeof reg.get === 'function' ? reg.get(examId) : null; }
+            catch (_) { return null; }
+        };
+        let ds = fromReg();
+        if (ds) return ds;
+
+        // 解析脚本文件名(与页面加载 manifest 使用同一相对基准)
+        let file = examId + '.js';
+        try {
+            const manifest = window.__READING_EXAM_MANIFEST__ || {};
+            const entry = manifest[examId];
+            if (entry && entry.script) file = String(entry.script).replace(/^\.\//, '');
+            else if (entry && entry.dataKey) file = entry.dataKey + '.js';
+        } catch (_) { /* ignore */ }
+        const url = 'assets/generated/reading-exams/' + file;
+
+        // 动态注入脚本(兼容 file:// 与 http,与应用自身加载题库的方式一致)
+        if (reg && typeof reg.register === 'function') {
+            try {
+                await this.loadExamScript(url);
+                ds = fromReg();
+                if (ds) return ds;
+            } catch (_) { /* ignore, 尝试 fetch */ }
+        }
+        // 回退:fetch 文本并手工解析出 register 的 JSON 载荷(仅 http 下可用)
+        try {
+            const res = await fetch(url);
+            if (res.ok) {
+                ds = this.parseExamPayload(await res.text());
+                if (ds) return ds;
+            }
+        } catch (_) { /* ignore */ }
+        return null;
+    }
+
+    /** 从题库脚本文本中提取 register(id, {payload}) 里的 JSON 对象 */
+    parseExamPayload(text) {
+        if (!text) return null;
+        const i = text.indexOf('.register(');
+        if (i < 0) return null;
+        const b = text.indexOf('{', i);
+        if (b < 0) return null;
+        let depth = 0, instr = false, esc = false;
+        for (let j = b; j < text.length; j++) {
+            const c = text[j];
+            if (instr) {
+                if (esc) esc = false;
+                else if (c === '\\') esc = true;
+                else if (c === '"') instr = false;
+            } else {
+                if (c === '"') instr = true;
+                else if (c === '{') depth++;
+                else if (c === '}') {
+                    depth--;
+                    if (depth === 0) {
+                        try { return JSON.parse(text.slice(b, j + 1)); }
+                        catch (_) { return null; }
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    /** 解析题组 HTML,得到 Map(题号 -> 题干纯文本)。覆盖填空/判断/选择/标题匹配等题型 */
+    extractQuestionStems(dataset) {
+        const map = new Map();
+        if (!dataset || !Array.isArray(dataset.questionGroups) || typeof DOMParser === 'undefined') {
+            return map;
+        }
+        const parser = new DOMParser();
+        dataset.questionGroups.forEach((group) => {
+            const qids = Array.isArray(group.questionIds) ? group.questionIds : [];
+            const nums = qids
+                .map(q => parseInt(String(q).replace(/\D/g, ''), 10))
+                .filter(n => Number.isFinite(n));
+            if (!nums.length) return;
+            let root;
+            try {
+                const doc = parser.parseFromString('<div id="__stemroot">' + (group.bodyHtml || '') + '</div>', 'text/html');
+                root = doc.getElementById('__stemroot');
+            } catch (_) { return; }
+            if (!root) return;
+
+            const isHeading = !!root.querySelector('.headings-pool, [data-heading]');
+            const usedContainers = [];
+            nums.forEach((n, idx) => {
+                const qid = 'q' + n;
+                const el = this.findQuestionAnchor(root, n, qid);
+                let stem = '';
+                let container = el ? this.lineContainer(el, root, n) : null;
+                if (container) {
+                    // 同一容器服务多题(如三选/两选题共用一个复选框组)时,只在第一题写题干
+                    if (usedContainers.indexOf(container) >= 0) {
+                        map.set(n, '（同上一题)');
+                        return;
+                    }
+                    usedContainers.push(container);
+                    stem = this.cleanStemText(container, n);
+                }
+                if (!stem && isHeading) {
+                    stem = 'Paragraph ' + String.fromCharCode(65 + idx) + '（标题匹配)';
+                }
+                if (!stem) {
+                    stem = this.strongStatement(root, n);
+                }
+                if (stem) {
+                    if (stem.length > 500) stem = stem.slice(0, 500) + '…';
+                    map.set(n, stem);
+                }
+            });
+        });
+        return map;
+    }
+
+    /** 定位某题号对应的可作答元素(input/select/拖放区/题项) */
+    findQuestionAnchor(root, n, qid) {
+        const tries = [
+            '[name="' + qid + '"]',
+            '[data-question="' + qid + '"]',
+            '#' + qid + '_input',
+            '#' + qid + '-anchor',
+            '[name^="' + qid + '-"]',
+            '[name*="-' + n + '-"]',
+            '[name*="' + qid + '"]',
+            '[id="' + qid + '"]'
+        ];
+        for (const sel of tries) {
+            let hit = null;
+            try { hit = root.querySelector(sel); } catch (_) { hit = null; }
+            if (hit) return hit;
+        }
+        return null;
+    }
+
+    /** 由锚点向上寻找含有实际题干文字的行容器 */
+    lineContainer(el, root, n) {
+        const SEL = '.question-item, .match-question-item, li, .flow-box, tr, p, td';
+        let node = el;
+        let fallback = null;
+        while (node && node !== root && node.nodeType === 1) {
+            if (node.matches && node.matches(SEL)) {
+                const t = this.cleanStemText(node, n);
+                if (!fallback && t) fallback = node;
+                if (t && t.length >= 3) return node;
+            }
+            node = node.parentElement;
+        }
+        return fallback;
+    }
+
+    /** 把容器渲染为纯题干文字:去掉作答控件,填空处标记为下划线,并去掉行首题号 */
+    cleanStemText(node, n) {
+        let clone;
+        try { clone = node.cloneNode(true); } catch (_) { return ''; }
+        clone.querySelectorAll('input').forEach((inp) => {
+            const type = (inp.getAttribute('type') || '').toLowerCase();
+            if (type === 'radio' || type === 'checkbox') {
+                inp.remove();
+            } else {
+                inp.replaceWith(clone.ownerDocument.createTextNode(' ______ '));
+            }
+        });
+        clone.querySelectorAll('select, textarea').forEach((inp) => {
+            inp.replaceWith(clone.ownerDocument.createTextNode(' ______ '));
+        });
+        // 拖放作答区(匹配/分类/标题)只是答案落点,不属题干文字,直接移除
+        clone.querySelectorAll('.match-dropzone, .dropped-items, .paragraph-dropzone, .paragraph-label, .flow-arrow')
+            .forEach((d) => { d.remove(); });
+        let t = (clone.textContent || '').replace(/\s+/g, ' ').trim();
+        // 去掉与题号列重复的行首编号,如 "1. " / "1 "
+        t = t.replace(new RegExp('^' + n + '\\s*[\\.\\)]?\\s+'), '');
+        // 去掉判断题末尾重复的固定选项词
+        t = t.replace(/\s*(TRUE\s+FALSE\s+NOT\s+GIVEN|YES\s+NO\s+NOT\s+GIVEN)\s*$/i, '').trim();
+        // 折叠重复的下划线占位
+        t = t.replace(/(?:\s*______\s*){2,}/g, ' ______ ').trim();
+        return t;
+    }
+
+    /** 兜底:在题组内寻找 <strong>n</strong> 后紧跟的语句文本 */
+    strongStatement(root, n) {
+        const strongs = root.querySelectorAll('strong, b');
+        for (const s of strongs) {
+            if ((s.textContent || '').trim() === String(n)) {
+                const holder = s.closest('p, li, td, .question-item, .match-question-item') || s.parentElement;
+                if (holder) {
+                    const t = this.cleanStemText(holder, n);
+                    if (t && t.length >= 3) return t;
+                }
+            }
+        }
+        return '';
+    }
+
     buildAnswerTableHtml(record) {
         const realData = record.realData || {};
         const comparison = record.answerComparison || realData.answerComparison || null;
@@ -874,11 +1120,26 @@ class PdfExporter {
             return '<p class="no-detail">未能解析出题级答题数据。</p>';
         }
 
+        // 若已加载该篇题库题干,则额外显示"题目"列
+        const stems = (this._stemsByExam && record && record.examId)
+            ? this._stemsByExam.get(String(record.examId))
+            : null;
+        const stemFor = (qNum) => {
+            if (!stems) return '';
+            const n = parseInt(String(qNum).replace(/\D/g, ''), 10);
+            return (Number.isFinite(n) && stems.get(n)) || '';
+        };
+        const hasStems = !!stems && rows.some(row => stemFor(row.questionNum));
+
         const rowsHtml = rows.map(row => {
             const isCorrect = !!row.isCorrect;
             const resultMark = isCorrect ? '✓' : '✗';
+            const stemCell = hasStems
+                ? `<td class="col-q">${this.escapeHtml(stemFor(row.questionNum) || '—')}</td>`
+                : '';
             return `<tr${isCorrect ? '' : ' class="bad"'}>
                 <td class="col-num">${this.escapeHtml(String(row.questionNum))}</td>
+                ${stemCell}
                 <td>${this.escapeHtml(row.userAnswer || 'No Answer')}</td>
                 <td>${this.escapeHtml(row.correctAnswer || 'N/A')}</td>
                 <td class="col-res ${isCorrect ? 'ok' : 'bad'}">${resultMark}</td>
@@ -887,7 +1148,7 @@ class PdfExporter {
 
         return `<table class="answers">
             <thead><tr>
-                <th>题号</th><th>你的答案</th><th>正确答案</th><th>结果</th>
+                <th>题号</th>${hasStems ? '<th>题目</th>' : ''}<th>你的答案</th><th>正确答案</th><th>结果</th>
             </tr></thead>
             <tbody>${rowsHtml}</tbody>
         </table>`;
