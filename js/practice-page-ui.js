@@ -22,7 +22,8 @@
             limitSeconds: null,
             pausedAtMs: null,
             pausedOffsetMs: 0,
-            source: ''
+            source: '',
+            expired: false
         };
         let submissionLocked = false;
         let isResizing = false;
@@ -220,6 +221,7 @@
                 if (!timerRunning) {
                     if (suiteTimerContext.active) {
                         renderTimerDisplay();
+                        maybeHandleCountdownExpiry();
                     }
                     return;
                 }
@@ -227,7 +229,24 @@
                     seconds += 1;
                 }
                 renderTimerDisplay();
+                maybeHandleCountdownExpiry();
             }, 1000);
+        }
+
+        // 模考模式倒计时归零：只触发一次「时间到」事件，交由做题页自动交卷
+        function maybeHandleCountdownExpiry() {
+            if (!suiteTimerContext.active
+                || suiteTimerContext.mode !== 'countdown'
+                || !Number.isFinite(suiteTimerContext.limitSeconds)
+                || suiteTimerContext.expired) {
+                return;
+            }
+            const elapsed = getSuiteTimerElapsedSeconds();
+            if (elapsed != null && elapsed >= suiteTimerContext.limitSeconds) {
+                suiteTimerContext.expired = true;
+                renderTimerDisplay();
+                emitPracticeTimerState('timer_expired');
+            }
         }
 
         function applySuiteTimerContext(source = {}, reason = 'query') {
@@ -249,6 +268,7 @@
             if (contextChanged) {
                 suiteTimerContext.pausedAtMs = null;
                 suiteTimerContext.pausedOffsetMs = 0;
+                suiteTimerContext.expired = false;
             }
             renderTimerDisplay();
             updateTimerVisualState();

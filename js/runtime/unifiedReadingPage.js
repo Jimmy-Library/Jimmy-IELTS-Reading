@@ -3779,7 +3779,34 @@
                 return;
             }
             syncPagePauseState(detail.running);
+            // 模考模式倒计时归零：自动交卷（整套结算），与真实机考一致
+            if (detail.reason === 'timer_expired'
+                || (detail.mode === 'countdown'
+                    && Number.isFinite(detail.limitSeconds)
+                    && Number(detail.displaySeconds) <= 0)) {
+                handleCountdownExpiry();
+            }
         });
+    }
+
+    // 倒计时结束：仅执行一次，提示后按「交卷」流程自动结算整套
+    function handleCountdownExpiry() {
+        if (state.countdownExpiryHandled || state.readOnly || state.submitted) {
+            return;
+        }
+        state.countdownExpiryHandled = true;
+        try {
+            if (typeof global.showMessage === 'function') {
+                global.showMessage('考试时间到，已自动交卷。', 'info');
+            }
+        } catch (_) { /* ignore */ }
+        Promise.resolve()
+            .then(() => handleSubmit())
+            .catch((error) => {
+                console.error('[UnifiedReadingPage] 倒计时自动交卷失败:', error);
+                // 失败时允许后续再次尝试，避免卡死在未交卷状态
+                state.countdownExpiryHandled = false;
+            });
     }
 
     async function bootstrap() {
