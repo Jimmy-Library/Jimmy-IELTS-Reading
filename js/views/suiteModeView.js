@@ -100,6 +100,59 @@
             + '</div>';
     }
 
+    /** 读取本地缓存中所有「未完成」的套题进度，按最近保存时间倒序 */
+    function readUnfinishedSuiteProgress() {
+        const list = [];
+        try {
+            const store = global.localStorage;
+            if (!store) return list;
+            for (let i = 0; i < store.length; i += 1) {
+                const key = store.key(i);
+                if (!key || key.indexOf('ielts_suite_progress::') !== 0) continue;
+                let parsed = null;
+                try { parsed = JSON.parse(store.getItem(key)); } catch (_) { parsed = null; }
+                if (!parsed || !Array.isArray(parsed.sequence) || !parsed.sequence.length) continue;
+                list.push({
+                    key: key,
+                    suiteSessionId: key.slice('ielts_suite_progress::'.length),
+                    title: parsed.title || '套题练习',
+                    answeredCount: Number(parsed.answeredCount) || 0,
+                    elapsed: Number(parsed.elapsed) || 0,
+                    savedAt: Number(parsed.updatedAt || parsed.savedAt) || 0
+                });
+            }
+        } catch (_) { /* localStorage 不可用时静默降级 */ }
+        list.sort((a, b) => (b.savedAt || 0) - (a.savedAt || 0));
+        return list;
+    }
+
+    function formatElapsed(sec) {
+        const s = Math.max(0, Math.floor(Number(sec) || 0));
+        const m = Math.floor(s / 60);
+        const r = s % 60;
+        return m + ':' + (r < 10 ? '0' + r : r);
+    }
+
+    /** 未完成套题的「继续 / 重新做题 / 删除」提示条（每次打开套题模式都会询问） */
+    function resumeBannerHtml(draft) {
+        if (!draft) return '';
+        const savedText = draft.savedAt ? new Date(draft.savedAt).toLocaleString() : '未知时间';
+        return ''
+            + '<div class="suite-resume-banner" data-suite-resume-id="' + escapeHtml(draft.suiteSessionId) + '"'
+            + ' style="border:1px solid #f59e0b;background:rgba(245,158,11,0.08);border-radius:12px;padding:14px 16px;margin-bottom:16px;">'
+            +   '<div style="font-weight:600;margin-bottom:4px;">检测到未完成的套题练习</div>'
+            +   '<div style="font-size:0.82rem;opacity:0.75;margin-bottom:10px;">'
+            +     escapeHtml(draft.title) + '　·　已做 ' + draft.answeredCount + ' 题　·　用时 '
+            +     formatElapsed(draft.elapsed) + '　·　' + escapeHtml(savedText)
+            +   '</div>'
+            +   '<div style="display:flex;gap:10px;flex-wrap:wrap;">'
+            +     '<button type="button" class="btn btn-sm" data-suite-resume-action="continue" style="border:1px solid #2563eb;background:#2563eb;color:#fff;border-radius:8px;padding:6px 14px;cursor:pointer;">继续做题</button>'
+            +     '<button type="button" class="btn btn-sm" data-suite-resume-action="restart" style="border:1px solid #cbd5e1;background:#fff;color:#475569;border-radius:8px;padding:6px 14px;cursor:pointer;">重新做题</button>'
+            +     '<button type="button" class="btn btn-sm" data-suite-resume-action="dismiss" style="border:1px solid #cbd5e1;background:#fff;color:#475569;border-radius:8px;padding:6px 14px;cursor:pointer;">删除记录</button>'
+            +   '</div>'
+            + '</div>';
+    }
+
     function render() {
         const listEl = document.getElementById(LIST_ID);
         if (!listEl) return;
@@ -111,8 +164,55 @@
         }
 
         const best = readBestScores();
-        listEl.innerHTML = catalog.map((s) => suiteCardHtml(s, best[s.id])).join('');
+        // 打开套题模式即询问是否继续未完成的套题（断点重做）
+        const unfinished = readUnfinishedSuiteProgress();
+        const bannerHtml = unfinished.length ? resumeBannerHtml(unfinished[0]) : '';
+        listEl.innerHTML = bannerHtml + catalog.map((s) => suiteCardHtml(s, best[s.id])).join('');
         rendered = true;
+    }
+
+    /** 处理未完成套题提示条上的操作 */
+    function handleResumeAction(action, suiteSessionId) {
+        if (!suiteSessionId) return;
+        const ensure = typeof global.ensureSessionSuiteReady === 'function'
+            ? global.ensureSessionSuiteReady()
+            : Promise.resolve();
+        if (action === 'continue') {
+            Promise.resolve(ensure).then(() => {
+                if (global.app && typeof global.app.resumeSuiteDraft === 'function') {
+                    return global.app.resumeSuiteDraft(suiteSessionId);
+                }
+                if (typeof global.resumeSuiteDraft === 'function') {
+                    return global.resumeSuiteDraft(suiteSessionId);
+                }
+                global.showMessage && global.showMessage('套题续做模块未就绪，请刷新后重试。', 'warning');
+            });
+        } else if (action === 'restart') {
+            if (typeof global.confirm === 'function'
+                && !global.confirm('重新做题会清空这套题已保存的答案，从头开始（仍是原来的三篇）。确定吗？')) {
+                return;
+            }
+            Promise.resolve(ensure).then(() => {
+                if (global.app && typeof global.app.restartSuiteDraft === 'function') {
+                    return global.app.restartSuiteDraft(suiteSessionId);
+                }
+                if (typeof global.restartSuiteDraft === 'function') {
+                    return global.restartSuiteDraft(suiteSessionId);
+                }
+                global.showMessage && global.showMessage('套题续做模块未就绪，请刷新后重试。', 'warning');
+            });
+        } else if (action === 'dismiss') {
+            if (typeof global.confirm === 'function'
+                && !global.confirm('确定删除这条未完成的套题记录吗？该操作不可恢复。')) {
+                return;
+            }
+            if (typeof global.deleteIncompleteDraft === 'function') {
+                global.deleteIncompleteDraft('ielts_suite_progress::' + suiteSessionId);
+            } else {
+                try { global.localStorage.removeItem('ielts_suite_progress::' + suiteSessionId); } catch (_) {}
+            }
+            render();
+        }
     }
 
     function ensureModal() {
@@ -218,6 +318,14 @@
         listEl.addEventListener('click', (event) => {
             const target = event.target instanceof HTMLElement ? event.target : null;
             if (!target) return;
+            // 未完成套题提示条：继续 / 重新做题 / 删除
+            const resumeBtn = target.closest('[data-suite-resume-action]');
+            if (resumeBtn) {
+                const banner = resumeBtn.closest('[data-suite-resume-id]');
+                const suiteSessionId = banner ? banner.getAttribute('data-suite-resume-id') : '';
+                handleResumeAction(resumeBtn.getAttribute('data-suite-resume-action'), suiteSessionId);
+                return;
+            }
             const card = target.closest('[data-suite-id]');
             if (!card) return;
             openModal(card.dataset.suiteId);

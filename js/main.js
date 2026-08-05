@@ -1504,6 +1504,13 @@ function setupPracticeHistoryInteractions() {
                 window.resumeIncompleteDraft(this.dataset.draftId);
             }
         });
+        window.DOM.delegate('click', '.practice-history-list [data-record-action="restart-draft"], #history-list [data-record-action="restart-draft"]', function (event) {
+            event.preventDefault();
+            event.stopPropagation();
+            if (typeof window.restartIncompleteDraft === 'function') {
+                window.restartIncompleteDraft(this.dataset.draftId);
+            }
+        });
         window.DOM.delegate('click', '.practice-history-list [data-record-action="delete-draft"], #history-list [data-record-action="delete-draft"]', function (event) {
             event.preventDefault();
             event.stopPropagation();
@@ -1550,6 +1557,17 @@ function setupPracticeHistoryInteractions() {
                 event.stopPropagation();
                 if (typeof window.resumeIncompleteDraft === 'function') {
                     window.resumeIncompleteDraft(resumeTarget.dataset.draftId);
+                }
+                return;
+            }
+
+            // 未完成草稿：重新做题
+            const restartTarget = event.target.closest('[data-record-action="restart-draft"]');
+            if (restartTarget && container.contains(restartTarget)) {
+                event.preventDefault();
+                event.stopPropagation();
+                if (typeof window.restartIncompleteDraft === 'function') {
+                    window.restartIncompleteDraft(restartTarget.dataset.draftId);
                 }
                 return;
             }
@@ -2344,6 +2362,7 @@ function createIncompleteDraftNode(draft) {
     actions.className = 'record-actions-container';
     actions.innerHTML =
         '<button type="button" class="btn btn-sm" data-record-action="resume-draft" data-draft-id="' + draft.id + '" style="margin-right:6px;">继续做题</button>'
+        + '<button type="button" class="btn btn-sm" data-record-action="restart-draft" data-draft-id="' + draft.id + '" style="margin-right:6px;">重新做题</button>'
         + '<button type="button" class="delete-record-btn" title="删除草稿" data-record-action="delete-draft" data-draft-id="' + draft.id + '">🗑️</button>';
 
     item.appendChild(info);
@@ -2401,6 +2420,64 @@ function resumeIncompleteDraft(draftId) {
     }
 }
 
+// 处理未完成草稿的「重新做题」：确认后丢弃已保存进度，从头重做同一套题/同一篇
+function restartIncompleteDraft(draftId) {
+    const drafts = collectIncompleteDrafts();
+    const draft = drafts.find((d) => d.id === draftId);
+    if (!draft) {
+        if (typeof window.showMessage === 'function') {
+            window.showMessage('未找到对应的草稿记录，可能已被清除。', 'warning');
+        }
+        return;
+    }
+    const confirmText = draft.kind === 'suite'
+        ? '重新做题会清空这套题已保存的答案，从头开始（仍是原来的三篇）。确定吗？'
+        : '重新做题会清空这篇已保存的答案，从头开始。确定吗？';
+    if (typeof window.confirm === 'function' && !window.confirm(confirmText)) {
+        return;
+    }
+
+    if (draft.kind === 'single' && draft.examId) {
+        // 单篇：清掉草稿后以「非续做」方式打开，页面不会弹续做框，等同重做
+        try { window.localStorage.removeItem('ielts_single_draft::' + draft.examId); } catch (_) { }
+        try { sessionStorage.removeItem('ielts_force_resume::' + draft.examId); } catch (_) { }
+        if (typeof window.openExam === 'function') {
+            window.openExam(draft.examId);
+        }
+    } else if (draft.kind === 'suite-passage' && draft.examId) {
+        // 套题片段（套题上下文已丢失）：按单篇重做处理
+        try { window.localStorage.removeItem(draft.id); } catch (_) { }
+        try { sessionStorage.removeItem('ielts_force_resume::' + draft.examId); } catch (_) { }
+        if (typeof window.openExam === 'function') {
+            window.openExam(draft.examId);
+        }
+    } else if (draft.kind === 'suite') {
+        // 套题重做能力（restartSuiteDraft）来自 suitePracticeMixin 的 session-suite 懒加载组，
+        // 与「继续做题」一致，需先确保该组加载并挂载到 app 实例后再调用
+        const restartSuite = function () {
+            if (window.app && typeof window.app.restartSuiteDraft === 'function') {
+                return window.app.restartSuiteDraft(draft.suiteSessionId);
+            }
+            if (typeof window.restartSuiteDraft === 'function') {
+                return window.restartSuiteDraft(draft.suiteSessionId);
+            }
+            if (typeof window.showMessage === 'function') {
+                window.showMessage('套题续做模块未就绪', 'warning');
+            }
+            return undefined;
+        };
+        const suiteModuleReady = window.app && typeof window.app.restartSuiteDraft === 'function';
+        if (!suiteModuleReady && window.AppLazyLoader && typeof window.AppLazyLoader.ensureGroup === 'function') {
+            window.AppLazyLoader.ensureGroup('session-suite').then(restartSuite).catch((err) => {
+                console.error('[main.js] 加载套题续做模块失败:', err);
+                restartSuite();
+            });
+        } else {
+            restartSuite();
+        }
+    }
+}
+
 function deleteIncompleteDraft(draftId) {
     try {
         window.localStorage.removeItem(draftId);
@@ -2420,12 +2497,25 @@ function deleteIncompleteDraft(draftId) {
 }
 if (typeof window !== 'undefined') {
     window.resumeIncompleteDraft = resumeIncompleteDraft;
+    window.restartIncompleteDraft = restartIncompleteDraft;
     window.deleteIncompleteDraft = deleteIncompleteDraft;
     // 套题续做：委托给 app 实例的 resumeSuiteDraft
     if (typeof window.resumeSuiteDraft !== 'function') {
         window.resumeSuiteDraft = function (suiteSessionId) {
             if (window.app && typeof window.app.resumeSuiteDraft === 'function') {
                 return window.app.resumeSuiteDraft(suiteSessionId);
+            }
+            if (typeof window.showMessage === 'function') {
+                window.showMessage('套题续做模块未就绪', 'warning');
+            }
+            return undefined;
+        };
+    }
+    // 套题重做：委托给 app 实例的 restartSuiteDraft
+    if (typeof window.restartSuiteDraft !== 'function') {
+        window.restartSuiteDraft = function (suiteSessionId) {
+            if (window.app && typeof window.app.restartSuiteDraft === 'function') {
+                return window.app.restartSuiteDraft(suiteSessionId);
             }
             if (typeof window.showMessage === 'function') {
                 window.showMessage('套题续做模块未就绪', 'warning');

@@ -801,7 +801,17 @@
                         answers: r.answers, answerComparison: r.answerComparison
                     })),
                     startTime: session.startTime,
-                    activeExamId: session.activeExamId
+                    activeExamId: session.activeExamId,
+                    // 续做 / 重新做题 需要的上下文（目录套题、模考计时、抽题范围），
+                    // 缺失会导致重做时丢失模考倒计时或套题目录归属
+                    frequencyScope: session.frequencyScope || 'all',
+                    catalogSuiteId: session.catalogSuiteId || null,
+                    catalogSuiteName: session.catalogSuiteName || '',
+                    suiteExamMode: session.suiteExamMode || '',
+                    suiteTimerMode: session.suiteTimerMode || null,
+                    suiteTimerLimitSeconds: session.suiteTimerLimitSeconds != null
+                        ? session.suiteTimerLimitSeconds
+                        : null
                 };
                 if (global.sessionStorage) {
                     global.sessionStorage.setItem('ielts_sim_session', JSON.stringify(snapshot));
@@ -947,13 +957,28 @@
                 elapsedByExam: snapshot.elapsedByExam || {},
                 globalTimerAnchorMs: resumedAnchorMs,
                 flowMode: snapshot.flowMode || 'simulation',
-                frequencyScope: 'all',
+                frequencyScope: snapshot.frequencyScope || 'all',
                 autoAdvanceAfterSubmit: typeof snapshot.autoAdvanceAfterSubmit === 'boolean'
                     ? snapshot.autoAdvanceAfterSubmit
                     : true,
                 windowRef: null,
                 windowName: suiteWindowName
             };
+
+            // 还原目录套题归属与模考倒计时上下文（若原本从套题目录启动）
+            if (snapshot.catalogSuiteId) {
+                session.catalogSuiteId = snapshot.catalogSuiteId;
+                session.catalogSuiteName = snapshot.catalogSuiteName || '';
+                session.suiteExamMode = snapshot.suiteExamMode || '';
+            }
+            if (snapshot.suiteTimerMode) {
+                session.suiteTimerMode = snapshot.suiteTimerMode;
+                // 续做沿用已前移的全局锚点，保证模考倒计时不把关页时段计入
+                session.suiteTimerAnchorMs = resumedAnchorMs;
+            }
+            if (snapshot.suiteTimerLimitSeconds != null) {
+                session.suiteTimerLimitSeconds = snapshot.suiteTimerLimitSeconds;
+            }
 
             this.currentSuiteSession = session;
             if (typeof this._registerSuiteSequence === 'function') {
@@ -998,6 +1023,87 @@
                 this._focusSuiteWindow(session.windowRef);
             }
             return true;
+        },
+
+        // 清除某个套题会话在本地缓存中的所有痕迹：整套进度 + 各分篇草稿
+        _removeSuiteProgressFromStorage(suiteSessionId) {
+            if (!suiteSessionId || !global.localStorage) return;
+            try {
+                global.localStorage.removeItem('ielts_suite_progress::' + suiteSessionId);
+                const prefix = 'ielts_suite_draft::' + suiteSessionId + '::';
+                const toRemove = [];
+                for (let i = 0; i < global.localStorage.length; i += 1) {
+                    const k = global.localStorage.key(i);
+                    if (k && k.indexOf(prefix) === 0) toRemove.push(k);
+                }
+                toRemove.forEach(k => global.localStorage.removeItem(k));
+                if (this._persistedSuiteProgressKey === 'ielts_suite_progress::' + suiteSessionId) {
+                    this._persistedSuiteProgressKey = null;
+                }
+            } catch (_) { /* ignore */ }
+        },
+
+        // 从「未完成」列表选择「重新做题」：沿用原来的三篇题目，
+        // 清空旧进度与草稿后从头开始（不改变原三篇的组合）
+        async restartSuiteDraft(suiteSessionId) {
+            if (!suiteSessionId) return false;
+            let snapshot = null;
+            try {
+                const raw = global.localStorage && global.localStorage.getItem('ielts_suite_progress::' + suiteSessionId);
+                snapshot = raw ? JSON.parse(raw) : null;
+            } catch (_) { snapshot = null; }
+            if (!snapshot || !Array.isArray(snapshot.sequence) || !snapshot.sequence.length) {
+                window.showMessage && window.showMessage('未找到可重做的套题进度。', 'warning');
+                return false;
+            }
+            if (this.currentSuiteSession && this.currentSuiteSession.status === 'active') {
+                window.showMessage && window.showMessage('套题练习正在进行中，请先完成当前套题。', 'warning');
+                return false;
+            }
+            if (!this._suiteModeReady) {
+                this.initializeSuiteMode();
+            }
+            if (typeof this.openExam !== 'function') {
+                window.showMessage && window.showMessage('当前版本暂不支持套题练习自动打开题目。', 'error');
+                return false;
+            }
+
+            // 用原三篇构造全新的序列（丢弃旧答案），要求每篇都带完整 exam 数据
+            const normalizedSequence = snapshot.sequence
+                .filter(item => item && item.examId && item.exam)
+                .map(item => ({ examId: item.examId, exam: item.exam }));
+            if (!normalizedSequence.length) {
+                window.showMessage && window.showMessage('套题题目数据缺失，无法重做。', 'warning');
+                return false;
+            }
+
+            // 先清掉旧进度，避免「未完成」列表残留同一套题的重复条目
+            this._removeSuiteProgressFromStorage(suiteSessionId);
+
+            const launchOptions = {
+                flowMode: snapshot.flowMode || 'simulation',
+                frequencyScope: snapshot.frequencyScope || 'all',
+                suiteWindowName: 'ielts-suite-mode-tab',
+                launchLabel: (snapshot.catalogSuiteName ? snapshot.catalogSuiteName + '·' : '') + '重新做题'
+            };
+            // 保留目录套题 / 模考倒计时上下文（若原本从套题目录启动）
+            if (snapshot.catalogSuiteId) {
+                launchOptions.catalogSuiteId = snapshot.catalogSuiteId;
+                launchOptions.catalogSuiteName = snapshot.catalogSuiteName || '';
+                launchOptions.suiteExamMode = snapshot.suiteExamMode || '';
+            }
+            if (snapshot.suiteTimerMode) {
+                launchOptions.suiteTimerMode = snapshot.suiteTimerMode;
+            }
+            if (snapshot.suiteTimerLimitSeconds != null) {
+                launchOptions.suiteTimerLimitSeconds = snapshot.suiteTimerLimitSeconds;
+            }
+
+            const started = await this._launchSuiteSessionFromSequence(normalizedSequence, launchOptions);
+            if (!started && this.currentSuiteSession) {
+                await this._abortSuiteSession(this.currentSuiteSession, { reason: 'restart_failed' });
+            }
+            return started;
         },
 
         _sendSimulationContext(session, examId, targetWindow) {
@@ -2126,6 +2232,11 @@
                 // _resolveSuiteTimerContext 会从 session 回退读取这两个字段
                 if (options.suiteTimerMode) {
                     session.suiteTimerMode = options.suiteTimerMode;
+                    session.suiteTimerAnchorMs = startedAt;
+                } else {
+                    // 未显式指定计时方式时，整套统一用「正计时」并共用同一锚点，
+                    // 保证三篇跨篇导航时计时连续、不会每打开一篇就从 0 重新计时
+                    session.suiteTimerMode = 'elapsed';
                     session.suiteTimerAnchorMs = startedAt;
                 }
                 if (options.suiteTimerLimitSeconds != null) {
