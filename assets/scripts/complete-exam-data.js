@@ -2549,6 +2549,28 @@ window.completeExamIndex = [
         hasHtml: true,
         hasPdf: false,
     },
+    {
+        id: 'p2-medium-243',
+        title: 'The internal body clock 生物钟',
+        category: 'P2',
+        frequency: '次高频',
+        path: 'assets/generated/reading-exams/',
+        filename: 'reading-practice-unified.html',
+        hasHtml: true,
+        hasPdf: false,
+        sourceKind: 'generated-reading',
+    },
+    {
+        id: 'p3-medium-244',
+        title: 'Look who was talking 语言的起源',
+        category: 'P3',
+        frequency: '次高频',
+        path: 'assets/generated/reading-exams/',
+        filename: 'reading-practice-unified.html',
+        hasHtml: true,
+        hasPdf: false,
+        sourceKind: 'generated-reading',
+    },
 ];
 window.completeExamIndex.pathRoot = {
     reading: '三月/',
