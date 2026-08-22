@@ -59,7 +59,8 @@
         "q26"
       ],
       "bodyHtml": "<div class=\"group\" id=\"q22-23-24-25-26-anchor\"><h4>Questions 22-26</h4><p>Look at the following statements (Questions 22-26) and the list of items below.</p><p>Match each statement with the correct option, A-C.</p><p>Write the correct letter, A-C, in boxes 22-26 on your answer sheet.</p><p><strong>NB</strong> You may use any letter more than once.</p><div class=\"match-question-item\" id=\"q22-anchor\"><p><strong>22</strong> It has seen the return of native tree species.</p><div class=\"match-dropzone\" data-question=\"q22\"></div></div><div class=\"match-question-item\" id=\"q23-anchor\"><p><strong>23</strong> It supports only one species of native monkey.</p><div class=\"match-dropzone\" data-question=\"q23\"></div></div><div class=\"match-question-item\" id=\"q24-anchor\"><p><strong>24</strong> Its monkey population helps the agriculture of the area.</p><div class=\"match-dropzone\" data-question=\"q24\"></div></div><div class=\"match-question-item\" id=\"q25-anchor\"><p><strong>25</strong> It is home to populations of all three local monkey species.</p><div class=\"match-dropzone\" data-question=\"q25\"></div></div><div class=\"match-question-item\" id=\"q26-anchor\"><p><strong>26</strong> Its landscape was altered by the construction of a transport link.</p><div class=\"match-dropzone\" data-question=\"q26\"></div></div><div class=\"options-pool\" data-allow-reuse=\"true\" data-allow-option-reuse=\"true\"><div class=\"pool-items\"><div class=\"drag-item\" draggable=\"true\" data-option=\"A\">A Hacienda La Pacifica</div><div class=\"drag-item\" draggable=\"true\" data-option=\"B\">B Santa Rosa National Park</div><div class=\"drag-item\" draggable=\"true\" data-option=\"C\">C Cholula Cacao Farm</div></div></div></div>",
-      "leadHtml": ""
+      "leadHtml": "",
+      "allowOptionReuse": true
     }
   ],
   "answerKey": {
