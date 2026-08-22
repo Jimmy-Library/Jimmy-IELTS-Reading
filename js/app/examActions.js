@@ -87,7 +87,8 @@
     }
 
     const AUGUST_2026_NEW_IDS = [
-        'p2-medium-243', 'p3-medium-244'
+        'p2-medium-243', 'p3-medium-244',
+        'p1-high-1783', 'p2-low-1823', 'p3-high-1051'
     ];
     global.__AUGUST_2026_NEW_IDS = AUGUST_2026_NEW_IDS;
 
