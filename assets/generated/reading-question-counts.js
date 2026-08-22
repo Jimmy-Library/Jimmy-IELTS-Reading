@@ -151,6 +151,7 @@
     "p2-medium-209": 13,
     "p2-medium-213": 13,
     "p2-medium-217": 13,
+    "p2-medium-243": 13,
     "p2-medium-58": 13,
     "p2-medium-86": 13,
     "p2-medium-93": 13,
@@ -238,6 +239,7 @@
     "p3-medium-197": 14,
     "p3-medium-22": 14,
     "p3-medium-241": 14,
+    "p3-medium-244": 14,
     "p3-medium-66": 14
   };
 })(typeof window !== "undefined" ? window : globalThis);

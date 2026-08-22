@@ -1631,6 +1631,20 @@
     "script": "./p3-medium-241.js",
     "title": "Who looks after the children in today's Britain? 育儿分工",
     "category": "P3"
+  },
+  "p2-medium-243": {
+    "examId": "p2-medium-243",
+    "dataKey": "p2-medium-243",
+    "script": "./p2-medium-243.js",
+    "title": "The internal body clock 生物钟",
+    "category": "P2"
+  },
+  "p3-medium-244": {
+    "examId": "p3-medium-244",
+    "dataKey": "p3-medium-244",
+    "script": "./p3-medium-244.js",
+    "title": "Look who was talking 语言的起源",
+    "category": "P3"
   }
 };
 })(typeof window !== "undefined" ? window : globalThis);

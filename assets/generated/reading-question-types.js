@@ -8,7 +8,7 @@
 (function (global) {
   'use strict';
   global.__READING_QUESTION_TYPES__ = {
-  "generatedAt": "2026-07-07",
+  "generatedAt": "2026-08-10",
   "source": "题型分类目录表.xlsx + 题目数据自动归类",
   "types": [
     {
@@ -1163,6 +1163,15 @@
     "p3-medium-66": [
       "tfng",
       "note"
+    ],
+    "p2-medium-243": [
+      "mc",
+      "matching-info",
+      "summary-passage"
+    ],
+    "p3-medium-244": [
+      "ynng",
+      "matching-features"
     ]
   }
 };

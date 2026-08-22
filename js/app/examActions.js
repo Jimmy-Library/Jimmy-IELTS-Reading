@@ -86,13 +86,10 @@
         });
     }
 
-    const JUNE_2026_NEW_IDS = [
-        'p1-high-229', 'p1-high-230', 'p1-high-231',
-        'p2-high-232', 'p2-high-233', 'p2-high-234',
-        'p2-high-235', 'p2-high-236', 'p2-high-239',
-        'p3-high-221', 'p3-high-229'
+    const AUGUST_2026_NEW_IDS = [
+        'p2-medium-243', 'p3-medium-244'
     ];
-    global.__JUNE_2026_NEW_IDS = JUNE_2026_NEW_IDS;
+    global.__AUGUST_2026_NEW_IDS = AUGUST_2026_NEW_IDS;
 
     const JULY_2026_NEW_IDS = [
         'p1-high-240', 'p2-low-240', 'p2-low-242',
@@ -100,15 +97,15 @@
     ];
     global.__JULY_2026_NEW_IDS = JULY_2026_NEW_IDS;
 
-    // __browseNewOnly 存放月份键（或 false）；旧值 true 视为 6 月，保持向后兼容
+    // __browseNewOnly 存放月份键（或 false）；旧值 true 视为最新批次
     const NEW_BATCHES = {
-        'june-2026': { ids: JUNE_2026_NEW_IDS, label: '2026.6月新增', filterId: 'new-june-2026' },
+        'august-2026': { ids: AUGUST_2026_NEW_IDS, label: '2026.8月新增', filterId: 'new-august-2026' },
         'july-2026': { ids: JULY_2026_NEW_IDS, label: '2026.7月新增', filterId: 'new-july-2026' }
     };
     global.__NEW_BATCHES = NEW_BATCHES;
 
     function getNewBatch(key) {
-        return NEW_BATCHES[key === true ? 'june-2026' : key] || null;
+        return NEW_BATCHES[key === true ? 'august-2026' : key] || null;
     }
     global.getNewBatch = getNewBatch;
 
@@ -1247,8 +1244,8 @@
     }
     global.filterByNewBatch = filterByNewBatch;
 
-    global.filterByNewJune2026 = function () {
-        filterByNewBatch('june-2026');
+    global.filterByNewAugust2026 = function () {
+        filterByNewBatch('august-2026');
     };
 
     global.filterByNewJuly2026 = function () {
