@@ -1,7 +1,10 @@
 /**
  * 阅读题目题量（自动生成，请勿手动编辑）
  * 生成方式：node tools/generate-question-counts.js
- * 结构：window.__READING_EXAM_QUESTION_COUNTS__ = { examId: 题量 }
+ * 结构：window.__READING_EXAM_QUESTION_COUNTS__ = {
+    "p1-high-1783": 13,
+    "p2-low-1823": 13,
+    "p3-high-1051": 14, examId: 题量 }
  */
 (function registerReadingQuestionCounts(global) {
   'use strict';
