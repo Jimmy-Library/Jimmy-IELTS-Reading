@@ -3,6 +3,10 @@
 // 数据版本: v3.2
 window.completeExamIndex = [
 {
+        id: "p1-medium-1389", title: "Foot Pedal Irrigation 脚踏水泵灌溉", category: "P1", frequency: "medium", path: "assets/generated/reading-exams/", filename: "p1-medium-1389.js", hasHtml: true, hasPdf: false,
+    },
+
+{
         id: "p1-low-1930", title: "Wood: a valuable resource in New Zealand's economy 木材：新西兰经济的重要资源", category: "P1", frequency: "low", path: "assets/generated/reading-exams/", filename: "p1-low-1930.js", hasHtml: true, hasPdf: false,
     },
 {

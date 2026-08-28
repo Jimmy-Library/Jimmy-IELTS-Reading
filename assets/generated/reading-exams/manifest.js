@@ -1,7 +1,14 @@
 (function registerReadingExamManifest(global) {
   'use strict';
   global.__READING_EXAM_MANIFEST__ = {
-   "p1-low-1930": {
+     "p1-medium-1389": {
+    "examId": "p1-medium-1389",
+    "dataKey": "p1-medium-1389",
+    "script": "./p1-medium-1389.js",
+    "title": "Foot Pedal Irrigation 脚踏水泵灌溉",
+    "category": "P1"
+  },
+"p1-low-1930": {
     "examId": "p1-low-1930",
     "dataKey": "p1-low-1930",
     "script": "./p1-low-1930.js",

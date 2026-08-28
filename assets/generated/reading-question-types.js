@@ -86,7 +86,8 @@
     }
   ],
   "byExamId": {
-    "p1-high-01": [
+      "p1-medium-1389": ["tfng", "diagram", "short-answer"],
+"p1-high-01": [
       "matching-headings",
       "matching-features"
     ],

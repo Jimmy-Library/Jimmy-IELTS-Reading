@@ -91,7 +91,7 @@
         'p1-high-1783', 'p2-low-1823', 'p3-high-1051',
         'p1-low-1930', 'p1-high-1931', 'p3-medium-1929', 'p1-high-1928',
         'p2-medium-1925', 'p1-medium-1923', 'p3-high-1133', 'p2-high-1015',
-        'p1-medium-1041', 'p1-high-1102'
+        'p1-medium-1041', 'p1-high-1102', 'p1-medium-1389'
     ];
     global.__AUGUST_2026_NEW_IDS = AUGUST_2026_NEW_IDS;
 
