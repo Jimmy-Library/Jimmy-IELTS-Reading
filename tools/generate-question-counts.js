@@ -6,6 +6,7 @@
  * 故在构建期把「examId -> 题量」固化成一份数据。
  *
  * 用法：node tools/generate-question-counts.js
+ * 完成题量生成后，会同时刷新题型索引，确保新增题目进入题型筛选。
  */
 'use strict';
 
@@ -65,3 +66,4 @@ ${body}
 }
 
 main();
+require('./generate-question-types.js').main();

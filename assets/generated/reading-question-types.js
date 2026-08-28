@@ -1,28 +1,13 @@
 /**
- * 阅读题
-        "p1-low-1930": ["tfng"],
-  "p1-high-1931": ["tfng", "diagram", "summary"],
-  "p3-medium-1929": ["tfng", "mc", "summary"],
-  "p1-high-1928": ["tfng", "matching", "mc"],
-  "p2-medium-1925": ["matching"],
-  "p1-medium-1923": ["matching", "mc", "short-answer"],
-  "p3-high-1133": ["matching", "mc", "tfng"],
-  "p2-high-1015": ["matching", "summary"],
-  "p1-medium-1041": ["tfng", "summary", "short-answer"],
-  "p1-high-1102": ["matching", "summary"],
-"p1-high-1783": ["tfng", "short-answer"],
-      "p2-low-1823": ["matching", "summary"],
-      "p3-high-1051": ["summary", "ynng", "mc"],型分类数据（自动生成，请勿手动编辑）
- * 数据来源：
- *   1. 题型分类目录表.xlsx —— 人工分类的 130 篇（权威）
- *   2. 其余文章：从题目数据的题目指令自动归类（已用 Excel 130 篇交叉验证，整体一致率约 93%）
- * 结构：window.__READING_QUESTION_TYPES__ = { types:[{key,cn,en}], byExamId:{ examId:[typeKey...] } }
+ * 阅读题型分类数据（自动生成，请勿手动编辑）
+ * 生成方式：node tools/generate-question-types.js
+ * 新增题目会从 questionGroups.kind 和题目指令自动识别；已有人工分类保持不变。
  */
-(function (global) {
+(function registerReadingQuestionTypes(global) {
   'use strict';
   global.__READING_QUESTION_TYPES__ = {
-  "generatedAt": "2026-08-10",
-  "source": "题型分类目录表.xlsx + 题目数据自动归类",
+  "generatedAt": "2026-08-28",
+  "source": "人工分类索引 + 题目数据自动识别",
   "types": [
     {
       "key": "mc",
@@ -122,6 +107,10 @@
       "matching-info",
       "summary-list"
     ],
+    "p1-high-1102": [
+      "matching-headings",
+      "note"
+    ],
     "p1-high-118": [
       "mc",
       "tfng",
@@ -130,6 +119,20 @@
     "p1-high-171": [
       "tfng",
       "note"
+    ],
+    "p1-high-1783": [
+      "tfng",
+      "short-answer"
+    ],
+    "p1-high-1928": [
+      "mc",
+      "tfng",
+      "matching-features"
+    ],
+    "p1-high-1931": [
+      "tfng",
+      "note",
+      "diagram"
     ],
     "p1-high-194": [
       "tfng",
@@ -169,6 +172,10 @@
     "p1-high-24": [
       "tfng",
       "summary-passage"
+    ],
+    "p1-high-240": [
+      "tfng",
+      "table"
     ],
     "p1-high-27": [
       "tfng",
@@ -260,6 +267,9 @@
       "tfng",
       "note"
     ],
+    "p1-low-1930": [
+      "tfng"
+    ],
     "p1-low-223": [
       "tfng",
       "flowchart"
@@ -349,6 +359,11 @@
       "tfng",
       "note"
     ],
+    "p1-medium-1041": [
+      "tfng",
+      "note",
+      "short-answer"
+    ],
     "p1-medium-115": [
       "tfng",
       "note"
@@ -369,6 +384,11 @@
       "mc",
       "tfng",
       "matching-info"
+    ],
+    "p1-medium-1923": [
+      "mc",
+      "matching-headings",
+      "short-answer"
     ],
     "p1-medium-20": [
       "tfng",
@@ -398,6 +418,11 @@
     "p2-high-09": [
       "mc",
       "matching-features"
+    ],
+    "p2-high-1015": [
+      "matching-headings",
+      "matching-features",
+      "summary-passage"
     ],
     "p2-high-120": [
       "matching-headings",
@@ -623,10 +648,25 @@
       "matching-info",
       "summary-passage"
     ],
+    "p2-low-1823": [
+      "matching-info",
+      "matching-features",
+      "summary-passage"
+    ],
     "p2-low-222": [
       "tfng",
       "matching-info",
       "matching-features"
+    ],
+    "p2-low-240": [
+      "mc",
+      "matching-headings",
+      "summary-passage"
+    ],
+    "p2-low-242": [
+      "mc",
+      "matching-info",
+      "summary-passage"
     ],
     "p2-low-37": [
       "mc",
@@ -734,6 +774,9 @@
       "matching-features",
       "summary-passage"
     ],
+    "p2-medium-1925": [
+      "matching-headings"
+    ],
     "p2-medium-209": [
       "matching-info",
       "matching-features",
@@ -748,6 +791,11 @@
       "matching-info",
       "matching-features",
       "sentence"
+    ],
+    "p2-medium-243": [
+      "mc",
+      "matching-info",
+      "summary-passage"
     ],
     "p2-medium-58": [
       "matching-headings",
@@ -773,6 +821,16 @@
       "mc",
       "ynng",
       "summary-list"
+    ],
+    "p3-high-1051": [
+      "mc",
+      "ynng",
+      "summary-list"
+    ],
+    "p3-high-1133": [
+      "mc",
+      "tfng",
+      "matching-endings"
     ],
     "p3-high-15": [
       "mc",
@@ -988,6 +1046,11 @@
       "mc",
       "matching-endings"
     ],
+    "p3-low-240": [
+      "mc",
+      "ynng",
+      "summary-list"
+    ],
     "p3-low-28": [
       "mc",
       "matching-headings",
@@ -1162,6 +1225,11 @@
       "tfng",
       "matching-features"
     ],
+    "p3-medium-1929": [
+      "mc",
+      "tfng",
+      "summary-list"
+    ],
     "p3-medium-197": [
       "mc",
       "ynng",
@@ -1173,11 +1241,7 @@
       "matching-features",
       "summary-passage"
     ],
-    "p3-medium-66": [
-      "tfng",
-      "note"
-    ],
-    "p2-medium-243": [
+    "p3-medium-241": [
       "mc",
       "matching-info",
       "summary-passage"
@@ -1185,7 +1249,31 @@
     "p3-medium-244": [
       "ynng",
       "matching-features"
+    ],
+    "p3-medium-66": [
+      "tfng",
+      "note"
     ]
-  }
+  },
+  "autoDetectedExamIds": [
+    "p1-high-1102",
+    "p1-high-1783",
+    "p1-high-1928",
+    "p1-high-1931",
+    "p1-high-240",
+    "p1-low-1930",
+    "p1-medium-1041",
+    "p1-medium-1923",
+    "p2-high-1015",
+    "p2-low-1823",
+    "p2-low-240",
+    "p2-low-242",
+    "p2-medium-1925",
+    "p3-high-1051",
+    "p3-high-1133",
+    "p3-low-240",
+    "p3-medium-1929",
+    "p3-medium-241"
+  ]
 };
-})(typeof window !== 'undefined' ? window : this);
+})(typeof window !== 'undefined' ? window : globalThis);
