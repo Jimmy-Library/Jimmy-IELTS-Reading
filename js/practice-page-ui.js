@@ -1091,6 +1091,15 @@
             if (explicitReuse === 'true') return true;
             if (explicitReuse === 'false') return false;
 
+            const reuseHost = pool.closest('[data-allow-reuse], [data-allow-option-reuse]');
+            if (reuseHost && reuseHost !== pool) {
+                const inheritedReuse = reuseHost.dataset.allowReuse || reuseHost.dataset.allowOptionReuse;
+                if (inheritedReuse === 'true' || inheritedReuse === 'false') {
+                    pool.dataset.allowReuse = inheritedReuse;
+                    return inheritedReuse === 'true';
+                }
+            }
+
             const unifiedGroup = pool.closest('.unified-group');
             const groupReuse = unifiedGroup?.dataset?.allowOptionReuse;
             if (groupReuse === 'true' || groupReuse === 'false') {
