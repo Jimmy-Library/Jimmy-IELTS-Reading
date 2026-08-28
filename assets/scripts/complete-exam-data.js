@@ -34,7 +34,7 @@ window.completeExamIndex = [
         id: "p1-medium-1041", title: "Ancient Chinese Chariots 中国古代战车", category: "P1", frequency: "medium", path: "assets/generated/reading-exams/", filename: "p1-medium-1041.js", hasHtml: true, hasPdf: false,
     },
 {
-        id: "p1-high-1102", title: "Cathy Freeman – Australian's track queen 澳大利亚田径女王凯西·弗里曼", category: "P1", frequency: "high", path: "assets/generated/reading-exams/", filename: "p1-high-1102.js", hasHtml: true, hasPdf: false,
+        id: "p1-high-1102", title: "Cathy Freeman – Australia's track queen 澳大利亚田径女王凯西·弗里曼", category: "P1", frequency: "high", path: "assets/generated/reading-exams/", filename: "p1-high-1102.js", hasHtml: true, hasPdf: false,
     },
 
 {
