@@ -118,6 +118,47 @@
         return left.every((leftItem) => right.some((rightItem) => areTokensEquivalent(leftItem, rightItem)));
     }
 
+    function compareAnswerSets(userAnswer, correctAnswer) {
+        const expected = splitAnswerTokens(correctAnswer);
+        const actual = splitAnswerTokens(userAnswer);
+        if (expected.length === 0 && actual.length === 0) {
+            return null;
+        }
+        if (expected.length === 0 || actual.length === 0) {
+            return false;
+        }
+        return compareTokenSets(actual, expected);
+    }
+
+    function alignAnswerSetToExpectedSlots(selectedValues, expectedValues) {
+        const selected = splitAnswerTokens(selectedValues);
+        const expected = (expectedValues || []).map((value) => {
+            const tokens = splitAnswerTokens(value);
+            return tokens.length === 1 ? tokens[0] : '';
+        });
+        const aligned = new Array(expected.length).fill('');
+        const used = new Set();
+
+        expected.forEach((expectedToken, expectedIndex) => {
+            if (!expectedToken) return;
+            const selectedIndex = selected.findIndex((selectedToken, index) => (
+                !used.has(index) && areTokensEquivalent(selectedToken, expectedToken)
+            ));
+            if (selectedIndex >= 0) {
+                aligned[expectedIndex] = selected[selectedIndex];
+                used.add(selectedIndex);
+            }
+        });
+
+        const remaining = selected.filter((_, index) => !used.has(index));
+        aligned.forEach((value, index) => {
+            if (!value && remaining.length) {
+                aligned[index] = remaining.shift();
+            }
+        });
+        return aligned;
+    }
+
     function compareAnswers(userAnswer, correctAnswer) {
         const expected = splitAnswerTokens(correctAnswer);
         const actual = splitAnswerTokens(userAnswer);
@@ -189,6 +230,8 @@
         splitAnswerTokens,
         areTokensEquivalent,
         compareTokenSets,
+        compareAnswerSets,
+        alignAnswerSetToExpectedSlots,
         compareAnswers,
         ensureReady: ensureAnswerMatchCoreReady
     };

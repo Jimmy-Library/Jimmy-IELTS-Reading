@@ -359,7 +359,7 @@
             const rows = order.map((questionId) => {
                 const userAnswer = answers[questionId] || '';
                 const correctAnswer = answerKey[questionId];
-                const isCorrect = compareAnswers(userAnswer, correctAnswer);
+                const isCorrect = compareQuestionAnswer(questionId, userAnswer, correctAnswer, dataset);
                 const weight = questionWeight(correctAnswer);
                 total += weight;
                 if (isCorrect) correct += weight;
@@ -1636,13 +1636,51 @@
         return canonicalizeAnswerToken(text);
     }
 
+    function alignCheckboxAnswersToExpectedSlots(selectedValues, expectedValues) {
+        const core = getAnswerMatchCore();
+        if (core && typeof core.alignAnswerSetToExpectedSlots === 'function') {
+            return core.alignAnswerSetToExpectedSlots(selectedValues, expectedValues);
+        }
+        const selected = selectedValues.map(canonicalizeAnswerToken).filter(Boolean);
+        const expected = expectedValues.map((value) => {
+            const tokens = splitAnswerTokens(value);
+            return tokens.length === 1 ? canonicalizeAnswerToken(tokens[0]) : '';
+        });
+        const aligned = new Array(expected.length).fill('');
+        const used = new Set();
+        expected.forEach((expectedToken, expectedIndex) => {
+            const selectedIndex = selected.findIndex((token, index) => !used.has(index) && token === expectedToken);
+            if (selectedIndex >= 0) {
+                aligned[expectedIndex] = selected[selectedIndex];
+                used.add(selectedIndex);
+            }
+        });
+        const remaining = selected.filter((_, index) => !used.has(index));
+        return aligned.map((value) => value || remaining.shift() || '');
+    }
+
+    function resolveCheckboxQuestionIds(name) {
+        const groups = Array.isArray(state.dataset?.questionGroups) ? state.dataset.questionGroups : [];
+        const owner = groups.find((group) => {
+            if (!group || group.kind !== 'multi_choice' || !Array.isArray(group.questionIds)) {
+                return false;
+            }
+            const bodyHtml = String(group.bodyHtml || '');
+            return bodyHtml.includes(`name="${name}"`) || bodyHtml.includes(`name='${name}'`);
+        });
+        if (owner) {
+            return owner.questionIds.map(normalizeQuestionId).filter(Boolean);
+        }
+        return expandQuestionSequence(name);
+    }
+
     function collectAnswers() {
         const order = Array.isArray(state.dataset?.questionOrder) ? state.dataset.questionOrder : [];
         const answers = {};
         const checkboxGroups = getCheckboxAnswers();
 
         checkboxGroups.forEach((values, name) => {
-            const questionIds = expandQuestionSequence(name);
+            const questionIds = resolveCheckboxQuestionIds(name);
             if (!questionIds.length) {
                 return;
             }
@@ -1651,8 +1689,10 @@
                 answers[questionIds[0]] = sorted.length > 1 ? sorted : (sorted[0] || '');
                 return;
             }
+            const expectedValues = questionIds.map((questionId) => state.dataset?.answerKey?.[questionId]);
+            const aligned = alignCheckboxAnswersToExpectedSlots(sorted, expectedValues);
             questionIds.forEach((questionId, index) => {
-                answers[questionId] = sorted[index] || '';
+                answers[questionId] = aligned[index] || '';
             });
         });
 
@@ -1763,6 +1803,32 @@
         return tokenEquivalent(actualTokens[0], expectedTokens[0]);
     }
 
+    function isMultiChoiceQuestion(questionId, dataset = state.dataset) {
+        const groups = Array.isArray(dataset?.questionGroups) ? dataset.questionGroups : [];
+        return groups.some((group) => (
+            group
+            && group.kind === 'multi_choice'
+            && Array.isArray(group.questionIds)
+            && group.questionIds.includes(questionId)
+        ));
+    }
+
+    function compareQuestionAnswer(questionId, userAnswer, correctAnswer, dataset = state.dataset) {
+        if (isMultiChoiceQuestion(questionId, dataset) && Array.isArray(correctAnswer)) {
+            const core = getAnswerMatchCore();
+            if (core && typeof core.compareAnswerSets === 'function') {
+                return core.compareAnswerSets(userAnswer, correctAnswer) === true;
+            }
+            const actual = splitAnswerTokens(userAnswer);
+            const expected = splitAnswerTokens(correctAnswer);
+            const actualSet = Array.from(new Set(actual.map(canonicalizeAnswerToken).filter(Boolean)));
+            const expectedSet = Array.from(new Set(expected.map(canonicalizeAnswerToken).filter(Boolean)));
+            return actualSet.length === expectedSet.length
+                && actualSet.every((token) => expectedSet.includes(token));
+        }
+        return compareAnswers(userAnswer, correctAnswer);
+    }
+
     function questionWeight(correctAnswer) {
         const normalized = normalizeAnswerValue(correctAnswer);
         if (Array.isArray(normalized) && normalized.length > 0) {
@@ -1789,7 +1855,7 @@
         questionOrder.forEach((questionId) => {
             const userAnswer = answers[questionId] || '';
             const correctAnswer = answerKey[questionId];
-            const isCorrect = compareAnswers(userAnswer, correctAnswer);
+            const isCorrect = compareQuestionAnswer(questionId, userAnswer, correctAnswer, state.dataset);
             const weight = questionWeight(correctAnswer);
             totalQuestions += weight;
             if (isCorrect) {
