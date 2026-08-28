@@ -2,7 +2,17 @@
  * 阅读题目题量（自动生成，请勿手动编辑）
  * 生成方式：node tools/generate-question-counts.js
  * 结构：window.__READING_EXAM_QUESTION_COUNTS__ = {
-    "p1-high-1783": 13,
+      "p1-low-1930": 6,
+  "p1-high-1931": 13,
+  "p3-medium-1929": 14,
+  "p1-high-1928": 14,
+  "p2-medium-1925": 5,
+  "p1-medium-1923": 13,
+  "p3-high-1133": 13,
+  "p2-high-1015": 13,
+  "p1-medium-1041": 13,
+  "p1-high-1102": 14,
+"p1-high-1783": 13,
     "p2-low-1823": 13,
     "p3-high-1051": 14, examId: 题量 }
  */

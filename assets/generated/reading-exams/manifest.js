@@ -1,7 +1,77 @@
 (function registerReadingExamManifest(global) {
   'use strict';
   global.__READING_EXAM_MANIFEST__ = {
- "p3-medium-169": {
+   "p1-low-1930": {
+    "examId": "p1-low-1930",
+    "dataKey": "p1-low-1930",
+    "script": "./p1-low-1930.js",
+    "title": "Wood: a valuable resource in New Zealand's economy 木材：新西兰经济的重要资源",
+    "category": "P1"
+  },
+  "p1-high-1931": {
+    "examId": "p1-high-1931",
+    "dataKey": "p1-high-1931",
+    "script": "./p1-high-1931.js",
+    "title": "Wooden Buildings 木制建筑",
+    "category": "P1"
+  },
+  "p3-medium-1929": {
+    "examId": "p3-medium-1929",
+    "dataKey": "p3-medium-1929",
+    "script": "./p3-medium-1929.js",
+    "title": "Women and the vision thing 女性与愿景那回事",
+    "category": "P3"
+  },
+  "p1-high-1928": {
+    "examId": "p1-high-1928",
+    "dataKey": "p1-high-1928",
+    "script": "./p1-high-1928.js",
+    "title": "Willpower 意志力",
+    "category": "P1"
+  },
+  "p2-medium-1925": {
+    "examId": "p2-medium-1925",
+    "dataKey": "p2-medium-1925",
+    "script": "./p2-medium-1925.js",
+    "title": "Why was he so smart? 他为什么那么聪明？",
+    "category": "P2"
+  },
+  "p1-medium-1923": {
+    "examId": "p1-medium-1923",
+    "dataKey": "p1-medium-1923",
+    "script": "./p1-medium-1923.js",
+    "title": "Why Risks Can Go Wrong 风险为何会出错",
+    "category": "P1"
+  },
+  "p3-high-1133": {
+    "examId": "p3-high-1133",
+    "dataKey": "p3-high-1133",
+    "script": "./p3-high-1133.js",
+    "title": "Cosmic Black Holes 宇宙黑洞",
+    "category": "P3"
+  },
+  "p2-high-1015": {
+    "examId": "p2-high-1015",
+    "dataKey": "p2-high-1015",
+    "script": "./p2-high-1015.js",
+    "title": "A New Look for Talbot Park 塔尔博特公园新貌",
+    "category": "P2"
+  },
+  "p1-medium-1041": {
+    "examId": "p1-medium-1041",
+    "dataKey": "p1-medium-1041",
+    "script": "./p1-medium-1041.js",
+    "title": "Ancient Chinese Chariots 中国古代战车",
+    "category": "P1"
+  },
+  "p1-high-1102": {
+    "examId": "p1-high-1102",
+    "dataKey": "p1-high-1102",
+    "script": "./p1-high-1102.js",
+    "title": "Cathy Freeman – Australian's track queen 澳大利亚田径女王凯西·弗里曼",
+    "category": "P1"
+  },
+"p3-medium-169": {
   "examId": "p3-medium-169",
   "dataKey": "p3-medium-169",
   "script": "./p3-medium-169.js",

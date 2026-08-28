@@ -3,6 +3,37 @@
 // 数据版本: v3.2
 window.completeExamIndex = [
 {
+        id: "p1-low-1930", title: "Wood: a valuable resource in New Zealand's economy 木材：新西兰经济的重要资源", category: "P1", frequency: "low", path: "assets/generated/reading-exams/", filename: "p1-low-1930.js", hasHtml: true, hasPdf: false,
+    },
+{
+        id: "p1-high-1931", title: "Wooden Buildings 木制建筑", category: "P1", frequency: "high", path: "assets/generated/reading-exams/", filename: "p1-high-1931.js", hasHtml: true, hasPdf: false,
+    },
+{
+        id: "p3-medium-1929", title: "Women and the vision thing 女性与愿景那回事", category: "P3", frequency: "medium", path: "assets/generated/reading-exams/", filename: "p3-medium-1929.js", hasHtml: true, hasPdf: false,
+    },
+{
+        id: "p1-high-1928", title: "Willpower 意志力", category: "P1", frequency: "high", path: "assets/generated/reading-exams/", filename: "p1-high-1928.js", hasHtml: true, hasPdf: false,
+    },
+{
+        id: "p2-medium-1925", title: "Why was he so smart? 他为什么那么聪明？", category: "P2", frequency: "medium", path: "assets/generated/reading-exams/", filename: "p2-medium-1925.js", hasHtml: true, hasPdf: false,
+    },
+{
+        id: "p1-medium-1923", title: "Why Risks Can Go Wrong 风险为何会出错", category: "P1", frequency: "medium", path: "assets/generated/reading-exams/", filename: "p1-medium-1923.js", hasHtml: true, hasPdf: false,
+    },
+{
+        id: "p3-high-1133", title: "Cosmic Black Holes 宇宙黑洞", category: "P3", frequency: "high", path: "assets/generated/reading-exams/", filename: "p3-high-1133.js", hasHtml: true, hasPdf: false,
+    },
+{
+        id: "p2-high-1015", title: "A New Look for Talbot Park 塔尔博特公园新貌", category: "P2", frequency: "high", path: "assets/generated/reading-exams/", filename: "p2-high-1015.js", hasHtml: true, hasPdf: false,
+    },
+{
+        id: "p1-medium-1041", title: "Ancient Chinese Chariots 中国古代战车", category: "P1", frequency: "medium", path: "assets/generated/reading-exams/", filename: "p1-medium-1041.js", hasHtml: true, hasPdf: false,
+    },
+{
+        id: "p1-high-1102", title: "Cathy Freeman – Australian's track queen 澳大利亚田径女王凯西·弗里曼", category: "P1", frequency: "high", path: "assets/generated/reading-exams/", filename: "p1-high-1102.js", hasHtml: true, hasPdf: false,
+    },
+
+{
         id: "p1-high-1783", title: "Thomas Young - The Last True know-it-all 托马斯·杨——最后的真通才【2026.8新增】", category: "P1", frequency: "high", path: "assets/generated/reading-exams/", filename: "p1-high-1783.js", hasHtml: true, hasPdf: false,
     },
 {

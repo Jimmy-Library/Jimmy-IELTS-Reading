@@ -1,6 +1,16 @@
 /**
  * 阅读题
-      "p1-high-1783": ["tfng", "short-answer"],
+        "p1-low-1930": ["tfng"],
+  "p1-high-1931": ["tfng", "diagram", "summary"],
+  "p3-medium-1929": ["tfng", "mc", "summary"],
+  "p1-high-1928": ["tfng", "matching", "mc"],
+  "p2-medium-1925": ["matching"],
+  "p1-medium-1923": ["matching", "mc", "short-answer"],
+  "p3-high-1133": ["matching", "mc", "tfng"],
+  "p2-high-1015": ["matching", "summary"],
+  "p1-medium-1041": ["tfng", "summary", "short-answer"],
+  "p1-high-1102": ["matching", "summary"],
+"p1-high-1783": ["tfng", "short-answer"],
       "p2-low-1823": ["matching", "summary"],
       "p3-high-1051": ["summary", "ynng", "mc"],型分类数据（自动生成，请勿手动编辑）
  * 数据来源：
