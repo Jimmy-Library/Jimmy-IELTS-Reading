@@ -1720,21 +1720,21 @@
   "examId": "p1-high-1783",
   "dataKey": "p1-high-1783",
   "script": "./p1-high-1783.js",
-  "title": "Thomas Young - The Last True know-it-all 托马斯·杨——最后的真通才【2026.8新增】",
+  "title": "Thomas Young - The Last True know-it-all 托马斯·杨——最后的真通才",
   "category": "P1"
  },
  "p2-low-1823": {
   "examId": "p2-low-1823",
   "dataKey": "p2-low-1823",
   "script": "./p2-low-1823.js",
-  "title": "The return of monkey life 猴群的回归【2026.8新增】",
+  "title": "The return of monkey life 猴群的回归",
   "category": "P2"
  },
  "p3-high-1051": {
   "examId": "p3-high-1051",
   "dataKey": "p3-high-1051",
   "script": "./p3-high-1051.js",
-  "title": "Art-based training for engineers 面向工程师的艺术培训【2026.8新增】",
+  "title": "Art-based training for engineers 面向工程师的艺术培训",
   "category": "P3"
  }
 }

@@ -34,13 +34,13 @@ window.completeExamIndex = [
     },
 
 {
-        id: "p1-high-1783", title: "Thomas Young - The Last True know-it-all 托马斯·杨——最后的真通才【2026.8新增】", category: "P1", frequency: "high", path: "assets/generated/reading-exams/", filename: "p1-high-1783.js", hasHtml: true, hasPdf: false,
+        id: "p1-high-1783", title: "Thomas Young - The Last True know-it-all 托马斯·杨——最后的真通才", category: "P1", frequency: "high", path: "assets/generated/reading-exams/", filename: "p1-high-1783.js", hasHtml: true, hasPdf: false,
     },
 {
-        id: "p2-low-1823", title: "The return of monkey life 猴群的回归【2026.8新增】", category: "P2", frequency: "low", path: "assets/generated/reading-exams/", filename: "p2-low-1823.js", hasHtml: true, hasPdf: false,
+        id: "p2-low-1823", title: "The return of monkey life 猴群的回归", category: "P2", frequency: "low", path: "assets/generated/reading-exams/", filename: "p2-low-1823.js", hasHtml: true, hasPdf: false,
     },
 {
-        id: "p3-high-1051", title: "Art-based training for engineers 面向工程师的艺术培训【2026.8新增】", category: "P3", frequency: "high", path: "assets/generated/reading-exams/", filename: "p3-high-1051.js", hasHtml: true, hasPdf: false,
+        id: "p3-high-1051", title: "Art-based training for engineers 面向工程师的艺术培训", category: "P3", frequency: "high", path: "assets/generated/reading-exams/", filename: "p3-high-1051.js", hasHtml: true, hasPdf: false,
     },
 
     {
