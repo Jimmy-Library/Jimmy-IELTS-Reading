@@ -6,7 +6,7 @@
 (function registerReadingQuestionTypes(global) {
   'use strict';
   global.__READING_QUESTION_TYPES__ = {
-  "generatedAt": "2026-08-28",
+  "generatedAt": "2026-08-29",
   "source": "人工分类索引 + 题目数据自动识别",
   "types": [
     {
@@ -86,8 +86,7 @@
     }
   ],
   "byExamId": {
-      "p1-medium-1389": ["tfng", "diagram", "short-answer"],
-"p1-high-01": [
+    "p1-high-01": [
       "matching-headings",
       "matching-features"
     ],
@@ -375,6 +374,16 @@
     ],
     "p1-medium-119": [
       "tfng",
+      "short-answer"
+    ],
+    "p1-medium-1255": [
+      "tfng",
+      "note",
+      "diagram"
+    ],
+    "p1-medium-1389": [
+      "tfng",
+      "diagram",
       "short-answer"
     ],
     "p1-medium-161": [
@@ -1264,6 +1273,7 @@
     "p1-high-240",
     "p1-low-1930",
     "p1-medium-1041",
+    "p1-medium-1255",
     "p1-medium-1923",
     "p2-high-1015",
     "p2-low-1823",

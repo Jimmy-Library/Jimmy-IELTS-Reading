@@ -1,6 +1,13 @@
 (function registerReadingExamManifest(global) {
   'use strict';
   global.__READING_EXAM_MANIFEST__ = {
+     "p1-medium-1255": {
+    "examId": "p1-medium-1255",
+    "dataKey": "p1-medium-1255",
+    "script": "./p1-medium-1255.js",
+    "title": "The history of cakes at weddings 婚礼蛋糕的历史",
+    "category": "P1"
+  },
      "p1-medium-1389": {
     "examId": "p1-medium-1389",
     "dataKey": "p1-medium-1389",

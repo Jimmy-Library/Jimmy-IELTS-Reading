@@ -3,6 +3,9 @@
 // 数据版本: v3.2
 window.completeExamIndex = [
 {
+        id: "p1-medium-1255", title: "The history of cakes at weddings 婚礼蛋糕的历史", category: "P1", frequency: "medium", path: "assets/generated/reading-exams/", filename: "p1-medium-1255.js", hasHtml: true, hasPdf: false,
+    },
+{
         id: "p1-medium-1389", title: "Foot Pedal Irrigation 脚踏水泵灌溉", category: "P1", frequency: "medium", path: "assets/generated/reading-exams/", filename: "p1-medium-1389.js", hasHtml: true, hasPdf: false,
     },
 
