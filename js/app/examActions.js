@@ -87,12 +87,14 @@
     }
 
     const AUGUST_2026_NEW_IDS = [
+        'p3-high-161', 'p2-high-09', 'p1-medium-1255',
+        'p1-high-1783', 'p3-high-1051', 'p2-low-1823',
         'p2-medium-243', 'p3-medium-244',
-        'p1-high-1783', 'p2-low-1823', 'p3-high-1051',
         'p1-low-1930', 'p1-high-1931', 'p3-medium-1929', 'p1-high-1928',
         'p2-medium-1925', 'p1-medium-1923', 'p3-high-1133', 'p2-high-1015',
-        'p1-medium-1041', 'p1-high-1102', 'p1-medium-1389', 'p1-medium-1255'
+        'p1-medium-1041', 'p1-high-1102', 'p1-medium-1389'
     ];
+    const AUGUST_2026_FEATURED_IDS = AUGUST_2026_NEW_IDS.slice(0, 6);
     global.__AUGUST_2026_NEW_IDS = AUGUST_2026_NEW_IDS;
 
     const JULY_2026_NEW_IDS = [
@@ -148,7 +150,16 @@
             }
         }
         result = applyQuestionTypeFilter(result);
-        return applyExamSort(result);
+        result = applyExamSort(result);
+        if (global.__browseNewOnly === 'august-2026' || global.__browseNewOnly === true) {
+            const featuredOrder = new Map(AUGUST_2026_FEATURED_IDS.map((id, index) => [id, index]));
+            result.sort((a, b) => {
+                const aRank = featuredOrder.has(a && a.id) ? featuredOrder.get(a.id) : Number.MAX_SAFE_INTEGER;
+                const bRank = featuredOrder.has(b && b.id) ? featuredOrder.get(b.id) : Number.MAX_SAFE_INTEGER;
+                return aRank - bRank;
+            });
+        }
+        return result;
     }
 
     function escapeHtml(value) {

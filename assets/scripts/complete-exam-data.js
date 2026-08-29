@@ -3,7 +3,7 @@
 // 数据版本: v3.2
 window.completeExamIndex = [
 {
-        id: "p1-medium-1255", title: "The history of cakes at weddings 婚礼蛋糕的历史", category: "P1", frequency: "medium", path: "assets/generated/reading-exams/", filename: "p1-medium-1255.js", hasHtml: true, hasPdf: false,
+        id: "p1-medium-1255", title: "The history of cakes at weddings 婚礼蛋糕的历史", category: "P1", frequency: "high", path: "assets/generated/reading-exams/", filename: "p1-medium-1255.js", hasHtml: true, hasPdf: false,
     },
 {
         id: "p1-medium-1389", title: "Foot Pedal Irrigation 脚踏水泵灌溉", category: "P1", frequency: "medium", path: "assets/generated/reading-exams/", filename: "p1-medium-1389.js", hasHtml: true, hasPdf: false,
@@ -44,7 +44,7 @@ window.completeExamIndex = [
         id: "p1-high-1783", title: "Thomas Young - The Last True know-it-all 托马斯·杨——最后的真通才", category: "P1", frequency: "high", path: "assets/generated/reading-exams/", filename: "p1-high-1783.js", hasHtml: true, hasPdf: false,
     },
 {
-        id: "p2-low-1823", title: "The return of monkey life 猴群的回归", category: "P2", frequency: "low", path: "assets/generated/reading-exams/", filename: "p2-low-1823.js", hasHtml: true, hasPdf: false,
+        id: "p2-low-1823", title: "The return of monkey life 猴群的回归", category: "P2", frequency: "high", path: "assets/generated/reading-exams/", filename: "p2-low-1823.js", hasHtml: true, hasPdf: false,
     },
 {
         id: "p3-high-1051", title: "Art-based training for engineers 面向工程师的艺术培训", category: "P3", frequency: "high", path: "assets/generated/reading-exams/", filename: "p3-high-1051.js", hasHtml: true, hasPdf: false,
@@ -142,7 +142,7 @@ window.completeExamIndex = [
         id: 'p2-high-09',
         title: 'Early Approaches to Organisational Design 组织设计',
         category: 'P2',
-        frequency: 'medium',
+        frequency: 'high',
         path: '睡着过项目组/2. 所有文章(11.20)[192篇]/106. P2 - Early Approaches to Organisational Design 组织设计【高】/',
         filename: '106. P2 - Early Approaches to Organisational Design 组织设计【高】.html',
         hasHtml: true,
