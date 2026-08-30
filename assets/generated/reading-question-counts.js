@@ -6,7 +6,17 @@
 (function registerReadingQuestionCounts(global) {
   'use strict';
   global.__READING_EXAM_QUESTION_COUNTS__ = {
-    "p1-high-01": 13,
+      "p1-medium-1003": 13,
+  "p1-medium-1005": 13,
+  "p1-medium-1007": 13,
+  "p1-high-1008": 13,
+  "p1-low-1009": 8,
+  "p1-low-1011": 13,
+  "p3-high-1012": 13,
+  "p1-low-1014": 13,
+  "p1-high-1016": 14,
+  "p3-medium-1018": 13,
+"p1-high-01": 13,
     "p1-high-05": 13,
     "p1-high-101": 13,
     "p1-high-105": 13,

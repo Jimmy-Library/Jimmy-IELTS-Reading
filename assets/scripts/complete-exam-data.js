@@ -3,6 +3,37 @@
 // 数据版本: v3.2
 window.completeExamIndex = [
 {
+        id: "p1-medium-1003", title: "A Bar at the Folies 欢乐酒吧", category: "P1", frequency: "medium", path: "assets/generated/reading-exams/", filename: "p1-medium-1003.js", hasHtml: true, hasPdf: false,
+    },
+{
+        id: "p1-medium-1005", title: "A Brief History of Ballet 芭蕾舞简史", category: "P1", frequency: "medium", path: "assets/generated/reading-exams/", filename: "p1-medium-1005.js", hasHtml: true, hasPdf: false,
+    },
+{
+        id: "p1-medium-1007", title: "A Brief History of Poetry 诗歌简史", category: "P1", frequency: "medium", path: "assets/generated/reading-exams/", filename: "p1-medium-1007.js", hasHtml: true, hasPdf: false,
+    },
+{
+        id: "p1-high-1008", title: "A Brief Introduction to Pepper 胡椒简介", category: "P1", frequency: "high", path: "assets/generated/reading-exams/", filename: "p1-high-1008.js", hasHtml: true, hasPdf: false,
+    },
+{
+        id: "p1-low-1009", title: "A brome lives on: How a British grass escaped extinction 雀麦草的重生：一种英国草如何免于灭绝", category: "P1", frequency: "low", path: "assets/generated/reading-exams/", filename: "p1-low-1009.js", hasHtml: true, hasPdf: false,
+    },
+{
+        id: "p1-low-1011", title: "A Decibel Hell (The Effects of Living in a Noisy World) 分贝地狱（嘈杂世界的影响）", category: "P1", frequency: "low", path: "assets/generated/reading-exams/", filename: "p1-low-1011.js", hasHtml: true, hasPdf: false,
+    },
+{
+        id: "p3-high-1012", title: "A focal point of academic inquiry 学术探究的焦点", category: "P1", frequency: "high", path: "assets/generated/reading-exams/", filename: "p1-high-1012.js", hasHtml: true, hasPdf: false,
+    },
+{
+        id: "p1-low-1014", title: "A much-travelled vegetable 旅行万里的蔬菜", category: "P1", frequency: "low", path: "assets/generated/reading-exams/", filename: "p1-low-1014.js", hasHtml: true, hasPdf: false,
+    },
+{
+        id: "p1-high-1016", title: "A new stage in the study and teaching of history 历史研究与教学的新阶段", category: "P1", frequency: "high", path: "assets/generated/reading-exams/", filename: "p1-high-1016.js", hasHtml: true, hasPdf: false,
+    },
+{
+        id: "p3-medium-1018", title: "A Review of Helen Thomson's Book, Unthinkable: An Extraordinary Journey Through the World's Strangest Brains 海伦·汤姆森《不可思议》书评", category: "P1", frequency: "medium", path: "assets/generated/reading-exams/", filename: "p1-medium-1018.js", hasHtml: true, hasPdf: false,
+    },
+
+{
         id: "p1-medium-1255", title: "The history of cakes at weddings 婚礼蛋糕的历史", category: "P1", frequency: "high", path: "assets/generated/reading-exams/", filename: "p1-medium-1255.js", hasHtml: true, hasPdf: false,
     },
 {

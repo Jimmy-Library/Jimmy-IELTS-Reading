@@ -1,7 +1,77 @@
 (function registerReadingExamManifest(global) {
   'use strict';
   global.__READING_EXAM_MANIFEST__ = {
-     "p1-medium-1255": {
+       "p1-medium-1003": {
+    "examId": "p1-medium-1003",
+    "dataKey": "p1-medium-1003",
+    "script": "./p1-medium-1003.js",
+    "title": "A Bar at the Folies 欢乐酒吧",
+    "category": "P1"
+  },
+  "p1-medium-1005": {
+    "examId": "p1-medium-1005",
+    "dataKey": "p1-medium-1005",
+    "script": "./p1-medium-1005.js",
+    "title": "A Brief History of Ballet 芭蕾舞简史",
+    "category": "P1"
+  },
+  "p1-medium-1007": {
+    "examId": "p1-medium-1007",
+    "dataKey": "p1-medium-1007",
+    "script": "./p1-medium-1007.js",
+    "title": "A Brief History of Poetry 诗歌简史",
+    "category": "P1"
+  },
+  "p1-high-1008": {
+    "examId": "p1-high-1008",
+    "dataKey": "p1-high-1008",
+    "script": "./p1-high-1008.js",
+    "title": "A Brief Introduction to Pepper 胡椒简介",
+    "category": "P1"
+  },
+  "p1-low-1009": {
+    "examId": "p1-low-1009",
+    "dataKey": "p1-low-1009",
+    "script": "./p1-low-1009.js",
+    "title": "A brome lives on: How a British grass escaped extinction 雀麦草的重生：一种英国草如何免于灭绝",
+    "category": "P1"
+  },
+  "p1-low-1011": {
+    "examId": "p1-low-1011",
+    "dataKey": "p1-low-1011",
+    "script": "./p1-low-1011.js",
+    "title": "A Decibel Hell (The Effects of Living in a Noisy World) 分贝地狱（嘈杂世界的影响）",
+    "category": "P1"
+  },
+  "p3-high-1012": {
+    "examId": "p3-high-1012",
+    "dataKey": "p3-high-1012",
+    "script": "./p3-high-1012.js",
+    "title": "A focal point of academic inquiry 学术探究的焦点",
+    "category": "P1"
+  },
+  "p1-low-1014": {
+    "examId": "p1-low-1014",
+    "dataKey": "p1-low-1014",
+    "script": "./p1-low-1014.js",
+    "title": "A much-travelled vegetable 旅行万里的蔬菜",
+    "category": "P1"
+  },
+  "p1-high-1016": {
+    "examId": "p1-high-1016",
+    "dataKey": "p1-high-1016",
+    "script": "./p1-high-1016.js",
+    "title": "A new stage in the study and teaching of history 历史研究与教学的新阶段",
+    "category": "P1"
+  },
+  "p3-medium-1018": {
+    "examId": "p3-medium-1018",
+    "dataKey": "p3-medium-1018",
+    "script": "./p3-medium-1018.js",
+    "title": "A Review of Helen Thomson's Book, Unthinkable: An Extraordinary Journey Through the World's Strangest Brains 海伦·汤姆森《不可思议》书评",
+    "category": "P1"
+  },
+"p1-medium-1255": {
     "examId": "p1-medium-1255",
     "dataKey": "p1-medium-1255",
     "script": "./p1-medium-1255.js",

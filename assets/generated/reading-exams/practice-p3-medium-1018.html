@@ -1,0 +1,1679 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IELTS 阅读练习</title>
+    <style>
+        :root {
+            --line: #d7dde5;
+            --panel: #ffffff;
+            --panel-alt: #edf2f9;
+            --text: #1f2937;
+            --muted: #64748b;
+            --accent: #2563eb;
+            --success: #15803d;
+            --danger: #b91c1c;
+            --shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            font-size: 16px;
+        }
+
+        body {
+            font-family: "SF Pro Text", "PingFang SC", "Noto Sans SC", system-ui, sans-serif;
+            background: linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
+            color: var(--text);
+            height: 100vh;
+            overflow: hidden;
+            padding-bottom: 72px;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 14px 22px;
+            background: rgba(255, 255, 255, 0.94);
+            border-bottom: 1px solid var(--line);
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+        }
+
+        .header h1 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            line-height: 1.4;
+        }
+
+        .header p {
+            font-size: 0.92rem;
+            color: var(--muted);
+        }
+
+        .header-content {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            min-width: 0;
+        }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        #timer,
+        .header-btn {
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: var(--panel);
+            padding: 8px 12px;
+            font-size: 0.92rem;
+            color: var(--text);
+        }
+
+        .header-btn {
+            cursor: pointer;
+        }
+
+        .shell {
+            display: flex;
+            height: calc(100vh - 67px - 72px);
+            width: 100%;
+        }
+
+        .pane {
+            overflow: auto;
+            background: var(--panel);
+            padding: 22px;
+        }
+
+        #left {
+            width: 50%;
+            min-width: 320px;
+        }
+
+        #divider {
+            flex: 0 0 8px;
+            background: linear-gradient(180deg, #e2e8f0 0%, #cbd5e1 100%);
+            border-left: 1px solid var(--line);
+            border-right: 1px solid var(--line);
+            cursor: ew-resize;
+        }
+
+        #right {
+            flex: 1;
+            min-width: 320px;
+            background: var(--panel-alt);
+            padding: 16px 20px;
+        }
+
+        #left p,
+        #right p {
+            line-height: 1.7;
+            margin: 0 0 14px;
+        }
+
+        .unified-group {
+            margin-bottom: 18px;
+        }
+
+        .group {
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            padding: 24px 32px;
+            margin-bottom: 24px;
+        }
+
+        .question-item,
+        .match-question-item,
+        .choice-item {
+            margin-bottom: 12px;
+        }
+
+        .paragraph-dropzone,
+        .match-dropzone {
+            min-height: 40px;
+            border: 2px dashed #93c5fd;
+            border-radius: 10px;
+            background: #eff6ff;
+            padding: 8px 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+        }
+
+        .paragraph-dropzone.drag-over,
+        .match-dropzone.drag-over {
+            border-color: var(--accent);
+            background: #dbeafe;
+        }
+
+        .paragraph-dropzone.dropzone-filled,
+        .match-dropzone.dropzone-filled {
+            border-style: solid;
+        }
+
+        .paragraph-label {
+            font-size: 0.9rem;
+            color: var(--muted);
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .pool-items,
+        .dropped-items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            flex: 1;
+        }
+
+        .pool-items {
+            min-height: 40px;
+        }
+
+        .pool-items.drag-over {
+            border-color: var(--accent);
+            background: rgba(37, 99, 235, 0.08);
+        }
+
+        .dropped-items:empty::after {
+            content: "拖到这里";
+            font-size: 0.82rem;
+            color: #7b8a98;
+            letter-spacing: 0.02em;
+        }
+
+        .drag-item {
+            border: 1px solid #bfdbfe;
+            border-radius: 8px;
+            background: #eff6ff;
+            padding: 6px 10px;
+            cursor: grab;
+            font-size: 0.9rem;
+            user-select: none;
+        }
+
+        .drag-item.dragging {
+            opacity: 0.55;
+        }
+
+        .drag-item--assigned {
+            border-style: solid;
+        }
+
+        .drag-item[draggable="false"] {
+            cursor: pointer;
+            border-style: solid;
+        }
+
+        .practice-nav {
+            position: fixed;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 12px 18px;
+            background: rgba(255, 255, 255, 0.96);
+            border-top: 1px solid var(--line);
+            box-shadow: 0 -8px 24px rgba(15, 23, 42, 0.06);
+            z-index: 2000;
+        }
+
+        .practice-nav .title {
+            font-weight: 700;
+            color: var(--muted);
+            white-space: nowrap;
+        }
+
+        .practice-nav .questions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .q-item,
+        .practice-nav .controls button {
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: var(--panel);
+            padding: 6px 12px;
+            font-size: 0.9rem;
+            color: var(--text);
+            cursor: pointer;
+        }
+
+        .q-item:hover,
+        .practice-nav .controls button:hover {
+            background: #f1f5f9;
+        }
+
+        .q-item.active {
+            border-color: var(--accent);
+            background: #eff6ff;
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        .q-item.answered {
+            background: #dbeafe;
+            border-color: #93c5fd;
+        }
+
+        .q-item.correct {
+            border-color: var(--success);
+            background: #dcfce7;
+            color: var(--success);
+        }
+
+        .q-item.incorrect {
+            border-color: var(--danger);
+            background: #fee2e2;
+            color: var(--danger);
+        }
+
+        /* ---- 套题模式：一次展示全部小节题目（约 40 题）+ 跨篇跳转 ---- */
+        .practice-nav .questions.question-nav--suite {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: flex-start;
+            gap: 6px 16px;
+            flex: 1 1 auto;
+            max-height: 140px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+
+        .q-passage {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .q-passage__label {
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: var(--muted);
+            background: rgba(148, 163, 184, 0.16);
+            border: none;
+            border-radius: 6px;
+            padding: 3px 7px;
+            white-space: nowrap;
+            line-height: 1.4;
+        }
+
+        .q-passage__label--btn {
+            cursor: pointer;
+            transition: background 0.15s ease, color 0.15s ease;
+        }
+
+        .q-passage__label--btn:hover {
+            background: rgba(37, 99, 235, 0.18);
+            color: var(--accent);
+        }
+
+        .q-passage.is-current .q-passage__label {
+            background: rgba(37, 99, 235, 0.16);
+            color: var(--accent);
+        }
+
+        .q-passage__items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+
+        .question-nav--suite .q-item {
+            padding: 3px 8px;
+            font-size: 0.8rem;
+            min-width: 30px;
+            text-align: center;
+        }
+
+        .question-nav--suite .q-passage:not(.is-current) .q-item {
+            opacity: 0.8;
+        }
+
+        .practice-nav .controls {
+            margin-left: auto;
+            display: flex;
+            gap: 8px;
+        }
+
+        /* ---- 导出 PDF：整页打印（文章 + 题目 + 作答 + 高亮 + 详情）---- */
+        /* 套题合并打印：屏幕上不显示，仅打印时启用 */
+        #suite-print-root {
+            display: none;
+        }
+
+        @media print {
+            html, body {
+                background: #fff !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+                height: auto !important;
+                overflow: visible !important;
+            }
+
+            /* 套题导出：只打印三篇合并内容，隐藏只渲染单篇的实时页面 */
+            body.suite-printing .shell,
+            body.suite-printing .header,
+            body.suite-printing #results,
+            body.suite-printing #question-nav {
+                display: none !important;
+            }
+
+            body.suite-printing #suite-print-root {
+                display: block !important;
+            }
+
+            #suite-print-root .suite-print__head h1 {
+                font-size: 18pt;
+                margin: 0 0 4px;
+            }
+
+            #suite-print-root .suite-print__head p {
+                margin: 0 0 16px;
+                font-weight: 700;
+            }
+
+            #suite-print-root .suite-print__passage {
+                page-break-before: always;
+                break-before: page;
+            }
+
+            #suite-print-root .suite-print__passage:first-of-type {
+                page-break-before: auto;
+                break-before: auto;
+            }
+
+            #suite-print-root .suite-print__title {
+                font-size: 14pt;
+                margin: 0 0 10px;
+                padding-bottom: 6px;
+                border-bottom: 2px solid #1f7a4d;
+            }
+
+            #suite-print-root .suite-print__tag {
+                display: inline-block;
+                margin-right: 8px;
+                padding: 1px 8px;
+                border-radius: 4px;
+                background: #1f7a4d;
+                color: #fff;
+                font-size: 11pt;
+            }
+
+            #suite-print-root .suite-print__score {
+                float: right;
+                font-size: 12pt;
+                color: #1f7a4d;
+            }
+
+            #suite-print-root .suite-print__article {
+                margin-bottom: 14px;
+                line-height: 1.7;
+            }
+
+            #suite-print-root .suite-print__answers {
+                width: 100%;
+                border-collapse: collapse;
+                page-break-inside: avoid;
+                break-inside: avoid;
+            }
+
+            #suite-print-root .suite-print__answers th,
+            #suite-print-root .suite-print__answers td {
+                border: 1px solid #cfd8dc;
+                padding: 5px 8px;
+                text-align: center;
+                font-size: 10pt;
+            }
+
+            /* 隐藏交互/悬浮元素 */
+            .header-controls,
+            #settings-panel,
+            #notes-panel,
+            .overlay,
+            #divider,
+            #selbar,
+            .practice-nav {
+                display: none !important;
+            }
+
+            .header {
+                position: static !important;
+                box-shadow: none !important;
+            }
+
+            /* 双栏展开为整页单列，完整显示全部内容 */
+            .shell {
+                display: block !important;
+                height: auto !important;
+                overflow: visible !important;
+                padding: 0 !important;
+            }
+
+            #left,
+            #right {
+                width: 100% !important;
+                min-width: 0 !important;
+                max-width: none !important;
+                height: auto !important;
+                max-height: none !important;
+                overflow: visible !important;
+                display: block !important;
+                padding: 0 !important;
+            }
+
+            #right {
+                margin-top: 18px;
+            }
+
+            /* 练习记录详情（结果区）始终展开 */
+            #results {
+                display: block !important;
+            }
+
+            .unified-group,
+            .group,
+            #results {
+                break-inside: avoid;
+                page-break-inside: avoid;
+            }
+
+            /* 保留高亮底色 */
+            .hl {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+        }
+
+        .submit-btn {
+            background: var(--accent) !important;
+            color: white !important;
+            border-color: var(--accent) !important;
+            font-weight: 600;
+        }
+
+        #results {
+            display: none;
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            padding: 18px;
+            margin-top: 18px;
+        }
+
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 12px;
+            font-size: 0.92rem;
+        }
+
+        .results-table th,
+        .results-table td {
+            border: 1px solid var(--line);
+            padding: 8px 10px;
+            text-align: center;
+        }
+
+        .result-correct {
+            color: var(--success);
+            font-weight: 700;
+        }
+
+        .result-incorrect {
+            color: var(--danger);
+            font-weight: 700;
+        }
+
+        /* 套题：每篇题目末尾的交卷条 */
+        #part-submit-bar[hidden] {
+            display: none;
+        }
+
+        #part-submit-bar {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 16px;
+            padding-top: 14px;
+            border-top: 1px solid var(--line);
+        }
+
+        #part-submit-btn {
+            border: none;
+            border-radius: 8px;
+            background: var(--accent);
+            color: #fff;
+            padding: 10px 26px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        #part-submit-btn:hover {
+            filter: brightness(1.08);
+        }
+
+        #part-submit-btn:disabled {
+            opacity: 0.5;
+            cursor: default;
+        }
+
+        /* 套题结果：三篇分节呈现 */
+        .suite-result-total {
+            font-size: 1.02rem;
+            font-weight: 700;
+            margin: 6px 0 4px;
+        }
+
+        .suite-result-band {
+            display: inline-block;
+            margin-left: 8px;
+            padding: 2px 10px;
+            border-radius: 999px;
+            background: var(--success);
+            color: #fff;
+            font-size: 0.86rem;
+        }
+
+        .suite-result-section {
+            margin-top: 16px;
+            padding-top: 12px;
+            border-top: 1px solid var(--line);
+        }
+
+        .suite-result-section__head {
+            display: flex;
+            align-items: baseline;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .suite-result-section__tag {
+            flex: 0 0 auto;
+            font-weight: 700;
+            font-size: 0.78rem;
+            padding: 2px 8px;
+            border-radius: 4px;
+            background: rgba(37, 99, 235, 0.12);
+            color: #1d4ed8;
+        }
+
+        .suite-result-section__title {
+            flex: 1 1 auto;
+            min-width: 0;
+            font-size: 0.92rem;
+            opacity: 0.85;
+        }
+
+        .suite-result-section__score {
+            flex: 0 0 auto;
+            font-weight: 700;
+            color: var(--success);
+            white-space: nowrap;
+        }
+
+        /* 提交后展示的微信 / 二维码联系卡片 */
+        .contact-card {
+            margin-top: 20px;
+            padding: 18px 16px;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            text-align: center;
+            background: var(--panel-alt, #f8fafc);
+        }
+
+        .contact-card .contact-title {
+            margin: 0 0 12px;
+            font-size: 0.98rem;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .contact-card .contact-qr {
+            display: block;
+            width: 200px;
+            max-width: 70%;
+            height: auto;
+            margin: 0 auto 12px;
+            border-radius: 8px;
+        }
+
+        .contact-card .contact-wechat {
+            margin: 6px 0 4px;
+            font-size: 0.95rem;
+            color: var(--text);
+        }
+
+        .contact-card .wechat-id-copy {
+            display: inline-block;
+            padding: 4px 12px;
+            margin-left: 4px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #fff;
+            background: #07c160;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: inherit;
+            transition: background 0.15s ease;
+        }
+
+        .contact-card .wechat-id-copy:hover {
+            background: #06ad56;
+        }
+
+        .contact-card .wechat-id-copy.copied {
+            background: #0369d9;
+        }
+
+        .contact-card .contact-hint {
+            margin: 2px 0 0;
+            font-size: 0.8rem;
+            color: var(--muted, #94a3b8);
+        }
+
+        body.dark-mode .contact-card {
+            background: var(--panel-alt, #0f172a);
+        }
+
+        .overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.12);
+            z-index: 800;
+        }
+
+        #settings-panel,
+        #notes-panel,
+        #selbar {
+            display: none;
+        }
+
+        @media (max-width: 980px) {
+            body {
+                overflow: auto;
+                padding-bottom: 112px;
+            }
+
+            .shell {
+                display: block;
+                height: auto;
+            }
+
+            #left,
+            #right {
+                width: 100%;
+                min-width: 0;
+            }
+
+            #divider {
+                display: none;
+            }
+
+            .practice-nav {
+                flex-wrap: wrap;
+                align-items: flex-start;
+            }
+
+            .practice-nav .controls {
+                margin-left: 0;
+                width: 100%;
+                justify-content: flex-end;
+            }
+        }
+
+        /* ---------------- Phase 2 Aesthetics ---------------- */
+        #timer {
+            cursor: pointer;
+            transition: opacity 0.2s ease, background 0.2s ease;
+        }
+
+        #timer:hover {
+            opacity: 0.85;
+        }
+
+        #timer.paused {
+            opacity: 0.5;
+        }
+
+        #settings-btn {
+            font-size: 1.1rem;
+            padding: 6px 12px;
+            font-weight: 700;
+        }
+
+        /* ---------------- IELTS Aesthetic Tweaks ---------------- */
+        /* Flattening corners */
+        .group,
+        .unified-group,
+        #results {
+            border-radius: 4px;
+        }
+
+        .paragraph-dropzone,
+        .match-dropzone {
+            border-radius: 4px;
+        }
+
+        .drag-item {
+            border-radius: 4px;
+        }
+
+        #timer,
+        .header-btn,
+        .q-item,
+        .practice-nav .controls button {
+            border-radius: 4px;
+        }
+
+        /* Font size utility classes */
+        html.font-normal {
+            font-size: 16px;
+        }
+
+        html.font-large {
+            font-size: 18px;
+        }
+
+        html.font-xlarge {
+            font-size: 20px;
+        }
+
+        /* Highlight visual */
+        .hl {
+            background-color: #72361c;
+            color: #fff;
+        }
+
+        /* Note highlight */
+        .hl[data-hl-type="note"] {
+            background-color: #0369d9;
+            color: #fff;
+        }
+
+        /* Pink highlight (second highlight pass) */
+        .hl[data-hl-type="pink"] {
+            background-color: #ec4899;
+            color: #fff;
+        }
+
+        /* 回顾只读模式：隐藏选区工具条的高亮/删除按钮（仅保留 Note 查看） */
+        body.review-readonly-mode #btnHL,
+        body.review-readonly-mode #btnUH {
+            display: none;
+        }
+
+        /* 回顾只读模式：计时器不可点击 */
+        body.review-readonly-mode #timer {
+            cursor: default;
+        }
+
+        /* Dark Mode variables */
+        body.dark-mode {
+            --panel: #1e293b;
+            --panel-alt: #0f172a;
+            --text: #f8fafc;
+            --line: #334155;
+            background: #020617;
+        }
+
+        body.dark-mode .header {
+            background: rgba(30, 41, 59, 0.94);
+            border-bottom: 1px solid var(--line);
+        }
+
+        body.dark-mode .group,
+        body.dark-mode .unified-group {
+            background: var(--panel);
+        }
+
+        body.dark-mode .hl {
+            background-color: #72361c;
+            color: #fff;
+        }
+
+        body.dark-mode .hl[data-hl-type="note"] {
+            background-color: #0369d9;
+            color: #fff;
+        }
+
+        body.dark-mode .hl[data-hl-type="pink"] {
+            background-color: #ec4899;
+            color: #fff;
+        }
+
+        body.dark-mode .paragraph-dropzone,
+        body.dark-mode .match-dropzone {
+            background: #1e293b;
+            border-color: #475569;
+        }
+
+        body.dark-mode .drag-item {
+            background: #334155;
+            border-color: #64748b;
+            color: #f8fafc;
+        }
+
+        body.dark-mode #timer,
+        body.dark-mode .header-btn {
+            background: var(--panel);
+            color: #f8fafc;
+        }
+
+        /* Phase 3 Nav Dark Mode */
+        body.dark-mode .practice-nav {
+            background: var(--panel);
+            border-color: var(--line);
+        }
+
+        body.dark-mode .q-item,
+        body.dark-mode .practice-nav .controls button {
+            background: var(--panel-alt);
+            color: #f8fafc;
+            border-color: var(--line);
+        }
+
+        body.dark-mode .q-item:hover,
+        body.dark-mode .practice-nav .controls button:hover {
+            background: #334155;
+        }
+
+        body.dark-mode .q-item.active {
+            border-color: var(--accent);
+            background: #1e40af;
+            color: white;
+        }
+
+        body.dark-mode .q-item.answered {
+            background: #1e3a8a;
+            border-color: #3b82f6;
+            color: #ffffff;
+        }
+
+        body.dark-mode .q-item.correct {
+            background: #064e3b;
+            border-color: var(--success);
+            color: #dcfce7;
+        }
+
+        body.dark-mode .q-item.incorrect {
+            background: #7f1d1d;
+            border-color: var(--danger);
+            color: #fee2e2;
+        }
+
+        body.dark-mode .submit-btn {
+            background: var(--accent) !important;
+        }
+
+        /* Selection bar visual */
+        #selbar {
+            position: absolute;
+            z-index: 1000;
+            background: #1e293b;
+            color: white;
+            padding: 4px;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+            display: none;
+            /* hidden by default */
+            gap: 4px;
+        }
+
+        #selbar button {
+            background: transparent;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 0.85rem;
+        }
+
+        #selbar button:hover {
+            background: #334155;
+        }
+
+        /* Settings Panel floating */
+        #settings-panel {
+            position: fixed;
+            top: 60px;
+            right: 20px;
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            padding: 16px;
+            width: 260px;
+            z-index: 1000;
+            display: none;
+            /* toggled by JS */
+        }
+
+        #settings-panel .settings-section {
+            margin-bottom: 16px;
+        }
+
+        #settings-panel .settings-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .settings-title {
+            font-size: 0.9rem;
+            color: var(--muted);
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .settings-options {
+            display: flex;
+            gap: 8px;
+        }
+
+        .settings-option {
+            flex: 1;
+            padding: 8px;
+            background: var(--panel-alt);
+            border: 1px solid var(--line);
+            border-radius: 4px;
+            cursor: pointer;
+            color: var(--text);
+            text-align: center;
+        }
+
+        .settings-option.active {
+            border-color: var(--accent);
+            background: var(--accent);
+            color: white;
+        }
+
+        /* Notes panel —— 右侧边栏样式 */
+        #notes-panel {
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 380px;
+            max-width: 92vw;
+            height: 100%;
+            background: var(--panel);
+            border-left: 1px solid var(--line);
+            box-shadow: -10px 0 30px rgba(0, 0, 0, 0.12);
+            z-index: 1001;
+            display: none;
+            /* toggled by JS */
+            flex-direction: column;
+        }
+
+        #notes-panel header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 18px;
+            border-bottom: 1px solid var(--line);
+            flex-shrink: 0;
+        }
+
+        #notes-panel header h3 {
+            margin: 0;
+            font-size: 1.15rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        #notes-panel .notes-header-actions {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        #notes-panel .notes-header-actions button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--text);
+            padding: 0;
+            display: inline-flex;
+            align-items: center;
+            opacity: 0.85;
+        }
+
+        #notes-panel .notes-header-actions button:hover {
+            opacity: 1;
+        }
+
+        /* 笔记列表容器 */
+        #notes-panel .notes-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0;
+        }
+
+        #notes-panel .notes-list__empty {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--muted, #999);
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        /* 单条笔记 */
+        .note-item {
+            border-bottom: 1px solid var(--line);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .note-item:last-child {
+            border-bottom: none;
+        }
+
+        .note-item__header {
+            display: flex;
+            align-items: flex-start;
+            padding: 12px 14px 8px;
+            gap: 8px;
+            background: #e8f1fd;
+        }
+
+        body.dark-mode .note-item__header {
+            background: #1e2d45;
+        }
+
+        .note-item__part {
+            font-weight: 700;
+            font-size: 0.85rem;
+            color: #2563eb;
+            white-space: nowrap;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+        .note-item__text {
+            flex: 1;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            word-break: break-word;
+        }
+
+        .note-item__delete {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #999;
+            font-size: 1.2rem;
+            line-height: 1;
+            padding: 0 2px;
+            flex-shrink: 0;
+            opacity: 0.6;
+            transition: opacity 0.15s, color 0.15s;
+        }
+
+        .note-item__delete:hover {
+            opacity: 1;
+            color: #e53e3e;
+        }
+
+        .note-item__textarea {
+            width: 100%;
+            min-height: 60px;
+            padding: 10px 14px 12px;
+            border: none;
+            border-top: 1px dashed var(--line);
+            resize: vertical;
+            background: transparent;
+            color: var(--text);
+            font-family: inherit;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            box-sizing: border-box;
+        }
+
+        .note-item__textarea:focus {
+            outline: none;
+            background: rgba(37, 99, 235, 0.03);
+        }
+
+        #notes-panel .notes-footer {
+            padding: 10px 18px;
+            text-align: right;
+            border-top: 1px solid var(--line);
+            flex-shrink: 0;
+        }
+
+        #notes-panel #notes-delete-all {
+            background: none;
+            border: none;
+            color: #e53e3e;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        #notes-panel #notes-delete-all:hover {
+            text-decoration: underline;
+        }
+
+        /* 眼睛图标：隐藏标注时淡化全部高亮背景 */
+        body.notes-hide-marks .hl {
+            background-color: transparent !important;
+            color: inherit !important;
+        }
+
+        /* ---------------- Exam Option Layouts ---------------- */
+        .choice-item label,
+        .checkbox-options label,
+        .options-list label,
+        .multiple-choice-options label,
+        .matching-options label,
+        .mcq-group label,
+        .radio-options label,
+        .radio-group label,
+        .multiple-choice label,
+        .true-false-ng label {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            line-height: 1.5;
+        }
+
+        .choice-item label input[type="checkbox"],
+        .checkbox-options label input[type="checkbox"],
+        .options-list label input[type="checkbox"],
+        .choice-item label input[type="radio"],
+        .multiple-choice-options label input[type="radio"],
+        .matching-options label input[type="radio"],
+        .mcq-group label input[type="radio"],
+        .radio-options label input[type="radio"],
+        .radio-group label input[type="radio"],
+        .multiple-choice label input[type="radio"],
+        .true-false-ng label input[type="radio"] {
+            margin-top: 4px;
+            flex-shrink: 0;
+            cursor: pointer;
+        }
+
+        /* ---------------- 题型渲染器 alignment (renderers.js output) ---------------- */
+        /* single_choice: mcq-options / mcq-option grid */
+        .mcq-options {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            margin: 8px 0 4px;
+        }
+
+        .mcq-option label {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            line-height: 1.5;
+        }
+
+        .mcq-option label input[type="radio"] {
+            margin-top: 4px;
+            flex-shrink: 0;
+            cursor: pointer;
+        }
+
+        /* matching: option / heading pools */
+        .options-pool,
+        .headings-pool {
+            margin-top: 16px;
+            padding: 12px 14px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: var(--panel-alt, var(--bg));
+        }
+
+        .options-pool > strong,
+        .headings-pool > strong {
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        /* matching grid + completion table borders (from renderer-styles.css) */
+        .matching-table,
+        .completion-table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 10px 0;
+            border: 2px solid var(--line);
+        }
+
+        .matching-table th,
+        .matching-table td,
+        .completion-table th,
+        .completion-table td {
+            border: 1px solid var(--line);
+            padding: 8px 10px;
+            vertical-align: middle;
+        }
+
+        .matching-table thead th,
+        .completion-table thead th {
+            background: var(--panel-alt);
+            text-align: center;
+            font-weight: 700;
+        }
+
+        .matching-table td:first-child { text-align: left; }
+        .matching-table td { text-align: center; }
+        .completion-table td { text-align: left; }
+
+        /* short_answer / flow_chart / diagram_label (renderer classes, future-proof) */
+        .short-answer-list { list-style: none; padding-left: 0; }
+        .short-answer-item { margin-bottom: 14px; }
+
+        .flow-chart {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            margin: 12px 0;
+        }
+
+        .flow-box {
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            padding: 10px 14px;
+            background: var(--panel-alt, var(--bg));
+            width: 100%;
+            max-width: 560px;
+            text-align: center;
+        }
+
+        .flow-arrow { font-size: 1.2em; opacity: 0.7; line-height: 1; }
+
+        .diagram-inputs { margin-top: 12px; }
+        .diagram-input-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        /* ---------------- Table Completion Layout ---------------- */
+        .table-section {
+            margin-top: 12px;
+            overflow-x: auto;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: var(--bg);
+            padding: 10px 12px;
+        }
+
+        .table-section table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+
+        .table-section thead th {
+            border: 1px solid var(--line);
+            background: var(--panel-alt);
+            font-weight: 700;
+            text-align: center;
+            padding: 10px 8px;
+        }
+
+        .table-section tbody td {
+            border: 1px solid var(--line);
+            padding: 10px 10px;
+            vertical-align: top;
+            line-height: 1.45;
+        }
+
+        .table-section thead th:first-child,
+        .table-section tbody td:first-child {
+            width: 16%;
+        }
+
+        .table-section thead th:nth-child(2),
+        .table-section tbody td:nth-child(2) {
+            width: 20%;
+        }
+
+        .table-section thead th:nth-child(3),
+        .table-section tbody td:nth-child(3) {
+            width: 64%;
+        }
+
+        .table-section ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+
+        .table-section li + li {
+            margin-top: 6px;
+        }
+
+        .table-section input.blank {
+            display: inline-block;
+            min-width: 120px;
+            max-width: 180px;
+            width: 40%;
+            padding: 2px 6px;
+            border: 1px solid var(--line);
+            border-radius: 4px;
+            background: var(--panel);
+            color: var(--text);
+            vertical-align: middle;
+        }
+
+        @media (max-width: 900px) {
+            .table-section input.blank {
+                width: 100%;
+                max-width: none;
+                margin-top: 4px;
+            }
+        }
+
+        /* ---------------- Drop Targets ---------------- */
+        .drop-target-summary {
+            display: inline-flex;
+            min-width: 80px;
+            min-height: 30px;
+            border-bottom: 2px solid var(--muted);
+            margin: 0 4px;
+            vertical-align: bottom;
+            align-items: center;
+            justify-content: center;
+            padding: 0 8px;
+            background: rgba(0, 0, 0, 0.02);
+            border-radius: 4px 4px 0 0;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .drop-target-summary.drag-over {
+            border-bottom-color: var(--accent);
+            background: #dbeafe;
+        }
+
+        .drop-target-summary.dropzone-filled {
+            border-bottom-color: var(--success);
+            background: #dcfce7;
+            color: var(--success);
+            font-weight: 600;
+        }
+
+        .drop-target-summary .drag-item {
+            border: none;
+            background: transparent;
+            padding: 0;
+            margin: 0;
+            cursor: grab;
+            color: inherit;
+            font-weight: inherit;
+        }
+    </style>
+</head>
+
+<body>
+    <header class="header">
+        <div class="header-content">
+            <h1 id="exam-title">IELTS 阅读练习</h1>
+            <p id="exam-subtitle">统一阅读页</p>
+        </div>
+        <div class="header-controls">
+            <div id="timer" title="点击启停">00:00</div>
+            <button class="header-btn" id="settings-btn" title="Settings" type="button">☰</button>
+            <button class="header-btn" id="note-btn" type="button">Note</button>
+        </div>
+    </header>
+
+    <div id="settings-panel">
+        <div class="settings-section">
+            <h3 class="settings-title">字号调整</h3>
+            <div class="settings-options">
+                <button class="settings-option active" data-size="normal">A</button>
+                <button class="settings-option" data-size="large" style="font-size: 1.1rem;">A</button>
+                <button class="settings-option" data-size="xlarge" style="font-size: 1.25rem;">A</button>
+            </div>
+        </div>
+        <div class="settings-section">
+            <h3 class="settings-title">背景颜色</h3>
+            <div class="settings-options">
+                <button class="settings-option active" data-mode="light">浅色</button>
+                <button class="settings-option" data-mode="dark">深色</button>
+            </div>
+        </div>
+        <div class="settings-section" id="suite-flow-mode-section" style="display: none;">
+            <h3 class="settings-title">套题流程模式</h3>
+            <div class="settings-options">
+                <button class="settings-option" data-suite-flow-mode="auto">自动跳转下一篇</button>
+                <button class="settings-option" data-suite-flow-mode="manual">提交后停留回看</button>
+            </div>
+        </div>
+    </div>
+    <div id="notes-panel">
+        <header>
+            <h3>NOTES</h3>
+            <div class="notes-header-actions">
+                <button id="notes-eye" type="button" title="显示/隐藏标注" aria-label="显示或隐藏标注">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z" />
+                        <circle cx="12" cy="12" r="3" />
+                    </svg>
+                </button>
+                <button id="close-note" type="button" aria-label="关闭">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                </button>
+            </div>
+        </header>
+        <div class="notes-list" id="notes-list">
+            <div class="notes-list__empty" id="notes-list-empty">
+                📝 选中文章中的文字，点击 Note 按钮添加笔记
+            </div>
+        </div>
+        <div class="notes-footer">
+            <button id="notes-delete-all" type="button">DELETE ALL</button>
+        </div>
+    </div>
+    <div class="overlay"></div>
+
+    <div class="shell">
+        <section class="pane" id="left"></section>
+        <div id="divider"></div>
+        <section class="pane" id="right">
+            <div id="question-groups"></div>
+            <!-- 套题模式：每一篇题目末尾的交卷按钮（右下角），一次点击结算整套 -->
+            <div id="part-submit-bar" hidden>
+                <button id="part-submit-btn" class="primary" type="button">Submit</button>
+            </div>
+            <div id="results"></div>
+        </section>
+    </div>
+
+    <div id="selbar">
+        <button type="button" id="btnHL" data-role="highlight">Highlight</button>
+        <button type="button" id="btnUH" data-role="remove-highlight">Remove</button>
+        <button type="button" id="btnNote" data-role="note">Note</button>
+    </div>
+
+    <div class="practice-nav">
+        <div class="title">题目导航</div>
+        <div class="questions" id="question-nav"></div>
+        <div class="controls">
+            <button id="exit-btn" type="button" title="退出" style="margin-right: 8px; display: none;">Exit</button>
+            <button id="export-pdf-btn" type="button" title="导出整页与练习详情为 PDF">导出PDF</button>
+            <button id="reset-btn" type="button">Reset</button>
+            <button id="submit-btn" class="primary" type="button">Submit</button>
+        </div>
+    </div>
+
+    <script src="../../../js/runtime/readingExamRegistry.js"></script>
+    <script src="../../../js/runtime/readingExplanationRegistry.js"></script>
+    <script>
+(function (global) {
+  'use strict';
+  global.__READING_EXAM_MANIFEST__ = {
+    "p3-medium-1018": { "examId": "p3-medium-1018", "dataKey": "p3-medium-1018", "script": "./p3-medium-1018.js", "title": "A Review of Helen Thomson's Book, Unthinkable: An Extraordinary Journey Through the World's Strangest Brains 海伦·汤姆森《不可思议》书评", "category": "P1" }
+  };
+})(typeof window !== 'undefined' ? window : this);
+
+(function registerReadingExamData(global) {
+  'use strict';
+  if (!global.__READING_EXAM_DATA__ || typeof global.__READING_EXAM_DATA__.register !== "function") {
+    throw new Error("reading_exam_registry_missing");
+  }
+  global.__READING_EXAM_DATA__.register("p3-medium-1018", {
+  "schemaVersion": "ReadingExamSourceV1",
+  "examId": "p3-medium-1018",
+  "meta": {
+    "title": "A Review of Helen Thomson's Book, Unthinkable: An Extraordinary Journey Through the World's Strangest Brains 海伦·汤姆森《不可思议》书评",
+    "category": "P1",
+    "frequency": "medium",
+    "pdfFilename": "",
+    "source": "IELTS清洗库 a-review-of-helen-thomson-s-book-unthinkable-an-extraordinary-journey.txt",
+    "questionIntroHtml": "<h3>Questions</h3>"
+  },
+  "passage": {
+    "blocks": [
+      {
+        "blockId": "passage-main",
+        "kind": "html",
+        "html": "<h2>READING PASSAGE</h2>\n<h3>A Review of Helen Thomson's Book, Unthinkable: An Extraordinary Journey Through the World's Strangest Brains 海伦·汤姆森《不可思议》书评</h3>\n<p><strong>A</strong> Sometimes the best way to understand how a 'normal' brain works is to explore those that are abnormal. Such is the insight in Helen Thomson's enjoyable new book, Unthinkable: An Extraordinary Journey Through the World's Strangest Brains. Thomson, a journalist with a particular interest in neuroscience, is dissatisfied with the 'cold and impersonal' accounts that make up the bulk of modem case studies. Instead, she reaches out to her research subjects to get a fuller picture of their lives. It should come as no surprise that Thomson is a fan of the late neuroscientist and popular writer Oliver Sacks. Yet her approach differs from his in one respect: instead of interviewing her subjects in a clinical setting, she prefers to meet them in their own homes, favourite restaurants and other haunts of regular life.</p>\n<p><strong>B</strong> Thomson brings to the project an eye for detail and the skills of a natural storyteller, which allow us to comprehend more readily some of her subjects, such as the man who thinks he's a tiger. She also asks the sort of personal questions scientists might avoid. For instance, she queries one subject, who strongly associates people with colours, what colour he associates with Thomson herself. Thomson's aim in writing the book is to shed light on what each case can tell all of us about our own life experiences, particularly as they are mediated every day by our brains. How do we find our way around, perceive our bodies and record our memories? And her book comes at a significant time. Neuroscience has exploded in the last two decades as imaging technology and a renewed exploration of human cognition have illuminated the inner workings of our minds like never before.</p>\n<p><strong>C</strong> Her nine subjects, mostly called only by their first names, all have decidedly unusual conditions. Bob can remember every single day of his life, Graham believed he was dead for three years and Sharon is perpetually lost in her own home. Each person's story anchors a chapter and Thomson's conversations with her subjects are summarised alongside background information and accounts of famous experiments. Together they take the reader on an engaging tour of the brain and its functions, from the hippocampus to the temporal lobe.</p>\n<p><strong>D</strong> Most of the individuals we meet have adapted to maintain fairly ordinary lives. Sylvia is nearly deaf but is able to vividly distinguish some music. By concentrating on the classical composer Bach, Sylvia has trained herself to identify different notes. Then there is Joel, a physician whose condition means he can literally feel his patients' pain. While this almost certainly makes him a more understanding doctor, his patients might be surprised that their physician relieves stress at home by watching cheap movies.</p>\n<p><strong>E</strong> A great science writer knows what is interesting to the reader, and here Thomson shines. Those familiar with the neuroscience genre will recognise figures like Phineas Gage, the American construction foreman whose remarkable recovery from a brain injury is a frequent case study in such volumes. But Thomson is able to provide a fresh account of even these well-known figures, bringing much-needed context and depth. In the same way, she has a gift for metaphor. At one point she describes the relative importance of different functions of the brain by comparing it to a car. While you absolutely must have an engine to make it run, parts like windshield wipers and air conditioning ensure that the experience is safe and pleasurable.</p>\n<p><strong>F</strong> The book certainly makes for educational and informative reading. It turns out we aren't left-and right-brained, as so often believed by the general public. It's more a case of being top- and bottom-brained with, roughly speaking, the top part of the brain specializing in taking action and the bottom part doing analysis. This is just one of several passages in the book where widely held but inaccurate notions are put right.</p>\n<p><strong>G</strong> One of the most enjoyable features of Thomson's book is that she addresses the reader directly. For example, she enthusiastically suggests tips to try at home and do-it-yourself diagnostics for your brain. If you have ever walked into a room and forgotten what you planned to do, try quickly looking left and right to help jog your memory. For the more ambitious, she outlines several other, sometimes quite sophisticated, techniques that might be of everyday use.</p>\n<p><strong>H</strong> Oddly enough, it is with some of the personal stories-the inspiration for her book-that the author occasionally stumbles. Some of the interviews feel too superficial to be regarded as fully fleshed-out profiles. Perhaps she found the condition more interesting than the person? Or more likely, there wasn't enough time. Fortunately, even the weaker profiles are surrounded by excellent supporting material, so this is more of a rough patch in the road than a serious detour and soon enough the narrative is flowing again.</p>\n<p><strong>I</strong> Perhaps the most moving chapter is the story of Tommy McHugh, whose personality completely changed after he suffered a stroke. He goes from being an emotionless, slightly menacing figure with a criminal record to a sensitive character with a deep appreciation for life. He also has become a compulsive painter, an activity from which he derives great fulfillment. It is transformations and revelations such as these that make the book so rewarding.</p>"
+      }
+    ]
+  },
+  "questionGroups": [
+    {
+      "groupId": "group-1",
+      "kind": "yes_no_not_given",
+      "questionIds": [
+        "q27",
+        "q28",
+        "q29",
+        "q30",
+        "q31"
+      ],
+      "bodyHtml": "<div class=\"group\" id=\"q27-28-29-30-31-anchor\"><h4>Questions 27-31</h4><p>Do the following statements agree with the claims of the writer in Reading Passage 3?</p><div class=\"question-item\"><p><strong>27</strong> Helen Thomson has followed the approach used in most modern case studies.</p><div class=\"radio-options\"><label><input name=\"q27\" type=\"radio\" value=\"YES\"> YES</label><label><input name=\"q27\" type=\"radio\" value=\"NO\"> NO</label><label><input name=\"q27\" type=\"radio\" value=\"NOT GIVEN\"> NOT GIVEN</label></div></div><div class=\"question-item\"><p><strong>28</strong> Helen Thomson became fascinated with neuroscience after reading Oliver Sacks' popular books.</p><div class=\"radio-options\"><label><input name=\"q28\" type=\"radio\" value=\"YES\"> YES</label><label><input name=\"q28\" type=\"radio\" value=\"NO\"> NO</label><label><input name=\"q28\" type=\"radio\" value=\"NOT GIVEN\"> NOT GIVEN</label></div></div><div class=\"question-item\"><p><strong>29</strong> Helen Thomson's writing style helps readers understand the man who believes he is a tiger.</p><div class=\"radio-options\"><label><input name=\"q29\" type=\"radio\" value=\"YES\"> YES</label><label><input name=\"q29\" type=\"radio\" value=\"NO\"> NO</label><label><input name=\"q29\" type=\"radio\" value=\"NOT GIVEN\"> NOT GIVEN</label></div></div><div class=\"question-item\"><p><strong>30</strong> Few scientists would ask the same question that Thomson asks about colour.</p><div class=\"radio-options\"><label><input name=\"q30\" type=\"radio\" value=\"YES\"> YES</label><label><input name=\"q30\" type=\"radio\" value=\"NO\"> NO</label><label><input name=\"q30\" type=\"radio\" value=\"NOT GIVEN\"> NOT GIVEN</label></div></div><div class=\"question-item\"><p><strong>31</strong> Thomson's aim in writing the book is to provide a technical overview of neuroscience for students.</p><div class=\"radio-options\"><label><input name=\"q31\" type=\"radio\" value=\"YES\"> YES</label><label><input name=\"q31\" type=\"radio\" value=\"NO\"> NO</label><label><input name=\"q31\" type=\"radio\" value=\"NOT GIVEN\"> NOT GIVEN</label></div></div></div>",
+      "leadHtml": ""
+    },
+    {
+      "groupId": "group-2",
+      "kind": "single_choice",
+      "questionIds": [
+        "q32",
+        "q33",
+        "q34",
+        "q35"
+      ],
+      "bodyHtml": "<div class=\"group\" id=\"q32-33-34-35-anchor\"><h4>Questions 32-35</h4><p>Choose the correct letter, A, B, C or D.</p><a id=\"q32-anchor\"></a><div><p>32. What is the writer doing in the third paragraph?</p><div class=\"mcq-options\"><div class=\"mcq-option\"><label><input type=\"radio\" name=\"q32\" value=\"A\"> A. claiming that Thomson's book is unique</label></div><div class=\"mcq-option\"><label><input type=\"radio\" name=\"q32\" value=\"B\"> B. outlining how Thomson's book is organised</label></div><div class=\"mcq-option\"><label><input type=\"radio\" name=\"q32\" value=\"C\"> C. explaining why Thomson excluded certain material</label></div><div class=\"mcq-option\"><label><input type=\"radio\" name=\"q32\" value=\"D\"> D. identifying who Thomson's most interesting subject is</label></div></div></div><a id=\"q33-anchor\"></a><div><p>33. The writer refers to a car in the fifth paragraph in order to</p><div class=\"mcq-options\"><div class=\"mcq-option\"><label><input type=\"radio\" name=\"q33\" value=\"A\"> A. highlight one factual error in Thomson's book.</label></div><div class=\"mcq-option\"><label><input type=\"radio\" name=\"q33\" value=\"B\"> B. contrast the complexity of humans and machines.</label></div><div class=\"mcq-option\"><label><input type=\"radio\" name=\"q33\" value=\"C\"> C. illustrate an impressive feature of Thomson's writing.</label></div><div class=\"mcq-option\"><label><input type=\"radio\" name=\"q33\" value=\"D\"> D. exemplify the way some brains develop in unusual ways.</label></div></div></div><a id=\"q34-anchor\"></a><div><p>34. Which of the following best summarises the writer's argument in the sixth paragraph?</p><div class=\"mcq-options\"><div class=\"mcq-option\"><label><input type=\"radio\" name=\"q34\" value=\"A\"> A. Thomson corrects some common misconceptions about the brain.</label></div><div class=\"mcq-option\"><label><input type=\"radio\" name=\"q34\" value=\"B\"> B. No two brains are likely to be exactly the same in every respect.</label></div><div class=\"mcq-option\"><label><input type=\"radio\" name=\"q34\" value=\"C\"> C. Thomson recognises that further research into brains is necessary.</label></div><div class=\"mcq-option\"><label><input type=\"radio\" name=\"q34\" value=\"D\"> D. Ordinary people cannot be expected to fully understand the brain.</label></div></div></div><a id=\"q35-anchor\"></a><div><p>35. What impresses the writer about Thomson's book in the seventh paragraph?</p><div class=\"mcq-options\"><div class=\"mcq-option\"><label><input type=\"radio\" name=\"q35\" value=\"A\"> A. her sympathy for people suffering from brain issues</label></div><div class=\"mcq-option\"><label><input type=\"radio\" name=\"q35\" value=\"B\"> B. her inclusion of practical advice about certain situations</label></div><div class=\"mcq-option\"><label><input type=\"radio\" name=\"q35\" value=\"C\"> C. her ability to describe complex problems in simple language</label></div><div class=\"mcq-option\"><label><input type=\"radio\" name=\"q35\" value=\"D\"> D. her humorous approach to describing some serious conditions</label></div></div></div></div>",
+      "leadHtml": ""
+    },
+    {
+      "groupId": "group-3",
+      "kind": "matching",
+      "questionIds": [
+        "q36",
+        "q37",
+        "q38",
+        "q39"
+      ],
+      "bodyHtml": "<div class=\"group\" id=\"q36-37-38-39-anchor\"><h4>Questions 36-39</h4><p>Complete each sentence with the correct ending, <strong>A-H</strong>, below.</p><p><em>Drag the correct ending block to the box below each sentence start.</em></p><div class=\"options-pool\" id=\"pool-endings\"><strong>List of Endings</strong><div class=\"pool-items\"><div class=\"drag-item\" draggable=\"true\" data-option=\"A\"><strong>A</strong> is a research subject who has been described in many different publications.</div><div class=\"drag-item\" draggable=\"true\" data-option=\"B\"><strong>B</strong> is thought to be the only person who has reacted to treatment in this particular way.</div><div class=\"drag-item\" draggable=\"true\" data-option=\"C\"><strong>C</strong> can successfully manipulate one sense that usually functions imperfectly.</div><div class=\"drag-item\" draggable=\"true\" data-option=\"D\"><strong>D</strong> has been critical of the approach taken by Helen Thomson.</div><div class=\"drag-item\" draggable=\"true\" data-option=\"E\"><strong>E</strong> changed to become a nicer individual with a satisfying hobby.</div><div class=\"drag-item\" draggable=\"true\" data-option=\"F\"><strong>F</strong> used a research environment that was rejected by Helen Thomson.</div><div class=\"drag-item\" draggable=\"true\" data-option=\"G\"><strong>G</strong> is a medical professional whose unusual condition affects his emotional experience.</div><div class=\"drag-item\" draggable=\"true\" data-option=\"H\"><strong>H</strong> is a successful professional whose relaxation technique might appear unconventional.</div></div></div><hr style=\"border:0; border-top:1px dashed var(--line); margin:20px 0;\"><div><p><a id=\"q36-anchor\"></a><strong>36</strong> The late neuroscientist and popular writer Oliver Sacks</p><div class=\"match-dropzone\" data-question=\"q36\"></div></div><div><p><a id=\"q37-anchor\"></a><strong>37</strong> Sylvia shows that she</p><div class=\"match-dropzone\" data-question=\"q37\"></div></div><div><p><a id=\"q38-anchor\"></a><strong>38</strong> The research subject named Joel</p><div class=\"match-dropzone\" data-question=\"q38\"></div></div><div><p><a id=\"q39-anchor\"></a><strong>39</strong> The American construction foreman Phineus Gage</p><div class=\"match-dropzone\" data-question=\"q39\"></div></div></div>",
+      "leadHtml": ""
+    }
+  ],
+  "answerKey": {
+    "q27": "NO",
+    "q28": "NOT GIVEN",
+    "q29": "YES",
+    "q30": "YES",
+    "q31": "NO",
+    "q32": "B",
+    "q33": "C",
+    "q34": "A",
+    "q35": "B",
+    "q36": "F",
+    "q37": "C",
+    "q38": "H",
+    "q39": "A"
+  },
+  "questionOrder": [
+    "q27",
+    "q28",
+    "q29",
+    "q30",
+    "q31",
+    "q32",
+    "q33",
+    "q34",
+    "q35",
+    "q36",
+    "q37",
+    "q38",
+    "q39"
+  ],
+  "questionDisplayMap": {
+    "q27": "27",
+    "q28": "28",
+    "q29": "29",
+    "q30": "30",
+    "q31": "31",
+    "q32": "32",
+    "q33": "33",
+    "q34": "34",
+    "q35": "35",
+    "q36": "36",
+    "q37": "37",
+    "q38": "38",
+    "q39": "39"
+  }
+});
+})(typeof window !== "undefined" ? window : this);
+
+// 自动设置 examId（独立单篇页）
+(function () {
+  var qs = new URLSearchParams(window.location.search);
+  if (!qs.get('examId')) qs.set('examId', 'p3-medium-1018');
+  if (!qs.get('dataKey')) qs.set('dataKey', 'p3-medium-1018');
+  var q = qs.toString();
+  if (window.location.search !== ('?' + q)) {
+    window.location.replace(window.location.pathname + '?' + q);
+  }
+})();
+</script>
+    <script src="../../../js/utils/answerMatchCore.js"></script>
+    <script src="../../../js/practice-page-ui.js"></script>
+    <!-- 套题交卷后按雅思分数表换算三篇合计成绩 -->
+    <script src="../../../js/utils/ieltsBandScore.js"></script>
+    <script src="../../../js/runtime/unifiedReadingPage.js"></script>
+</body>
+
+</html>
