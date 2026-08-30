@@ -90,7 +90,7 @@
   "p1-medium-1005": ["matching", "sentence-completion", "tfng"],
   "p1-medium-1007": ["table", "tfng", "mc"],
   "p1-high-1008": ["tfng", "summary"],
-  "p1-low-1009": ["tfng"],
+  "p1-low-1009": ["tfng", "matching"],
   "p1-low-1011": ["summary", "matching", "mc"],
   "p3-high-1012": ["ynng", "sentence-completion", "mc"],
   "p1-low-1014": ["tfng", "sentence-completion", "short-answer"],
