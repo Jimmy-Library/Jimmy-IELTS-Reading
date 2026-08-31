@@ -2240,6 +2240,28 @@
             return [];
         },
 
+        _resolveReplayMarkedQuestions(entry, entryMetadata, record, recordMetadata) {
+            const candidates = [
+                entry && entry.markedQuestions,
+                entry && entry.realData && entry.realData.markedQuestions,
+                entry && entry.realData && entry.realData.metadata && entry.realData.metadata.markedQuestions,
+                entry && entry.rawData && entry.rawData.markedQuestions,
+                entry && entry.rawData && entry.rawData.metadata && entry.rawData.metadata.markedQuestions,
+                entryMetadata && entryMetadata.markedQuestions,
+                record && record.markedQuestions,
+                record && record.realData && record.realData.markedQuestions,
+                record && record.realData && record.realData.metadata && record.realData.metadata.markedQuestions,
+                record && record.results && record.results.metadata && record.results.metadata.markedQuestions,
+                recordMetadata && recordMetadata.markedQuestions
+            ];
+            for (let index = 0; index < candidates.length; index += 1) {
+                if (Array.isArray(candidates[index]) && candidates[index].length) {
+                    return candidates[index].slice();
+                }
+            }
+            return [];
+        },
+
         _normalizeReplayAnswerMap(rawMap, targetExamId = '', allowUnprefixed = true) {
             const normalized = {};
             if (!this._isReplayObject(rawMap)) {
@@ -2555,11 +2577,7 @@
                     startTime: entry.startTime || record.startTime || record.date || null,
                     endTime: entry.endTime || record.endTime || record.date || null,
                     duration: Number(entry.duration ?? record.duration) || 0,
-                    markedQuestions: Array.isArray(entry.markedQuestions)
-                        ? entry.markedQuestions.slice()
-                        : (Array.isArray(entryMetadata.markedQuestions)
-                            ? entryMetadata.markedQuestions.slice()
-                            : (Array.isArray(recordMetadata.markedQuestions) ? recordMetadata.markedQuestions.slice() : [])),
+                    markedQuestions: this._resolveReplayMarkedQuestions(entry, entryMetadata, record, recordMetadata),
                     highlights: this._resolveReplayHighlights(entry, entryMetadata, record, recordMetadata),
                     metadata: mergedMetadata
                 };

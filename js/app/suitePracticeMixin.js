@@ -339,6 +339,7 @@
             session.draftsByExam[examId] = {
                 answers: data.answers || {},
                 highlights: data.highlights || [],
+                markedQuestions: data.markedQuestions || data.metadata?.markedQuestions || [],
                 scrollY: data.scrollY || 0
             };
             if (Number.isFinite(Number(data && data.duration))) {
@@ -492,7 +493,12 @@
                 answers: filteredAnswers,
                 answerComparison: filteredComparison,
                 scoreInfo: result.scoreInfo || {},
-                markedQuestions: Array.isArray(result.markedQuestions) ? result.markedQuestions.slice() : []
+                markedQuestions: Array.isArray(result.markedQuestions) ? result.markedQuestions.slice() : [],
+                highlights: Array.isArray(result.rawData?.highlights)
+                    ? result.rawData.highlights.slice()
+                    : (Array.isArray(result.rawData?.metadata?.highlights)
+                        ? result.rawData.metadata.highlights.slice()
+                        : [])
             };
         },
 
@@ -1723,6 +1729,7 @@
                 answers: entry.answers,
                 answerComparison: entry.answerComparison,
                 markedQuestions: Array.isArray(entry.markedQuestions) ? entry.markedQuestions.slice() : [],
+                highlights: Array.isArray(entry.highlights) ? entry.highlights.slice() : [],
                 rawData: entry.rawData || {}
             }));
 
@@ -2374,6 +2381,9 @@
                 markedQuestions: Array.isArray(rawData?.metadata?.markedQuestions)
                     ? rawData.metadata.markedQuestions.slice()
                     : (Array.isArray(rawData?.markedQuestions) ? rawData.markedQuestions.slice() : []),
+                highlights: Array.isArray(rawData?.highlights)
+                    ? rawData.highlights.slice()
+                    : (Array.isArray(rawData?.metadata?.highlights) ? rawData.metadata.highlights.slice() : []),
                 rawData: rawData || {}
             };
         },

@@ -311,6 +311,8 @@ class PdfExporter {
             .ielts-export-card-root table.answers td.col-res.ok { color: #1f7a4d; }
             .ielts-export-card-root table.answers td.col-res.bad { color: #c0392b; }
             .ielts-export-card-root table.answers tr.bad td { background: #fdf2ef; }
+            .ielts-export-card-root table.answers tr.marked td { box-shadow: inset 0 2px 0 #f59e0b, inset 0 -2px 0 #f59e0b; }
+            .ielts-export-card-root .mark-star { color: #d97706; font-weight: 800; }
             .ielts-export-card-root .no-detail {
                 margin: 0; padding: 8px 12px; background: #e8f3eb;
                 border-left: 3px solid #1f7a4d; border-radius: 3px; color: #5b7064; font-size: 12px;
@@ -617,6 +619,8 @@ class PdfExporter {
     table.answers td.col-res.ok { color: #1f7a4d; }
     table.answers td.col-res.bad { color: #c0392b; }
     table.answers tr.bad td { background: #fdf2ef; }
+    table.answers tr.marked td { box-shadow: inset 0 2px 0 #f59e0b, inset 0 -2px 0 #f59e0b; }
+    .mark-star { color: #d97706; font-weight: 800; }
     .no-detail {
         margin: 0;
         padding: 8px 12px;
@@ -718,13 +722,29 @@ class PdfExporter {
 </div>
 <script>
     (function () {
-        function triggerPrint() {
-            try { window.focus(); window.print(); } catch (e) { /* noop */ }
+        async function triggerPrint() {
+            try {
+                if (document.fonts && document.fonts.ready) await document.fonts.ready;
+                var images = Array.prototype.slice.call(document.images || []);
+                await Promise.all(images.map(function (image) {
+                    if (image.complete) return Promise.resolve();
+                    return new Promise(function (resolve) {
+                        image.addEventListener('load', resolve, { once: true });
+                        image.addEventListener('error', resolve, { once: true });
+                        setTimeout(resolve, 1500);
+                    });
+                }));
+                await new Promise(function (resolve) {
+                    requestAnimationFrame(function () { requestAnimationFrame(resolve); });
+                });
+                window.focus();
+                window.print();
+            } catch (e) { /* noop */ }
         }
         if (document.readyState === 'complete') {
-            setTimeout(triggerPrint, 350);
+            setTimeout(triggerPrint, 250);
         } else {
-            window.addEventListener('load', function () { setTimeout(triggerPrint, 350); }, { once: true });
+            window.addEventListener('load', function () { setTimeout(triggerPrint, 250); }, { once: true });
         }
     })();
 </script>
@@ -777,6 +797,49 @@ class PdfExporter {
         </section>`;
     }
 
+    resolveMarkedQuestions(record) {
+        const metadata = record?.metadata || {};
+        const realData = record?.realData || {};
+        const rawData = record?.rawData || {};
+        const candidates = [
+            record?.markedQuestions,
+            metadata.markedQuestions,
+            realData.markedQuestions,
+            realData.metadata?.markedQuestions,
+            rawData.markedQuestions,
+            rawData.metadata?.markedQuestions
+        ];
+        for (let index = 0; index < candidates.length; index += 1) {
+            if (Array.isArray(candidates[index]) && candidates[index].length) {
+                return candidates[index].map((value) => String(value).trim()).filter(Boolean);
+            }
+        }
+        if (Array.isArray(record?.suiteEntries)) {
+            return record.suiteEntries.flatMap((entry) => this.resolveMarkedQuestions(entry));
+        }
+        return [];
+    }
+
+    resolveHighlightCount(record) {
+        const metadata = record?.metadata || {};
+        const realData = record?.realData || {};
+        const rawData = record?.rawData || {};
+        const candidates = [
+            record?.highlights,
+            metadata.highlights,
+            realData.highlights,
+            realData.metadata?.highlights,
+            rawData.highlights,
+            rawData.metadata?.highlights
+        ];
+        const found = candidates.find((value) => Array.isArray(value) && value.length);
+        if (found) return found.length;
+        if (Array.isArray(record?.suiteEntries)) {
+            return record.suiteEntries.reduce((sum, entry) => sum + this.resolveHighlightCount(entry), 0);
+        }
+        return 0;
+    }
+
     buildRecordHtml(record) {
         const metadata = record.metadata || {};
         const title = this.markdown.normalizeTitle(
@@ -787,6 +850,8 @@ class PdfExporter {
         const metrics = this.markdown.resolveScoreMetrics(record);
         const startTime = this.formatTime(record.startTime || record.date);
         const duration = typeof record.duration === 'number' ? this.formatDuration(record.duration) : '未记录';
+        const markedCount = this.resolveMarkedQuestions(record).length;
+        const highlightCount = this.resolveHighlightCount(record);
 
         // 套题记录：按 P1/P2/P3 分篇输出，而不是并成一张扁平表
         const suiteEntries = this.getSuiteEntries(record);
@@ -822,6 +887,8 @@ class PdfExporter {
                 <span>开始时间:${this.escapeHtml(startTime)}</span>
                 <span>用时:${this.escapeHtml(duration)}</span>
                 <span>题目数:${metrics.total}</span>
+                ${markedCount ? `<span>★ 标记题:${markedCount}</span>` : ''}
+                ${highlightCount ? `<span>高亮:${highlightCount} 处</span>` : ''}
                 ${suiteMetaHtml}
             </div>
             ${bodyHtml}
@@ -1131,14 +1198,17 @@ class PdfExporter {
         };
         const hasStems = !!stems && rows.some(row => stemFor(row.questionNum));
 
+        const markedSet = new Set(this.resolveMarkedQuestions(record).map((value) => String(value).replace(/^q/i, '')));
         const rowsHtml = rows.map(row => {
             const isCorrect = !!row.isCorrect;
+            const isMarked = markedSet.has(String(row.questionNum).replace(/^q/i, ''));
             const resultMark = isCorrect ? '✓' : '✗';
             const stemCell = hasStems
                 ? `<td class="col-q">${this.escapeHtml(stemFor(row.questionNum) || '—')}</td>`
                 : '';
-            return `<tr${isCorrect ? '' : ' class="bad"'}>
-                <td class="col-num">${this.escapeHtml(String(row.questionNum))}</td>
+            const rowClasses = [isCorrect ? '' : 'bad', isMarked ? 'marked' : ''].filter(Boolean).join(' ');
+            return `<tr${rowClasses ? ` class="${rowClasses}"` : ''}>
+                <td class="col-num">${isMarked ? '<span class="mark-star">★</span> ' : ''}${this.escapeHtml(String(row.questionNum))}</td>
                 ${stemCell}
                 <td>${this.escapeHtml(row.userAnswer || 'No Answer')}</td>
                 <td>${this.escapeHtml(row.correctAnswer || 'N/A')}</td>

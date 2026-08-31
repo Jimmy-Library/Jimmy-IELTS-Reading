@@ -588,11 +588,8 @@
         }
 
         #part-submit-bar {
-            display: flex;
-            justify-content: flex-end;
-            margin-top: 16px;
-            padding-top: 14px;
-            border-top: 1px solid var(--line);
+            display: inline-flex;
+            align-items: center;
         }
 
         #part-submit-btn {
@@ -1444,10 +1441,6 @@
         <div id="divider"></div>
         <section class="pane" id="right">
             <div id="question-groups"></div>
-            <!-- 套题模式：每一篇题目末尾的交卷按钮（右下角），一次点击结算整套 -->
-            <div id="part-submit-bar" hidden>
-                <button id="part-submit-btn" class="primary" type="button">Submit</button>
-            </div>
             <div id="results"></div>
         </section>
     </div>
@@ -1465,6 +1458,10 @@
             <button id="exit-btn" type="button" title="退出" style="margin-right: 8px; display: none;">Exit</button>
             <button id="export-pdf-btn" type="button" title="导出整页与练习详情为 PDF">导出PDF</button>
             <button id="reset-btn" type="button">Reset</button>
+            <!-- P1/P2 可只提交当前篇，保存后仍可续做其他篇 -->
+            <span id="part-submit-bar" hidden>
+                <button id="part-submit-btn" class="primary" type="button">Submit</button>
+            </span>
             <button id="submit-btn" class="primary" type="button">Submit</button>
         </div>
     </div>
