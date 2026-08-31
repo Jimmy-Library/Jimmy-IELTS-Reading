@@ -3,6 +3,16 @@
 // 数据版本: v3.2
 window.completeExamIndex = [
 {
+        id: "p1-medium-1019", title: "A review of Nigel Townson's The British at Play 奈杰尔·汤森《玩耍的英国人》书评", category: "P1", frequency: "medium", path: "assets/generated/reading-exams/", filename: "p1-medium-1019.js", hasHtml: true, hasPdf: false,
+    },
+{
+        id: "p1-high-1021", title: "A river reveals its Roman past 一条河流显露罗马往事", category: "P1", frequency: "high", path: "assets/generated/reading-exams/", filename: "p1-high-1021.js", hasHtml: true, hasPdf: false,
+    },
+{
+        id: "p1-high-1028", title: "A Wonder Plant - Bamboo Furniture 神奇植物——竹制家具", category: "P1", frequency: "high", path: "assets/generated/reading-exams/", filename: "p1-high-1028.js", hasHtml: true, hasPdf: false,
+    },
+
+{
         id: "p1-medium-1003", title: "A Bar at the Folies 欢乐酒吧", category: "P1", frequency: "medium", path: "assets/generated/reading-exams/", filename: "p1-medium-1003.js", hasHtml: true, hasPdf: false,
     },
 {

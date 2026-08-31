@@ -86,7 +86,10 @@
     }
   ],
   "byExamId": {
-      "p1-medium-1003": ["matching", "short-answer"],
+        "p1-medium-1019": ["summary", "matching"],
+  "p1-high-1021": ["tfng", "summary"],
+  "p1-high-1028": ["matching", "short-answer"],
+"p1-medium-1003": ["matching", "short-answer"],
   "p1-medium-1005": ["matching", "sentence-completion", "tfng"],
   "p1-medium-1007": ["table", "tfng", "mc"],
   "p1-high-1008": ["tfng", "summary"],

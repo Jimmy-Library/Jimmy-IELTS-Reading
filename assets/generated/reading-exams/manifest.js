@@ -1,7 +1,28 @@
 (function registerReadingExamManifest(global) {
   'use strict';
   global.__READING_EXAM_MANIFEST__ = {
-       "p1-medium-1003": {
+         "p1-medium-1019": {
+    "examId": "p1-medium-1019",
+    "dataKey": "p1-medium-1019",
+    "script": "./p1-medium-1019.js",
+    "title": "A review of Nigel Townson's The British at Play 奈杰尔·汤森《玩耍的英国人》书评",
+    "category": "P1"
+  },
+  "p1-high-1021": {
+    "examId": "p1-high-1021",
+    "dataKey": "p1-high-1021",
+    "script": "./p1-high-1021.js",
+    "title": "A river reveals its Roman past 一条河流显露罗马往事",
+    "category": "P1"
+  },
+  "p1-high-1028": {
+    "examId": "p1-high-1028",
+    "dataKey": "p1-high-1028",
+    "script": "./p1-high-1028.js",
+    "title": "A Wonder Plant - Bamboo Furniture 神奇植物——竹制家具",
+    "category": "P1"
+  },
+"p1-medium-1003": {
     "examId": "p1-medium-1003",
     "dataKey": "p1-medium-1003",
     "script": "./p1-medium-1003.js",
