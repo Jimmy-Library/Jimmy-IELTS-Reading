@@ -20,6 +20,9 @@
 :root[data-image-skin="pastel-parade"] { --skin-button-radius: 22px; --skin-card-radius: 32px; }
 :root[data-image-skin="vinyl-studio"] { --skin-button-radius: 6px; --skin-card-radius: 13px; }
 :root[data-image-skin="silver-studio"] { --skin-button-radius: 10px; --skin-card-radius: 18px; }
+:root[data-image-skin="gravity-gaze"] { --skin-button-radius: 5px 18px 5px 18px; --skin-card-radius: 12px 30px 12px 30px; }
+:root[data-image-skin="asuka-heart"] { --skin-button-radius: 999px; --skin-card-radius: 30px; }
+:root[data-image-skin="snoopy-notes"] { --skin-button-radius: 14px 20px 14px 20px; --skin-card-radius: 22px 30px 22px 30px; }
 
 :root[data-image-skin="autumn-gold"] {
     --skin-accent: #c8792b;

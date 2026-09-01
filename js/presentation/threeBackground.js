@@ -228,7 +228,10 @@
         'street-rhythm': sageShader,
         'pastel-parade': candyShader,
         'vinyl-studio': slateBlueShader,
-        'silver-studio': warmGrayShader
+        'silver-studio': warmGrayShader,
+        'gravity-gaze': aquaShader,
+        'asuka-heart': sunsetShader,
+        'snoopy-notes': yellowShader
     };
 
     function createBackground(theme = 'misty-mountain') {

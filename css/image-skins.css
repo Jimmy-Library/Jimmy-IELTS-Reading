@@ -167,6 +167,48 @@
     --skin-image-filter: saturate(.82) contrast(.98);
 }
 
+:root[data-image-skin="gravity-gaze"] {
+    --skin-accent: #1598b7;
+    --skin-accent-strong: #0b4c66;
+    --skin-accent-soft: rgba(21, 152, 183, 0.2);
+    --skin-ink: #173d4c;
+    --skin-base: #e7f6f7;
+    --skin-panel-rgb: 248, 254, 254;
+    --skin-panel-alt-rgb: 229, 247, 249;
+    --skin-image: url("../skin/%E5%BC%95%E5%8A%9B%20%28Gravity%29.jpg");
+    --skin-image-opacity: .36;
+    --skin-image-position: 50% 50%;
+    --skin-image-filter: saturate(1.04) contrast(1.02);
+}
+
+:root[data-image-skin="asuka-heart"] {
+    --skin-accent: #d9584c;
+    --skin-accent-strong: #8e3436;
+    --skin-accent-soft: rgba(217, 88, 76, 0.2);
+    --skin-ink: #573638;
+    --skin-base: #f9ece5;
+    --skin-panel-rgb: 255, 251, 247;
+    --skin-panel-alt-rgb: 250, 235, 226;
+    --skin-image: url("../skin/Asuka%20_%20Cute%20Anime%20Wallpaper.jpg");
+    --skin-image-opacity: .35;
+    --skin-image-position: 50% 50%;
+    --skin-image-filter: saturate(.98) contrast(1.01);
+}
+
+:root[data-image-skin="snoopy-notes"] {
+    --skin-accent: #c8982e;
+    --skin-accent-strong: #70531c;
+    --skin-accent-soft: rgba(200, 152, 46, 0.19);
+    --skin-ink: #443b27;
+    --skin-base: #faf7ee;
+    --skin-panel-rgb: 255, 254, 249;
+    --skin-panel-alt-rgb: 248, 243, 229;
+    --skin-image: url("../skin/snoopy%20study.jpg");
+    --skin-image-opacity: .32;
+    --skin-image-position: 50% 50%;
+    --skin-image-filter: saturate(.9) contrast(1.01);
+}
+
 html[data-image-skin] {
     min-height: 100%;
     background: linear-gradient(155deg, #fff 0%, var(--skin-base) 52%, #f8fafc 100%);

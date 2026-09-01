@@ -30,7 +30,10 @@
         { id: 'street-rhythm', name: '街头律动', note: '鼠尾草 · 自由能量', color: '#6f846b', image: 'skin/33a003b514ca7922e4927fc94dbf9748.jpg', position: '50% 52%' },
         { id: 'pastel-parade', name: '糖果游行', note: '粉彩 · 轻盈童趣', color: '#73a9c8', image: 'skin/9bbc8ed25b7812b514a98d69974676ec.jpg', position: '50% 68%' },
         { id: 'vinyl-studio', name: '黑胶练习室', note: '雾蓝 · 复古节奏', color: '#5d7f93', image: 'skin/cc899965adb49afaf878305b68735128.jpg', position: '50% 48%' },
-        { id: 'silver-studio', name: '暖灰镜头', note: '奶咖 · 简约质感', color: '#8a6257', image: 'skin/riize的宋银硕.jpg', position: '50% 34%' }
+        { id: 'silver-studio', name: '暖灰镜头', note: '奶咖 · 简约质感', color: '#8a6257', image: 'skin/riize的宋银硕.jpg', position: '50% 34%' },
+        { id: 'gravity-gaze', name: '引力凝视', note: '青蓝 · 清醒专注', color: '#1598b7', image: 'skin/引力 (Gravity).jpg', position: '50% 50%' },
+        { id: 'asuka-heart', name: '明日香心动', note: '珊瑚红 · 元气热烈', color: '#d9584c', image: 'skin/Asuka _ Cute Anime Wallpaper.jpg', position: '50% 50%' },
+        { id: 'snoopy-notes', name: '史努比自习社', note: '奶白 · 轻松陪伴', color: '#c8982e', image: 'skin/snoopy study.jpg', position: '50% 50%' }
     ];
 
     var panel = null;
