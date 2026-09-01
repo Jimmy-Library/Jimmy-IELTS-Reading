@@ -17,6 +17,7 @@
     var reducedMotion = global.matchMedia && global.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     var SKINS = [
+        { id: 'custom', name: '自定义模式', note: '图片 · 配色 · 字体 · 形状', color: '#6d5bd0', fallback: 'linear-gradient(145deg,#f5f3ff,#8b7de3)', image: '', custom: true },
         { id: 'spring', name: '春日新绿', note: '默认 · 清新专注', color: '#2f855a', fallback: 'linear-gradient(145deg,#f7fff8,#9ae6b4)', image: '' },
         { id: 'autumn-gold', name: '秋日暖金', note: '琥珀 · 丰收暖意', color: '#c8792b', fallback: 'linear-gradient(145deg,#fff8e8,#d77b2c)', image: '' },
         { id: 'winter-glass', name: '冬日冰晶', note: '冰蓝 · 澄澈安静', color: '#6f9fc2', fallback: 'linear-gradient(145deg,#ffffff,#9fc8df)', image: '' },
@@ -44,7 +45,7 @@
     var pointerY = -100;
 
     function skinById(id) {
-        return SKINS.find(function (skin) { return skin.id === id; }) || SKINS[0];
+        return SKINS.find(function (skin) { return skin.id === id; }) || SKINS.find(function (skin) { return skin.id === DEFAULT_SKIN; }) || SKINS[0];
     }
 
     function savedSkinId() {

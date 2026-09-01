@@ -234,6 +234,23 @@
         'snoopy-notes': yellowShader
     };
 
+    function customShader() {
+        let saved = {};
+        try { saved = JSON.parse(localStorage.getItem('custom_image_skin_settings_v1') || '{}'); } catch (_) {}
+        const valid = (value, fallback) => /^#[0-9a-f]{6}$/i.test(String(value || '')) ? value : fallback;
+        const toRgb = (value) => {
+            const clean = valid(value, '#000000').slice(1);
+            return [parseInt(clean.slice(0, 2), 16) / 255, parseInt(clean.slice(2, 4), 16) / 255, parseInt(clean.slice(4, 6), 16) / 255];
+        };
+        const mix = (first, second, weight) => first.map((channel, index) => channel * (1 - weight) + second[index] * weight);
+        const vec = (value) => `vec3(${value.map(channel => channel.toFixed(3)).join(', ')})`;
+        const accent = toRgb(valid(saved.accent, '#6d5bd0'));
+        const base = toRgb(valid(saved.base, '#eeeafd'));
+        const surface = toRgb(valid(saved.surface, '#fbfaff'));
+        const ink = toRgb(valid(saved.ink, '#292345'));
+        return makeMountainShader(vec(surface), vec(base), vec(mix(base, accent, .38)), vec(accent), vec(mix(ink, accent, .18)));
+    }
+
     function createBackground(theme = 'misty-mountain') {
         if (!THREE) {
             document.body.classList.add('three-bg-fallback');
@@ -266,7 +283,7 @@
             uResolution: { value: new THREE.Vector2(1, 1) }
         };
         
-        const fragmentShader = shaders[theme] || shaders['forest-green'];
+        const fragmentShader = theme === 'custom' ? customShader() : (shaders[theme] || shaders['forest-green']);
 
         const material = new THREE.ShaderMaterial({
             uniforms,
