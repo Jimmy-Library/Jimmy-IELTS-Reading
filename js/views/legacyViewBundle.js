@@ -860,7 +860,7 @@
             && String(draft.pickedByCategory[examCategory].examId) === String(exam.id);
         var examItem = this._createElement('div', {
             className: 'exam-item' + (isSelecting ? ' exam-item--suite-selecting' : '') + (isSelected ? ' exam-item--suite-selected' : ''),
-            dataset: { examId: exam.id }
+            dataset: { examId: exam.id, frequency: String(exam.frequency || 'unknown').trim().toLowerCase() || 'unknown' }
         });
         if (isSelecting) {
             examItem.dataset.action = 'suite-custom-select';

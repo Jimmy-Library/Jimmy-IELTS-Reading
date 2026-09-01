@@ -1,0 +1,72 @@
+/* Full-art composition for every photographic skin. Seasonal gradient skins stay unchanged. */
+:root[data-image-skin]:not([data-image-skin="spring"]):not([data-image-skin="autumn-gold"]):not([data-image-skin="winter-glass"]) {
+    --skin-image-position: 50% 50%;
+}
+
+:root[data-image-skin]:not([data-image-skin="spring"]):not([data-image-skin="autumn-gold"]):not([data-image-skin="winter-glass"]) body::after {
+    height: min(78vh, 820px);
+    background-color: rgb(var(--skin-panel-alt-rgb));
+    background-size: cover, contain !important;
+    background-position: center, center bottom !important;
+}
+
+:root[data-image-skin]:not([data-image-skin="spring"]):not([data-image-skin="autumn-gold"]):not([data-image-skin="winter-glass"]) #boot-overlay {
+    background-color: rgb(var(--skin-panel-alt-rgb)) !important;
+    background-image:
+        linear-gradient(145deg, rgba(var(--skin-panel-rgb), .7), rgba(var(--skin-panel-alt-rgb), .34)),
+        var(--skin-image) !important;
+    background-repeat: no-repeat !important;
+    background-size: cover, contain !important;
+    background-position: center, center !important;
+}
+
+:root[data-image-skin]:not([data-image-skin="spring"]):not([data-image-skin="autumn-gold"]):not([data-image-skin="winter-glass"]) .hero-shell::before,
+:root[data-image-skin]:not([data-image-skin="spring"]):not([data-image-skin="autumn-gold"]):not([data-image-skin="winter-glass"]) .ielts-topbar,
+:root[data-image-skin]:not([data-image-skin="spring"]):not([data-image-skin="autumn-gold"]):not([data-image-skin="winter-glass"]) .hero-header,
+:root[data-image-skin]:not([data-image-skin="spring"]):not([data-image-skin="autumn-gold"]):not([data-image-skin="winter-glass"]) .suite-card,
+:root[data-image-skin]:not([data-image-skin="spring"]):not([data-image-skin="autumn-gold"]):not([data-image-skin="winter-glass"]) .group,
+:root[data-image-skin]:not([data-image-skin="spring"]):not([data-image-skin="autumn-gold"]):not([data-image-skin="winter-glass"]) .unified-group {
+    background-color: rgb(var(--skin-panel-alt-rgb)) !important;
+    background-size: cover, contain !important;
+    background-position: center, center !important;
+    background-repeat: no-repeat !important;
+}
+
+:root[data-image-skin]:not([data-image-skin="spring"]):not([data-image-skin="autumn-gold"]):not([data-image-skin="winter-glass"]) .hero-header {
+    min-height: clamp(250px, 27vw, 390px) !important;
+}
+
+:root[data-image-skin]:not([data-image-skin="spring"]):not([data-image-skin="autumn-gold"]):not([data-image-skin="winter-glass"]) body.three-bg-fallback {
+    background-color: rgb(var(--skin-panel-alt-rgb)) !important;
+    background-size: cover, contain !important;
+    background-position: center, center bottom !important;
+}
+
+/* The loading page welcomes the learner; the selected skin name is intentionally hidden. */
+.boot-skin-name {
+    display: none !important;
+}
+
+.boot-welcome {
+    max-width: 34rem;
+    margin: .7rem auto .25rem;
+    color: var(--skin-ink, #17352a);
+    font-family: var(--skin-youth-font, "Microsoft YaHei UI", sans-serif);
+    font-size: clamp(.92rem, 1.6vw, 1.08rem);
+    font-weight: 750;
+    line-height: 1.65;
+    letter-spacing: .035em;
+    text-align: center;
+    opacity: .82;
+}
+
+@media (max-width: 700px) {
+    :root[data-image-skin]:not([data-image-skin="spring"]):not([data-image-skin="autumn-gold"]):not([data-image-skin="winter-glass"]) .hero-header {
+        min-height: 220px !important;
+    }
+
+    .boot-welcome {
+        padding-inline: .75rem;
+        font-size: .9rem;
+    }
+}

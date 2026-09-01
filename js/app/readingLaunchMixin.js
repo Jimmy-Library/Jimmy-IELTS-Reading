@@ -55,6 +55,7 @@
             if (resolvedDataKey) {
                 params.set('dataKey', String(resolvedDataKey));
             }
+            params.set('ui', 'original-20260901');
             const query = params.toString();
             const url = query
                 ? `assets/generated/reading-exams/reading-practice-unified.html?${query}`

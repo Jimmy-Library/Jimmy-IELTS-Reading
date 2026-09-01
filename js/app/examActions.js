@@ -872,6 +872,7 @@
         if (exam.id) {
             item.dataset.examId = exam.id;
         }
+        item.dataset.frequency = String(exam.frequency || 'unknown').trim().toLowerCase() || 'unknown';
         if (isSelecting) {
             item.dataset.action = 'suite-custom-select';
             item.setAttribute('role', 'button');

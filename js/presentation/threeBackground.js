@@ -1,4 +1,4 @@
-﻿(function initShuiThreeBackground(global) {
+(function initShuiThreeBackground(global) {
     'use strict';
 
     const THREE = global.THREE;
@@ -143,15 +143,92 @@
         'vec3(0.278, 0.333, 0.412)'  /* #475569 */
     );
 
+    const tealShader = makeMountainShader(
+        'vec3(0.890, 0.969, 0.965)',
+        'vec3(0.682, 0.890, 0.875)',
+        'vec3(0.310, 0.690, 0.710)',
+        'vec3(0.075, 0.420, 0.490)',
+        'vec3(0.035, 0.190, 0.260)'
+    );
+
+    const aquaShader = makeMountainShader(
+        'vec3(0.900, 0.980, 1.000)',
+        'vec3(0.690, 0.925, 0.955)',
+        'vec3(0.290, 0.755, 0.825)',
+        'vec3(0.055, 0.500, 0.625)',
+        'vec3(0.025, 0.245, 0.350)'
+    );
+
+    const sageShader = makeMountainShader(
+        'vec3(0.945, 0.965, 0.945)',
+        'vec3(0.790, 0.865, 0.815)',
+        'vec3(0.490, 0.645, 0.545)',
+        'vec3(0.250, 0.390, 0.325)',
+        'vec3(0.120, 0.230, 0.195)'
+    );
+
+    const sunsetShader = makeMountainShader(
+        'vec3(1.000, 0.945, 0.850)',
+        'vec3(0.975, 0.785, 0.560)',
+        'vec3(0.910, 0.525, 0.285)',
+        'vec3(0.690, 0.300, 0.160)',
+        'vec3(0.330, 0.155, 0.105)'
+    );
+
+    const skyShader = makeMountainShader(
+        'vec3(0.935, 0.975, 1.000)',
+        'vec3(0.735, 0.875, 0.955)',
+        'vec3(0.380, 0.680, 0.850)',
+        'vec3(0.145, 0.430, 0.650)',
+        'vec3(0.075, 0.235, 0.390)'
+    );
+
+    const candyShader = makeMountainShader(
+        'vec3(1.000, 0.965, 0.985)',
+        'vec3(0.865, 0.920, 0.990)',
+        'vec3(0.690, 0.820, 0.935)',
+        'vec3(0.440, 0.650, 0.800)',
+        'vec3(0.245, 0.420, 0.585)'
+    );
+
+    const slateBlueShader = makeMountainShader(
+        'vec3(0.925, 0.955, 0.975)',
+        'vec3(0.760, 0.845, 0.890)',
+        'vec3(0.450, 0.610, 0.700)',
+        'vec3(0.245, 0.390, 0.485)',
+        'vec3(0.120, 0.225, 0.290)'
+    );
+
+    const warmGrayShader = makeMountainShader(
+        'vec3(0.965, 0.950, 0.930)',
+        'vec3(0.855, 0.815, 0.775)',
+        'vec3(0.625, 0.535, 0.485)',
+        'vec3(0.390, 0.310, 0.285)',
+        'vec3(0.205, 0.165, 0.155)'
+    );
     const shaders = {
         'forest-green': forestGreenShader,
         'misty-mountain': forestGreenShader,
-        'teal-ocean': forestGreenShader,
-        'floral-bloom': forestGreenShader,
+        'floral-bloom': pinkShader,
+        'teal-ocean': tealShader,
         'orange': orangeShader,
         'yellow': yellowShader,
         'pink': pinkShader,
-        'white': whiteShader
+        'white': whiteShader,
+        'spring': forestGreenShader,
+        'autumn-gold': orangeShader,
+        'winter-glass': whiteShader,
+        'snoopy-study': tealShader,
+        'pool-day': aquaShader,
+        'quiet-room': sageShader,
+        'sunset-desk': sunsetShader,
+        'blossom-reader': pinkShader,
+        'star-friends': pinkShader,
+        'cat-circle': skyShader,
+        'street-rhythm': sageShader,
+        'pastel-parade': candyShader,
+        'vinyl-studio': slateBlueShader,
+        'silver-studio': warmGrayShader
     };
 
     function createBackground(theme = 'misty-mountain') {

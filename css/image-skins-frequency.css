@@ -1,0 +1,60 @@
+/* Question-bank cards: skin-aware colour gradients, never photographic backgrounds. */
+html[data-image-skin] #browse-view .exam-item {
+    --exam-card-from: color-mix(in srgb, rgb(var(--skin-panel-rgb)) 94%, var(--skin-accent-soft));
+    --exam-card-mid: color-mix(in srgb, rgb(var(--skin-panel-rgb)) 86%, var(--skin-accent-soft));
+    --exam-card-to: color-mix(in srgb, rgb(var(--skin-panel-alt-rgb)) 74%, var(--skin-accent) 26%);
+    --exam-card-edge: var(--skin-accent);
+    background: linear-gradient(118deg, var(--exam-card-from) 0%, var(--exam-card-mid) 56%, var(--exam-card-to) 100%) !important;
+    background-image: linear-gradient(118deg, var(--exam-card-from) 0%, var(--exam-card-mid) 56%, var(--exam-card-to) 100%) !important;
+    background-size: 100% 100% !important;
+    background-position: center !important;
+}
+
+html[data-image-skin] #browse-view .exam-item::before {
+    background: linear-gradient(180deg, var(--exam-card-edge), color-mix(in srgb, var(--exam-card-edge) 36%, #fff), var(--skin-accent-strong)) !important;
+}
+
+html[data-image-skin] #browse-view .exam-item:hover {
+    background: linear-gradient(118deg,
+        color-mix(in srgb, var(--exam-card-from) 94%, #fff),
+        color-mix(in srgb, var(--exam-card-mid) 91%, #fff) 56%,
+        color-mix(in srgb, var(--exam-card-to) 92%, #fff)) !important;
+    background-image: linear-gradient(118deg,
+        color-mix(in srgb, var(--exam-card-from) 94%, #fff),
+        color-mix(in srgb, var(--exam-card-mid) 91%, #fff) 56%,
+        color-mix(in srgb, var(--exam-card-to) 92%, #fff)) !important;
+}
+
+/* Ultra-high: warm gold and apricot, reserved for the strongest priority. */
+html[data-image-skin] #browse-view .exam-item[data-frequency="ultra-high"] {
+    --exam-card-from: color-mix(in srgb, rgb(var(--skin-panel-rgb)) 68%, #fff0b8 32%);
+    --exam-card-mid: color-mix(in srgb, var(--skin-accent-soft) 58%, #ffd9b8 42%);
+    --exam-card-to: color-mix(in srgb, var(--skin-accent) 54%, #ffb58e 46%);
+    --exam-card-edge: #f59e0b;
+}
+
+/* High: coral-peach blended with the active skin. */
+html[data-image-skin] #browse-view .exam-item[data-frequency="high"] {
+    --exam-card-from: color-mix(in srgb, rgb(var(--skin-panel-rgb)) 74%, #ffe8dc 26%);
+    --exam-card-mid: color-mix(in srgb, var(--skin-accent-soft) 68%, #ffd8c7 32%);
+    --exam-card-to: color-mix(in srgb, var(--skin-accent) 66%, #ffbea8 34%);
+    --exam-card-edge: color-mix(in srgb, var(--skin-accent-strong) 62%, #f97316 38%);
+}
+
+/* Medium: a more visible version of the current skin colour. */
+html[data-image-skin] #browse-view .exam-item[data-frequency="medium"] {
+    --exam-card-from: color-mix(in srgb, rgb(var(--skin-panel-rgb)) 87%, var(--skin-accent-soft) 13%);
+    --exam-card-mid: color-mix(in srgb, rgb(var(--skin-panel-alt-rgb)) 73%, var(--skin-accent-soft) 27%);
+    --exam-card-to: color-mix(in srgb, var(--skin-accent-soft) 58%, var(--skin-accent) 42%);
+    --exam-card-edge: var(--skin-accent);
+}
+
+/* Low, standard and unknown: quiet, low-saturation skin tones. */
+html[data-image-skin] #browse-view .exam-item[data-frequency="low"],
+html[data-image-skin] #browse-view .exam-item[data-frequency="standard"],
+html[data-image-skin] #browse-view .exam-item[data-frequency="unknown"] {
+    --exam-card-from: color-mix(in srgb, rgb(var(--skin-panel-rgb)) 96%, var(--skin-accent-soft) 4%);
+    --exam-card-mid: color-mix(in srgb, rgb(var(--skin-panel-rgb)) 90%, var(--skin-accent-soft) 10%);
+    --exam-card-to: color-mix(in srgb, rgb(var(--skin-panel-alt-rgb)) 84%, var(--skin-accent-soft) 16%);
+    --exam-card-edge: color-mix(in srgb, var(--skin-accent) 68%, #94a3b8 32%);
+}

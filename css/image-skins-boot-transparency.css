@@ -1,0 +1,29 @@
+/* Let the selected artwork remain visible through the loading screen. */
+:root[data-image-skin]:not([data-image-skin="spring"]):not([data-image-skin="autumn-gold"]):not([data-image-skin="winter-glass"]) #boot-overlay {
+    background-image:
+        linear-gradient(145deg, rgba(var(--skin-panel-rgb), .34), rgba(var(--skin-panel-alt-rgb), .1)),
+        var(--skin-image) !important;
+    backdrop-filter: blur(3px) saturate(1.03) !important;
+    -webkit-backdrop-filter: blur(3px) saturate(1.03) !important;
+}
+
+html[data-image-skin] .boot-panel {
+    background:
+        linear-gradient(145deg,
+            color-mix(in srgb, var(--skin-accent-strong) 18%, rgba(24, 35, 52, .56)),
+            color-mix(in srgb, var(--skin-accent) 14%, rgba(43, 55, 72, .5))) !important;
+    border-color: color-mix(in srgb, var(--skin-accent) 38%, rgba(255,255,255,.54)) !important;
+    box-shadow: 0 26px 72px rgba(12, 23, 38, .28) !important;
+    backdrop-filter: blur(10px) saturate(1.02) !important;
+    -webkit-backdrop-filter: blur(10px) saturate(1.02) !important;
+}
+
+html[data-image-skin] .boot-panel::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    border-radius: inherit;
+    background: linear-gradient(115deg, rgba(255,255,255,.1), transparent 38%, rgba(255,255,255,.035));
+}

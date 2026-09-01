@@ -1,0 +1,34 @@
+/* Blend the WebGL bottom landscape with the selected artwork instead of a fixed green layer. */
+:root[data-image-skin] #shui-three-bg {
+    opacity: .48;
+    filter: saturate(1.03) contrast(.98);
+    transition: opacity .42s ease, filter .42s ease;
+}
+
+:root[data-image-skin="spring"] #shui-three-bg { opacity: .74; }
+:root[data-image-skin="autumn-gold"] #shui-three-bg { opacity: .69; filter: saturate(1.12) contrast(1.01); }
+:root[data-image-skin="winter-glass"] #shui-three-bg { opacity: .63; filter: saturate(.84) brightness(1.04); }
+:root[data-image-skin="snoopy-study"] #shui-three-bg,
+:root[data-image-skin="pool-day"] #shui-three-bg,
+:root[data-image-skin="cat-circle"] #shui-three-bg { opacity: .45; }
+:root[data-image-skin="sunset-desk"] #shui-three-bg { opacity: .52; filter: saturate(1.08) contrast(1.01); }
+:root[data-image-skin="blossom-reader"] #shui-three-bg,
+:root[data-image-skin="star-friends"] #shui-three-bg,
+:root[data-image-skin="pastel-parade"] #shui-three-bg { opacity: .42; }
+:root[data-image-skin="silver-studio"] #shui-three-bg,
+:root[data-image-skin="vinyl-studio"] #shui-three-bg { opacity: .5; filter: saturate(.88) contrast(1.02); }
+
+/* Fallback still follows the current image skin when WebGL is unavailable. */
+html[data-image-skin] body.three-bg-fallback {
+    background-image:
+        linear-gradient(155deg, rgba(var(--skin-panel-rgb), .82), rgba(var(--skin-panel-alt-rgb), .48)),
+        var(--skin-image) !important;
+    background-repeat: no-repeat !important;
+    background-size: cover !important;
+    background-position: center, var(--skin-image-position) !important;
+    background-attachment: fixed !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    :root[data-image-skin] #shui-three-bg { transition: none !important; }
+}

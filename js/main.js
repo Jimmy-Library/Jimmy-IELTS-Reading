@@ -2620,6 +2620,7 @@ function loadExamListFallback() {
             if (!exam) return;
             const item = document.createElement('div');
             item.className = 'exam-item';
+            item.dataset.frequency = String(exam.frequency || 'unknown').trim().toLowerCase() || 'unknown';
             item.innerHTML = '<div class="exam-info"><h4>' + (exam.title || '') + '</h4></div>' +
                 '<div class="exam-actions">' +
                 '<button class="btn" onclick="window.openExam(\'' + (exam.id || '') + '\')">开始练习</button>' +
@@ -2691,6 +2692,7 @@ function displayExams(exams) {
             if (!exam) return;
             const item = document.createElement('div');
             item.className = 'exam-item';
+            item.dataset.frequency = String(exam.frequency || 'unknown').trim().toLowerCase() || 'unknown';
             item.innerHTML = '<div class="exam-info"><h4>' + (exam.title || '') + '</h4>' +
                 '<div class="exam-meta">' + (exam.category || '') + ' | ' + (exam.type || '') + '</div></div>' +
                 '<div class="exam-actions">' +

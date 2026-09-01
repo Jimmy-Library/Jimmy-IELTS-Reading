@@ -7,6 +7,11 @@
  */
 (function initSeasonThemes(global) {
     'use strict';
+    if (global.__READING_ORIGINAL_UI__ || /reading-practice-unified\.html$/i.test(global.location && global.location.pathname || '')) {
+        document.documentElement.removeAttribute('data-image-skin');
+        document.documentElement.removeAttribute('data-theme');
+        return;
+    }
 
     const THEME_KEY = 'theme';                 // 与既有主题系统共用
     const WEATHER_KEY = 'season_weather';      // 'rain' | 'snow' | 'none'

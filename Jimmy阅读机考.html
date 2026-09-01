@@ -9,14 +9,26 @@
     <link rel="stylesheet" href="css/main.css">
     <link rel="stylesheet" href="css/heroui-bridge.css">
     <link rel="stylesheet" href="css/onboarding.css">
+    <link rel="stylesheet" href="css/image-skins.css">
+    <link rel="stylesheet" href="css/image-skins-premium.css">
+    <link rel="stylesheet" href="css/image-skins-youth.css">
+    <link rel="stylesheet" href="css/image-skins-depth.css">
+    <link rel="stylesheet" href="css/image-skins-browse.css">
+    <link rel="stylesheet" href="css/image-skins-heading.css">
+    <link rel="stylesheet" href="css/image-skins-frequency.css">
+    <link rel="stylesheet" href="css/image-skins-contain.css">
+    <link rel="stylesheet" href="css/image-skins-boot-classic.css">
+    <link rel="stylesheet" href="css/image-skins-boot-transparency.css">
     <script>
         (function () {
             try {
-                var savedSkin = localStorage.getItem('theme');
-                if (savedSkin) document.documentElement.setAttribute('data-theme', savedSkin);
+                var savedImageSkin = localStorage.getItem('image_skin') || 'spring';
+                document.documentElement.setAttribute('data-image-skin', savedImageSkin);
+                document.documentElement.removeAttribute('data-theme');
             } catch (e) {}
         })();
     </script>
+    <script src="js/runtime/openAtTop.js"></script>
 </head>
 
 <body class="hero-body boot-active" data-theme="heroui">
@@ -54,7 +66,7 @@
     <div id="boot-overlay" role="status" aria-live="polite">
         <div class="boot-panel">
             <img class="boot-brand-logo" src="Jimmy's logo.png" alt="Jimmy" decoding="async">
-            <div class="boot-logo">IELTS · CBT</div>
+            <div class="boot-logo">Jimmy 的阅读题库</div>
             <p class="boot-status" id="boot-status-text">正在启动 IELTS 阅读机考练习系统...</p>
             <div class="boot-progress">
                 <span class="boot-progress__bar" id="boot-progress-bar"></span>
@@ -357,7 +369,8 @@
         </header>
 
         <div class="hero-header">
-            <h1 style="width: 100%;">📚 IELTS 阅读机考练习系统
+            <h1 class="hero-header__heading">
+                <span class="hero-header__title">📚<span>IELTS 阅读机考练习系统</span></span>
                 <span class="hero-header__tagline">Practice · Review · Progress</span>
             </h1>
         </div>
@@ -875,6 +888,8 @@
     <script src="assets/vendor/three.min.js"></script>
     <script src="js/presentation/threeBackground.js"></script>
     <script src="js/presentation/seasonThemes.js"></script>
+    <script src="js/presentation/imageSkins.js"></script>
+    <script src="js/presentation/skinAtmosphere.js"></script>
     <script src="js/runtime/bootScreen.js" defer></script>
     <script src="js/runtime/lazyLoader.js" defer></script>
     <script src="js/utils/suitePreference.js" defer></script>

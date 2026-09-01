@@ -1,0 +1,87 @@
+/* Classic loading card inspired by the original IELTS CBT startup screen. */
+html[data-image-skin] .boot-panel {
+    width: min(630px, calc(100vw - 64px));
+    min-height: min(470px, calc(100vh - 64px));
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: clamp(38px, 7vh, 64px) clamp(28px, 6vw, 54px) !important;
+    color: rgba(255, 255, 255, .94) !important;
+    border: 1px solid color-mix(in srgb, var(--skin-accent) 44%, rgba(255,255,255,.55)) !important;
+    border-radius: 10px !important;
+    background:
+        linear-gradient(145deg,
+            color-mix(in srgb, var(--skin-accent-strong) 72%, rgba(27, 38, 56, .88)),
+            color-mix(in srgb, var(--skin-accent) 38%, rgba(42, 53, 70, .9))) !important;
+    box-shadow: 0 30px 86px rgba(12, 23, 38, .38) !important;
+    backdrop-filter: blur(22px) saturate(.92) !important;
+    -webkit-backdrop-filter: blur(22px) saturate(.92) !important;
+}
+
+html[data-image-skin] .boot-brand-logo {
+    width: clamp(126px, 18vw, 156px) !important;
+    margin: 0 auto clamp(30px, 5vh, 46px) !important;
+    filter: drop-shadow(0 5px 12px rgba(255,255,255,.12));
+}
+
+html[data-image-skin] .boot-logo {
+    margin: 0 0 22px !important;
+    color: color-mix(in srgb, var(--skin-accent-soft) 32%, #fff) !important;
+    font-family: "Avenir Next", "Segoe UI", "Microsoft YaHei UI", sans-serif !important;
+    font-size: clamp(1.05rem, 2.4vw, 1.28rem) !important;
+    font-weight: 850 !important;
+    line-height: 1.25;
+    letter-spacing: .2em !important;
+    text-transform: none !important;
+    text-shadow: 0 2px 12px rgba(0,0,0,.2);
+}
+
+html[data-image-skin] .boot-status {
+    margin: 0 0 27px !important;
+    color: rgba(255,255,255,.94) !important;
+    font-family: "Microsoft YaHei UI", "PingFang SC", sans-serif !important;
+    font-size: clamp(.98rem, 2vw, 1.16rem) !important;
+    font-weight: 600;
+    line-height: 1.55;
+}
+
+html[data-image-skin] .boot-progress {
+    width: 100%;
+    height: 8px !important;
+    margin: 0 0 22px !important;
+    border: 1px solid rgba(255,255,255,.08);
+    background: rgba(255,255,255,.24) !important;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,.16);
+}
+
+html[data-image-skin] .boot-progress__bar {
+    background: linear-gradient(90deg, color-mix(in srgb, var(--skin-accent) 76%, #fff), #fff) !important;
+    box-shadow: 0 0 15px color-mix(in srgb, var(--skin-accent) 46%, transparent) !important;
+}
+
+html[data-image-skin] .boot-progress__text {
+    color: rgba(255,255,255,.9) !important;
+    font-family: "Microsoft YaHei UI", "PingFang SC", sans-serif !important;
+    font-size: clamp(.92rem, 1.8vw, 1.08rem) !important;
+    font-weight: 500;
+    letter-spacing: .035em !important;
+}
+
+html[data-image-skin] .boot-welcome,
+html[data-image-skin] .boot-skin-name {
+    display: none !important;
+}
+
+@media (max-width: 640px) {
+    html[data-image-skin] .boot-panel {
+        width: calc(100vw - 30px);
+        min-height: min(440px, calc(100vh - 30px));
+        padding-inline: 24px !important;
+    }
+
+    html[data-image-skin] .boot-logo {
+        letter-spacing: .12em !important;
+    }
+}

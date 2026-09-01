@@ -1,0 +1,335 @@
+/* Youthful image-aware header, navigation and question-card treatment. */
+:root[data-image-skin] {
+    --skin-youth-font: "Avenir Next Rounded", "Nunito", "Arial Rounded MT Bold", "PingFang SC", "Microsoft YaHei UI", system-ui, sans-serif;
+}
+
+html[data-image-skin] body.hero-body,
+html[data-image-skin] body.skin-practice-page {
+    background-color: transparent !important;
+}
+
+/* Carry the selected artwork into the application interior. */
+html[data-image-skin] .hero-shell {
+    position: relative;
+    isolation: isolate;
+    border-radius: var(--skin-card-radius);
+}
+
+html[data-image-skin] .hero-shell::before {
+    content: "";
+    position: absolute;
+    z-index: 0;
+    inset: 0;
+    pointer-events: none;
+    border-radius: inherit;
+    background-image:
+        linear-gradient(180deg, rgba(var(--skin-panel-rgb), .26), rgba(var(--skin-panel-rgb), .08) 42%, rgba(var(--skin-panel-alt-rgb), .2)),
+        var(--skin-image);
+    background-repeat: no-repeat;
+    background-size: cover, cover;
+    background-position: center, var(--skin-image-position);
+    opacity: .2;
+    filter: var(--skin-image-filter);
+    -webkit-mask-image: linear-gradient(180deg, #000 0%, rgba(0,0,0,.72) 40%, transparent 100%);
+    mask-image: linear-gradient(180deg, #000 0%, rgba(0,0,0,.72) 40%, transparent 100%);
+}
+
+html[data-image-skin] .hero-shell > * {
+    position: relative;
+    z-index: 1;
+}
+
+/* Header bar follows the selected photo and palette. */
+html[data-image-skin] .ielts-topbar {
+    overflow: hidden;
+    min-height: 82px;
+    padding: 13px 20px !important;
+    border: 1px solid color-mix(in srgb, var(--skin-accent) 52%, rgba(255,255,255,.62)) !important;
+    border-bottom: 5px solid color-mix(in srgb, var(--skin-accent) 72%, #fff) !important;
+    border-radius: var(--skin-card-radius) !important;
+    color: #fff !important;
+    background-image:
+        linear-gradient(120deg, color-mix(in srgb, var(--skin-accent-strong) 88%, transparent), color-mix(in srgb, var(--skin-accent) 72%, transparent)),
+        var(--skin-image) !important;
+    background-repeat: no-repeat !important;
+    background-size: cover, cover !important;
+    background-position: center, var(--skin-image-position) !important;
+    box-shadow: 0 18px 44px color-mix(in srgb, var(--skin-accent-strong) 24%, transparent) !important;
+    backdrop-filter: blur(12px) saturate(1.15);
+    -webkit-backdrop-filter: blur(12px) saturate(1.15);
+}
+
+html[data-image-skin] .ielts-topbar::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+        radial-gradient(circle at 84% 20%, rgba(255,255,255,.22) 0 5px, transparent 6px),
+        radial-gradient(circle at 88% 52%, rgba(255,255,255,.14) 0 9px, transparent 10px),
+        linear-gradient(90deg, rgba(255,255,255,.08), transparent 35%, rgba(255,255,255,.06));
+}
+
+html[data-image-skin] .ielts-topbar__brand,
+html[data-image-skin] .ielts-topbar__meta {
+    position: relative;
+    z-index: 1;
+}
+
+html[data-image-skin] .ielts-topbar__logo {
+    color: var(--skin-accent-strong) !important;
+    background: rgba(var(--skin-panel-rgb), .92) !important;
+    border-color: color-mix(in srgb, var(--skin-accent) 68%, #fff) !important;
+    border-radius: var(--skin-button-radius) !important;
+    box-shadow: inset 0 -4px 0 var(--skin-accent-soft), 0 6px 20px rgba(0,0,0,.14) !important;
+}
+
+html[data-image-skin] .ielts-topbar__title,
+html[data-image-skin] .ielts-topbar__subtitle,
+html[data-image-skin] .ielts-topbar__candidate,
+html[data-image-skin] .ielts-topbar__clock,
+html[data-image-skin] .ielts-topbar__badge {
+    font-family: var(--skin-youth-font);
+}
+
+html[data-image-skin] .ielts-topbar__title { font-weight: 850; letter-spacing: .025em; }
+html[data-image-skin] .ielts-topbar__subtitle { opacity: .9; }
+
+html[data-image-skin] .ielts-topbar__candidate,
+html[data-image-skin] .ielts-topbar__clock {
+    color: #fff !important;
+    background: rgba(255,255,255,.14) !important;
+    border-color: rgba(255,255,255,.32) !important;
+    border-radius: var(--skin-button-radius) !important;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.25);
+}
+
+html[data-image-skin] .ielts-topbar__badge {
+    color: var(--skin-accent-strong) !important;
+    background: rgba(var(--skin-panel-rgb), .9) !important;
+    border-color: rgba(255,255,255,.54) !important;
+    border-radius: var(--skin-button-radius) !important;
+}
+
+/* Hero title is now a translucent image card, not an empty paper strip. */
+html[data-image-skin] .hero-header {
+    position: relative;
+    min-height: 178px;
+    justify-content: center;
+    overflow: hidden;
+    padding: clamp(24px, 4vw, 48px) !important;
+    border: 1px solid color-mix(in srgb, var(--skin-accent) 30%, rgba(255,255,255,.62));
+    border-radius: var(--skin-card-radius);
+    background-image:
+        linear-gradient(100deg, rgba(var(--skin-panel-rgb), .9) 0%, rgba(var(--skin-panel-rgb), .72) 48%, rgba(var(--skin-panel-alt-rgb), .38) 100%),
+        var(--skin-image);
+    background-repeat: no-repeat;
+    background-size: cover, cover;
+    background-position: center, var(--skin-image-position);
+    box-shadow: 0 22px 60px color-mix(in srgb, var(--skin-accent-strong) 14%, transparent);
+    backdrop-filter: blur(8px) saturate(1.08);
+    -webkit-backdrop-filter: blur(8px) saturate(1.08);
+}
+
+html[data-image-skin] .hero-header::before,
+html[data-image-skin] .hero-header::after {
+    content: "";
+    position: absolute;
+    pointer-events: none;
+    border-radius: 999px;
+}
+
+html[data-image-skin] .hero-header::before {
+    width: 150px;
+    height: 150px;
+    right: 7%;
+    top: -55px;
+    background: radial-gradient(circle, var(--skin-accent-soft), transparent 70%);
+}
+
+html[data-image-skin] .hero-header::after {
+    width: 86px;
+    height: 86px;
+    right: 22%;
+    bottom: -40px;
+    border: 16px solid color-mix(in srgb, var(--skin-accent) 15%, transparent);
+}
+
+html[data-image-skin] .hero-header h1 {
+    position: relative;
+    z-index: 1;
+    color: var(--skin-ink) !important;
+    font-family: var(--skin-youth-font) !important;
+    font-weight: 900 !important;
+    letter-spacing: -.035em !important;
+    text-shadow: 0 2px 0 rgba(255,255,255,.72), 0 10px 30px var(--skin-accent-soft);
+}
+
+html[data-image-skin] .hero-header__tagline {
+    color: var(--skin-accent-strong) !important;
+    background: rgba(var(--skin-panel-rgb), .66) !important;
+    border: 1px solid color-mix(in srgb, var(--skin-accent) 34%, transparent) !important;
+    border-radius: var(--skin-button-radius) !important;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.72);
+    backdrop-filter: blur(10px);
+}
+
+/* Navigation uses the same visual language as the active skin. */
+html[data-image-skin] .hero-nav {
+    padding: 7px !important;
+    border-radius: var(--skin-card-radius) !important;
+    border-color: color-mix(in srgb, var(--skin-accent) 28%, rgba(255,255,255,.7)) !important;
+    background: rgba(var(--skin-panel-rgb), .65) !important;
+    box-shadow: 0 14px 38px color-mix(in srgb, var(--skin-accent-strong) 11%, transparent) !important;
+    backdrop-filter: blur(18px) saturate(1.15) !important;
+    -webkit-backdrop-filter: blur(18px) saturate(1.15) !important;
+}
+
+html[data-image-skin] .hero-nav__btn {
+    color: var(--skin-ink) !important;
+    font-family: var(--skin-youth-font) !important;
+    font-weight: 800 !important;
+    border-radius: var(--skin-button-radius) !important;
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+html[data-image-skin] .hero-nav__btn:hover {
+    color: var(--skin-accent-strong) !important;
+    background: rgba(var(--skin-panel-rgb), .76) !important;
+}
+
+html[data-image-skin] .hero-nav__btn.active {
+    color: #fff !important;
+    background: linear-gradient(135deg, var(--skin-accent), var(--skin-accent-strong)) !important;
+    box-shadow: 0 8px 22px color-mix(in srgb, var(--skin-accent-strong) 24%, transparent) !important;
+}
+
+/* Suite cards: rounded, playful, image-tinted, still highly readable. */
+html[data-image-skin] .suite-list { gap: 18px !important; }
+
+html[data-image-skin] .suite-card {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    min-height: 205px;
+    padding: 18px !important;
+    color: var(--skin-ink);
+    font-family: var(--skin-youth-font);
+    background-image:
+        linear-gradient(145deg, rgba(var(--skin-panel-rgb), .9), rgba(var(--skin-panel-alt-rgb), .68)),
+        var(--skin-image) !important;
+    background-repeat: no-repeat !important;
+    background-size: cover, cover !important;
+    background-position: center, var(--skin-image-position) !important;
+}
+
+html[data-image-skin] .suite-card::before {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    left: 0;
+    right: 0;
+    top: 0;
+    height: 6px;
+    background: linear-gradient(90deg, var(--skin-accent), color-mix(in srgb, var(--skin-accent) 30%, #fff), var(--skin-accent-strong));
+}
+
+html[data-image-skin] .suite-card::after {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    width: 100px;
+    height: 100px;
+    right: -36px;
+    bottom: -42px;
+    border-radius: 999px;
+    background: radial-gradient(circle, var(--skin-accent-soft), transparent 68%);
+}
+
+html[data-image-skin] .suite-card__header,
+html[data-image-skin] .suite-card__parts,
+html[data-image-skin] .suite-card__footer { position: relative; z-index: 1; }
+
+html[data-image-skin] .suite-card__no {
+    color: var(--skin-accent-strong) !important;
+    font-family: var(--skin-youth-font) !important;
+    font-size: 1.02rem !important;
+    font-weight: 900 !important;
+}
+
+html[data-image-skin] .suite-card__best,
+html[data-image-skin] .suite-card__part-tag {
+    color: var(--skin-accent-strong) !important;
+    background: var(--skin-accent-soft) !important;
+    border: 1px solid color-mix(in srgb, var(--skin-accent) 24%, transparent);
+    border-radius: var(--skin-button-radius) !important;
+    font-weight: 850 !important;
+}
+
+html[data-image-skin] .suite-card__part-title,
+html[data-image-skin] .suite-card__meta {
+    color: color-mix(in srgb, var(--skin-ink) 82%, #64748b) !important;
+    font-family: var(--skin-youth-font) !important;
+}
+
+/* Actual question groups and individual questions inherit the youthful skin treatment. */
+html[data-image-skin] .group,
+html[data-image-skin] .unified-group {
+    position: relative;
+    overflow: hidden;
+    color: var(--skin-ink);
+    font-family: var(--skin-youth-font);
+    border-top: 5px solid var(--skin-accent) !important;
+    background-image:
+        linear-gradient(155deg, rgba(var(--skin-panel-rgb), .9), rgba(var(--skin-panel-alt-rgb), .7)),
+        var(--skin-image) !important;
+    background-repeat: no-repeat !important;
+    background-size: cover, cover !important;
+    background-position: center, var(--skin-image-position) !important;
+}
+
+html[data-image-skin] .group h2,
+html[data-image-skin] .group h3,
+html[data-image-skin] .unified-group h2,
+html[data-image-skin] .unified-group h3,
+html[data-image-skin] #question-groups h2,
+html[data-image-skin] #question-groups h3 {
+    color: var(--skin-accent-strong) !important;
+    font-family: var(--skin-youth-font) !important;
+    font-weight: 900 !important;
+    letter-spacing: -.015em;
+}
+
+html[data-image-skin] .question-item,
+html[data-image-skin] .match-question-item,
+html[data-image-skin] .choice-item {
+    padding: 13px 15px;
+    border: 1px solid color-mix(in srgb, var(--skin-accent) 18%, transparent);
+    border-left: 4px solid color-mix(in srgb, var(--skin-accent) 70%, #fff);
+    border-radius: var(--skin-button-radius);
+    background: rgba(var(--skin-panel-rgb), .58);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.62);
+}
+
+html[data-image-skin] .drag-item,
+html[data-image-skin] .paragraph-dropzone,
+html[data-image-skin] .match-dropzone,
+html[data-image-skin] .drop-target-summary {
+    border-radius: var(--skin-button-radius) !important;
+    font-family: var(--skin-youth-font) !important;
+}
+
+@media (max-width: 900px) {
+    html[data-image-skin] .ielts-topbar { align-items: flex-start; gap: 12px; }
+    html[data-image-skin] .ielts-topbar__meta { flex-wrap: wrap; }
+    html[data-image-skin] .hero-header { min-height: 150px; padding: 24px !important; }
+    html[data-image-skin] .hero-header h1 { align-items: flex-start; flex-direction: column; }
+    html[data-image-skin] .hero-header__tagline { margin-left: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html[data-image-skin] .suite-card,
+    html[data-image-skin] .hero-header,
+    html[data-image-skin] .ielts-topbar { transition: none !important; }
+}
