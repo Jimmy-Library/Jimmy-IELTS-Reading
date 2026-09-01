@@ -34,6 +34,7 @@
         // 多笔记状态
         let notesList = [];
         let noteIdCounter = 0;
+        let activeNoteId = null;
         injectPracticeUIStyles();
 
         const overlay = document.querySelector('.overlay');
@@ -298,6 +299,9 @@
         function closeAllPanels() {
             notesOpen = false;
             settingsOpen = false;
+            document.body.classList.remove('notes-panel-open');
+            document.querySelectorAll('.hl[data-hl-type="note"].note-anchor-active')
+                .forEach((el) => el.classList.remove('note-anchor-active'));
             if (notesPanel) notesPanel.style.display = 'none';
             if (settingsPanel) settingsPanel.style.display = 'none';
             if (overlay) overlay.style.display = 'none';
@@ -309,6 +313,46 @@
         function getNoteAnchorEl(note) {
             if (!note || !note.id) return null;
             return document.querySelector('.hl[data-note-id="' + note.id + '"]');
+        }
+
+        function getNoteForAnchorEl(anchorEl) {
+            if (!(anchorEl instanceof HTMLElement)) return null;
+            const noteId = anchorEl.dataset.noteId || '';
+            if (noteId) {
+                const direct = notesList.find((note) => note.id === noteId);
+                if (direct) return direct;
+            }
+            const text = (anchorEl.textContent || '').trim();
+            if (!text) return null;
+            const unboundMatch = notesList.find((note) => (
+                note.text === text && !getNoteAnchorEl(note)
+            ));
+            if (unboundMatch) {
+                anchorEl.dataset.noteId = unboundMatch.id;
+                return unboundMatch;
+            }
+            return null;
+        }
+
+        function focusNote(noteId, options = {}) {
+            const note = notesList.find((entry) => entry.id === noteId);
+            if (!note) return false;
+            openNotesPanel(note.id);
+            requestAnimationFrame(() => {
+                const item = document.querySelector('.note-item[data-note-id="' + note.id + '"]');
+                const anchor = getNoteAnchorEl(note);
+                document.querySelectorAll('.hl[data-hl-type="note"].note-anchor-active')
+                    .forEach((el) => el.classList.remove('note-anchor-active'));
+                anchor?.classList.add('note-anchor-active');
+                item?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                if (options.revealAnchor && anchor) {
+                    window.scrollToElement?.(anchor);
+                }
+                if (options.focusEditor !== false) {
+                    item?.querySelector('.note-item__textarea')?.focus({ preventScroll: true });
+                }
+            });
+            return true;
         }
 
         /**
@@ -354,11 +398,18 @@
             notesList.forEach((note, index) => {
                 const item = document.createElement('div');
                 item.className = 'note-item';
+                if (note.id === activeNoteId) {
+                    item.classList.add('is-active');
+                }
                 item.dataset.noteId = note.id;
 
                 // 头部：Part + 选中文本 + 删除按钮
                 const header = document.createElement('div');
                 header.className = 'note-item__header';
+                header.title = '点击定位到文章中的对应标注';
+                header.addEventListener('click', () => {
+                    focusNote(note.id, { focusEditor: false, revealAnchor: true });
+                });
 
                 const partLabel = document.createElement('span');
                 partLabel.className = 'note-item__part';
@@ -372,7 +423,10 @@
                 deleteBtn.className = 'note-item__delete';
                 deleteBtn.title = '删除此笔记';
                 deleteBtn.textContent = '×';
-                deleteBtn.addEventListener('click', () => deleteNote(note.id));
+                deleteBtn.addEventListener('click', (event) => {
+                    event.stopPropagation();
+                    deleteNote(note.id);
+                });
 
                 header.appendChild(partLabel);
                 header.appendChild(textSpan);
@@ -409,12 +463,24 @@
                 anchorEl.dataset.noteId = note.id;
             }
             notesList.push(note);
+            activeNoteId = note.id;
             renderNotesList();
             return note;
         }
 
         function deleteNote(noteId) {
+            const note = notesList.find((entry) => entry.id === noteId);
+            const anchor = getNoteAnchorEl(note);
+            if (anchor && anchor.parentNode) {
+                const parent = anchor.parentNode;
+                while (anchor.firstChild) {
+                    parent.insertBefore(anchor.firstChild, anchor);
+                }
+                parent.removeChild(anchor);
+                parent.normalize();
+            }
             notesList = notesList.filter(n => n.id !== noteId);
+            if (activeNoteId === noteId) activeNoteId = null;
             renderNotesList();
         }
 
@@ -422,6 +488,7 @@
             if (notesList.length === 0) return;
             if (!confirm('确定要删除所有笔记吗？')) return;
             notesList = [];
+            activeNoteId = null;
             // 同时清除所有高亮标注
             document.querySelectorAll('.hl[data-hl-type="note"]').forEach(el => {
                 const parent = el.parentNode;
@@ -778,13 +845,15 @@
             });
         }
 
-        function openNotesPanel() {
+        function openNotesPanel(noteId = null) {
             closeAllPanels();
             notesOpen = true;
+            if (noteId) activeNoteId = noteId;
+            document.body.classList.add('notes-panel-open');
             notesPanel.style.display = 'flex';
             // 每次打开都重新渲染，标注被增删后编号与顺序保持最新
             renderNotesList();
-            // 右侧边栏不铺遮罩，避免挡住做题区
+            // 停靠式侧栏通过 body class 为做题区预留宽度，不使用遮罩
         }
 
         if (noteBtn && notesPanel) {
@@ -922,6 +991,20 @@
                     const activeSel = window.getSelection();
                     const hasLiveSelection = !!(activeSel && activeSel.rangeCount && !activeSel.isCollapsed);
 
+                    if (clickedHighlight?.dataset?.hlType === 'note' && !hasLiveSelection) {
+                        const existingNote = getNoteForAnchorEl(clickedHighlight);
+                        if (existingNote) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            currentHlNode = null;
+                            lastRange = null;
+                            selbar.style.display = 'none';
+                            window.getSelection()?.removeAllRanges();
+                            focusNote(existingNote.id, { focusEditor: true });
+                            return;
+                        }
+                    }
+
                     if (clickedHighlight && hasLiveSelection) {
                         // 用户在高亮内部拖选了一段文字：保留选区，交给 updateSelbar 定位，
                         // 以便后续把选中的那部分单词局部升级为粉色（不要清除选区）。
@@ -955,6 +1038,17 @@
                 if (isReviewReadonly()) {
                     if (selbar) selbar.style.display = 'none';
                     return;
+                }
+                if (currentHlNode?.dataset?.hlType === 'note') {
+                    const existingNote = getNoteForAnchorEl(currentHlNode);
+                    if (existingNote) {
+                        focusNote(existingNote.id, { focusEditor: true });
+                        currentHlNode = null;
+                        lastRange = null;
+                        window.getSelection()?.removeAllRanges();
+                        if (selbar) selbar.style.display = 'none';
+                        return;
+                    }
                 }
                 const text = (
                     currentHlNode
