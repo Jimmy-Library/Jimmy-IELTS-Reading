@@ -30,6 +30,71 @@
   text-shadow: 0 3px 18px color-mix(in srgb, var(--skin-accent, #3aa987) 18%, transparent);
 }
 
+.hero-header__brand {
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: .72rem;
+}
+
+.offline-download-row {
+  display: flex;
+  align-items: center;
+  gap: .72rem;
+  min-width: 0;
+  margin-left: clamp(2.8rem, 4.6vw, 5rem);
+  font-family: var(--skin-youth-font, "Microsoft YaHei UI", "PingFang SC", sans-serif);
+  white-space: nowrap;
+}
+
+.offline-download-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .42rem;
+  min-height: 2.25rem;
+  padding: .48rem .9rem;
+  border: 1px solid color-mix(in srgb, var(--skin-accent, #2f855a) 42%, rgba(255,255,255,.72));
+  border-radius: 999px;
+  color: #fff !important;
+  background: linear-gradient(135deg, var(--skin-accent, #2f855a), var(--skin-accent-strong, #166534));
+  box-shadow: 0 8px 22px color-mix(in srgb, var(--skin-accent-strong, #166534) 24%, transparent);
+  font-size: .78rem;
+  font-weight: 850;
+  letter-spacing: .035em;
+  line-height: 1;
+  text-decoration: none;
+  transition: transform .18s ease, box-shadow .18s ease, filter .18s ease;
+}
+
+.offline-download-btn:hover {
+  transform: translateY(-2px);
+  filter: saturate(1.08) brightness(1.03);
+  box-shadow: 0 12px 28px color-mix(in srgb, var(--skin-accent-strong, #166534) 30%, transparent);
+}
+
+.offline-download-btn > span:first-child {
+  display: grid;
+  place-items: center;
+  width: 1.15rem;
+  height: 1.15rem;
+  border-radius: 999px;
+  background: rgba(255,255,255,.2);
+  font-size: .95rem;
+}
+
+.offline-download-version {
+  overflow: hidden;
+  color: var(--skin-ink, #123f36);
+  font-size: .66rem;
+  font-weight: 720;
+  letter-spacing: .025em;
+  text-overflow: ellipsis;
+  opacity: .62;
+}
+
 .hero-header__title > span:last-child {
   background: linear-gradient(118deg, var(--skin-ink, #123f36) 8%, var(--skin-accent-strong, #257c67) 92%);
   background-clip: text;
@@ -94,6 +159,10 @@
     font-size: clamp(1.45rem, 6.15vw, 2.15rem);
     letter-spacing: -.06em;
   }
+
+  .hero-header__brand { width: 100%; gap: .62rem; }
+  .offline-download-row { flex-wrap: wrap; margin-left: 0; white-space: normal; }
+  .offline-download-version { width: 100%; }
 
   .hero-header__tagline {
     max-width: 100% !important;

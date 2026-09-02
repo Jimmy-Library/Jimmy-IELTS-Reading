@@ -1,0 +1,15 @@
+Jimmy 的 IELTS 阅读题库离线版
+版本日期：2026-09-02
+压缩包名称：Jimmy-IELTS-Reading-Offline-2026-09-02.zip
+
+网页 App 主入口：
+打开这个页面-Jimmy阅读题库.html
+
+兼容系统：
+Windows 10 / 11
+macOS 12 及以上版本
+
+推荐浏览器：
+Chrome、Microsoft Edge、Safari
+
+说明：练习记录、自定义皮肤和设置保存在当前浏览器的本地数据中。
