@@ -45,8 +45,19 @@
   gap: .72rem;
   min-width: 0;
   margin-left: clamp(2.8rem, 4.6vw, 5rem);
-  font-family: var(--skin-youth-font, "Microsoft YaHei UI", "PingFang SC", sans-serif);
+  font-family: "Segoe UI", "Microsoft YaHei UI", "PingFang SC", Arial, sans-serif !important;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-shadow: none !important;
   white-space: nowrap;
+}
+
+.offline-download-row,
+.offline-download-row * {
+  text-shadow: none !important;
+  -webkit-text-fill-color: currentColor !important;
 }
 
 .offline-download-btn {
@@ -62,9 +73,10 @@
   background: linear-gradient(135deg, var(--skin-accent, #2f855a), var(--skin-accent-strong, #166534));
   box-shadow: 0 8px 22px color-mix(in srgb, var(--skin-accent-strong, #166534) 24%, transparent);
   font-size: .78rem;
-  font-weight: 850;
-  letter-spacing: .035em;
-  line-height: 1;
+  font-family: "Segoe UI", "Microsoft YaHei UI", "PingFang SC", Arial, sans-serif !important;
+  font-weight: 700;
+  letter-spacing: 0;
+  line-height: 1.2;
   text-decoration: none;
   transition: transform .18s ease, box-shadow .18s ease, filter .18s ease;
 }
@@ -88,11 +100,13 @@
 .offline-download-version {
   overflow: hidden;
   color: var(--skin-ink, #123f36);
-  font-size: .66rem;
-  font-weight: 720;
-  letter-spacing: .025em;
+  font-family: "Segoe UI", "Microsoft YaHei UI", "PingFang SC", Arial, sans-serif !important;
+  font-size: .7rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  line-height: 1.4;
   text-overflow: ellipsis;
-  opacity: .62;
+  opacity: .82;
 }
 
 .hero-header__title > span:last-child {
