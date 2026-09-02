@@ -13,13 +13,14 @@
     var fine = global.matchMedia && global.matchMedia('(hover:hover) and (pointer:fine)').matches;
     var styles = ['halo', 'sparkle', 'bubble', 'ribbon', 'custom', 'cat-1', 'cat-2', 'cat-3', 'cat-4', 'cat-5'];
     var cats = {
-        'cat-1': { name: '坐坐猫', file: 'cat-cursor-1.png', color: '#c78a4e', effect: 'halo' },
-        'cat-2': { name: '散步猫', file: 'cat-cursor-2.png', color: '#5f9b83', effect: 'ribbon' },
-        'cat-3': { name: '开心猫', file: 'cat-cursor-3.png', color: '#df7958', effect: 'sparkle' },
-        'cat-4': { name: '铃铛猫', file: 'cat-cursor-4.png', color: '#cf6888', effect: 'bubble' },
-        'cat-5': { name: '打滚猫', file: 'cat-cursor-5.png', color: '#6685cf', effect: 'sparkle' }
+        'cat-1': { name: '蓝帽暹罗', file: 'cat-cursor-1.png', color: '#4169b1', effect: 'halo' },
+        'cat-2': { name: '躺躺橘猫', file: 'cat-cursor-2.png', color: '#c9853f', effect: 'ribbon' },
+        'cat-3': { name: '翻肚灰猫', file: 'cat-cursor-3.png', color: '#d09a4e', effect: 'sparkle' },
+        'cat-4': { name: '趴睡黑猫', file: 'cat-cursor-4.png', color: '#76678f', effect: 'bubble' },
+        'cat-5': { name: '蓝眼暹罗', file: 'cat-cursor-5.png', color: '#5778bd', effect: 'sparkle' }
     };
     var settings = read();
+    if (cats[settings.style] && settings.size < 52) settings.size = 52;
     var canvas, ctx, icon, panel, raf = 0, points = [], x = -100, y = -100, visible = false, last = 0, dpr = 1, objectUrl = '';
 
     function clamp(value, min, max) { value = Number(value); return Number.isFinite(value) ? Math.min(max, Math.max(min, value)) : min; }
@@ -110,7 +111,7 @@
     }
     function choose(style) {
         if (styles.indexOf(style) < 0) return;
-        settings.style = style; settings.enabled = true; points = []; save(); apply();
+        settings.style = style; settings.enabled = true; if (cats[style] && settings.size < 52) settings.size = 52; points = []; save(); apply();
         status(cats[style] ? '已选择' + cats[style].name + '，并搭配协调色轨迹。' : style === 'custom' ? '上传透明背景图片，效果会实时显示并保存在本机。' : '已应用新的鼠标图标与追踪轨迹。');
     }
     function card(id, name, glyph) { return '<button type="button" class="skin-pointer-preset" data-pointer-style="' + id + '" aria-label="使用' + name + '鼠标效果"><i class="skin-pointer-preset__icon">' + glyph + '</i><span class="skin-pointer-preset__name">' + name + '</span></button>'; }
