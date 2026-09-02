@@ -36,6 +36,34 @@
         let noteIdCounter = 0;
         let activeNoteId = null;
         injectPracticeUIStyles();
+        initializeOptionLabelTextFlow();
+
+        function normalizeOptionLabelTextFlow(root) {
+            const scope = root instanceof Element || root instanceof Document ? root : document;
+            scope.querySelectorAll('#question-groups label').forEach((label) => {
+                if (label.querySelector(':scope > .practice-option-copy')) return;
+                const control = label.querySelector(':scope > input[type="radio"], :scope > input[type="checkbox"]');
+                if (!control) return;
+                const wrapper = document.createElement('span');
+                wrapper.className = 'practice-option-copy';
+                let node = control.nextSibling;
+                while (node) {
+                    const next = node.nextSibling;
+                    wrapper.appendChild(node);
+                    node = next;
+                }
+                if (wrapper.childNodes.length) label.appendChild(wrapper);
+            });
+        }
+
+        function initializeOptionLabelTextFlow() {
+            const root = document.getElementById('question-groups');
+            if (!root) return;
+            normalizeOptionLabelTextFlow(root);
+            if (typeof MutationObserver !== 'function') return;
+            const observer = new MutationObserver(() => normalizeOptionLabelTextFlow(root));
+            observer.observe(root, { childList: true, subtree: true });
+        }
 
         const overlay = document.querySelector('.overlay');
         const settingsPanel = document.getElementById('settings-panel');
@@ -2052,6 +2080,21 @@
         practiceUIStylesInjected = true;
         const style = document.createElement('style');
         style.textContent = `
+.practice-option-copy {
+    min-width: 0;
+    flex: 1 1 auto;
+    white-space: normal;
+    word-break: normal;
+    overflow-wrap: normal;
+}
+.practice-option-copy .hl {
+    display: inline !important;
+    white-space: normal !important;
+    word-break: normal !important;
+    overflow-wrap: normal !important;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+}
 .practice-nav .q-item {
     transition: background-color 0.2s ease, color 0.2s ease;
 }
