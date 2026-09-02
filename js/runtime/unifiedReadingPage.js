@@ -1690,6 +1690,105 @@
         return expandQuestionSequence(name);
     }
 
+    function parseRequestedSelectionCount(input) {
+        const container = input?.closest?.('.group, .unified-group, [data-question-group]');
+        const text = String(container?.textContent || '').replace(/\s+/g, ' ').trim();
+        if (!text) return 0;
+        const words = {
+            one: 1,
+            two: 2,
+            three: 3,
+            four: 4,
+            five: 5,
+            six: 6
+        };
+        const match = text.match(/\b(one|two|three|four|five|six|\d+)\b\s+(?:letters?|answers?|options?|points?|statements?|features?|choices?|items?)/i);
+        if (!match) return 0;
+        const token = String(match[1] || '').toLowerCase();
+        return words[token] || Number(token) || 0;
+    }
+
+    function resolveCheckboxSelectionLimit(input) {
+        if (!(input instanceof HTMLInputElement) || input.type !== 'checkbox' || !input.name) {
+            return 0;
+        }
+        const cached = Number(input.dataset.maxSelections);
+        if (Number.isInteger(cached) && cached > 0) {
+            return cached;
+        }
+        const escapedName = escapeSelector(input.name);
+        const inputs = Array.from(document.querySelectorAll('input[type="checkbox"][name="' + escapedName + '"]'));
+        if (!inputs.length) return 0;
+
+        const questionIds = resolveCheckboxQuestionIds(input.name);
+        const explicitLimit = Number(input.closest('[data-limit]')?.dataset?.limit || input.dataset.limit);
+        let limit = Number.isInteger(explicitLimit) && explicitLimit > 0
+            ? explicitLimit
+            : (questionIds.length > 1 ? questionIds.length : parseRequestedSelectionCount(input));
+        if (!limit && questionIds.length === 1) {
+            const expected = state.dataset?.answerKey?.[questionIds[0]];
+            if (Array.isArray(expected) && expected.length > 1) {
+                limit = expected.length;
+            }
+        }
+        limit = Math.min(inputs.length, Math.max(0, Number(limit) || 0));
+        if (limit > 0) {
+            inputs.forEach((item) => {
+                item.dataset.maxSelections = String(limit);
+            });
+        }
+        return limit;
+    }
+
+    function syncCheckboxSelectionLimit(changedInput) {
+        if (!(changedInput instanceof HTMLInputElement) || changedInput.type !== 'checkbox' || !changedInput.name) {
+            return;
+        }
+        const limit = resolveCheckboxSelectionLimit(changedInput);
+        if (!limit) return;
+        const escapedName = escapeSelector(changedInput.name);
+        const inputs = Array.from(document.querySelectorAll('input[type="checkbox"][name="' + escapedName + '"]'));
+        let checked = inputs.filter((item) => item.checked);
+        if (checked.length > limit) {
+            if (changedInput.checked) {
+                changedInput.checked = false;
+            } else {
+                checked.slice(limit).forEach((item) => {
+                    item.checked = false;
+                });
+            }
+            checked = inputs.filter((item) => item.checked);
+        }
+        if (state.readOnly) return;
+        const atLimit = checked.length >= limit;
+        inputs.forEach((item) => {
+            if (item.checked) {
+                if (item.dataset.selectionLimitDisabled === 'true') {
+                    item.disabled = false;
+                    delete item.dataset.selectionLimitDisabled;
+                }
+                return;
+            }
+            if (atLimit) {
+                item.disabled = true;
+                item.dataset.selectionLimitDisabled = 'true';
+                item.title = '本题最多选择 ' + limit + ' 项';
+            } else if (item.dataset.selectionLimitDisabled === 'true') {
+                item.disabled = false;
+                delete item.dataset.selectionLimitDisabled;
+                item.removeAttribute('title');
+            }
+        });
+    }
+
+    function syncAllCheckboxSelectionLimits() {
+        const processedNames = new Set();
+        document.querySelectorAll('input[type="checkbox"][name]').forEach((input) => {
+            if (processedNames.has(input.name)) return;
+            processedNames.add(input.name);
+            syncCheckboxSelectionLimit(input);
+        });
+    }
     function collectAnswers() {
         const order = Array.isArray(state.dataset?.questionOrder) ? state.dataset.questionOrder : [];
         const answers = {};
@@ -3203,6 +3302,7 @@
             restoreMarks();
             global.setTimeout(restoreMarks, 80);
         }
+        syncAllCheckboxSelectionLimits();
         if (typeof draft.scrollY === 'number') {
             global.scrollTo(0, draft.scrollY);
         }
@@ -3621,6 +3721,7 @@
         document.querySelectorAll('input[type="radio"], input[type="checkbox"]').forEach((input) => {
             input.checked = false;
         });
+        syncAllCheckboxSelectionLimits();
         document.querySelectorAll('input[type="text"], textarea').forEach((input) => {
             input.value = '';
         });
@@ -3813,8 +3914,15 @@
         dom.resetBtn?.addEventListener('click', handleReset);
         const exportBtn = document.getElementById('export-pdf-btn');
         exportBtn?.addEventListener('click', handleExportPdf);
-        document.addEventListener('change', () => updateNavStatuses());
+        document.addEventListener('change', (event) => {
+            const target = event.target;
+            if (target instanceof HTMLInputElement && target.type === 'checkbox') {
+                syncCheckboxSelectionLimit(target);
+            }
+            updateNavStatuses();
+        }, true);
         document.addEventListener('input', () => updateNavStatuses());
+        syncAllCheckboxSelectionLimits();
         document.addEventListener('drop', () => {
             global.setTimeout(() => updateNavStatuses(), 0);
         }, true);

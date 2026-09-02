@@ -40,8 +40,11 @@
 
         function normalizeOptionLabelTextFlow(root) {
             const scope = root instanceof Element || root instanceof Document ? root : document;
-            scope.querySelectorAll('#question-groups label').forEach((label) => {
-                if (label.querySelector(':scope > .practice-option-copy')) return;
+            const labels = [];
+            if (scope instanceof Element && scope.matches('label')) labels.push(scope);
+            scope.querySelectorAll('label').forEach((label) => labels.push(label));
+            labels.forEach((label) => {
+                if (!label.closest('#question-groups') || label.querySelector(':scope > .practice-option-copy')) return;
                 const control = label.querySelector(':scope > input[type="radio"], :scope > input[type="checkbox"]');
                 if (!control) return;
                 const wrapper = document.createElement('span');
@@ -61,7 +64,13 @@
             if (!root) return;
             normalizeOptionLabelTextFlow(root);
             if (typeof MutationObserver !== 'function') return;
-            const observer = new MutationObserver(() => normalizeOptionLabelTextFlow(root));
+            const observer = new MutationObserver((records) => {
+                records.forEach((record) => {
+                    record.addedNodes.forEach((node) => {
+                        if (node instanceof Element) normalizeOptionLabelTextFlow(node);
+                    });
+                });
+            });
             observer.observe(root, { childList: true, subtree: true });
         }
 

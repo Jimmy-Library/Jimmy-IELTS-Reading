@@ -21,6 +21,7 @@ class VirtualScroller {
         this.itemsPerRow = 1;
         this.layoutMetrics = null;
         this.gap = 0;
+        this.scrollTimer = null;
 
         this.handleResize = this.recalculateLayout.bind(this);
 
@@ -150,18 +151,17 @@ class VirtualScroller {
      * 设置滚动监听器
      */
     setupScrollListener() {
-        let scrollTimer = null;
-
         const onScroll = () => {
-            // 使用防抖优化滚动性能
-            if (scrollTimer) {
-                clearTimeout(scrollTimer);
+            // 使用一帧节流，避免高速滚动积压重复渲染任务
+            if (this.scrollTimer) {
+                clearTimeout(this.scrollTimer);
             }
 
-            scrollTimer = setTimeout(() => {
+            this.scrollTimer = setTimeout(() => {
+                this.scrollTimer = null;
                 this.calculateVisibleRange();
                 this.renderVisible();
-            }, 10);
+            }, 16);
         };
 
         this.handleScroll = onScroll;
@@ -238,6 +238,10 @@ class VirtualScroller {
         // 移除滚动监听器
         this.container.removeEventListener('scroll', this.handleScroll);
         window.removeEventListener('resize', this.handleResize);
+        if (this.scrollTimer) {
+            clearTimeout(this.scrollTimer);
+            this.scrollTimer = null;
+        }
 
         // 清空容器
         this.container.innerHTML = '';
@@ -320,6 +324,7 @@ class PerformanceOptimizer {
         this.cache = new Map();
         this.cacheTTL = new Map();
         this.observers = new Map();
+        this.cleanupTimer = null;
         
         // 性能监控
         this.performanceMetrics = {
@@ -339,7 +344,7 @@ class PerformanceOptimizer {
         console.log('[PerformanceOptimizer] 初始化性能优化器');
         
         // 设置缓存清理定时器
-        setInterval(() => {
+        this.cleanupTimer = setInterval(() => {
             this.cleanExpiredCache();
         }, 60000); // 每分钟清理一次过期缓存
         
@@ -701,6 +706,10 @@ class PerformanceOptimizer {
             observer.disconnect();
         });
         this.observers.clear();
+        if (this.cleanupTimer) {
+            clearInterval(this.cleanupTimer);
+            this.cleanupTimer = null;
+        }
     }
 }
 

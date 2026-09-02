@@ -40,9 +40,6 @@
     var panel = null;
     var activeSkin = DEFAULT_SKIN;
     var weatherMode = 'none';
-    var mouseFrame = 0;
-    var pointerX = -100;
-    var pointerY = -100;
 
     function skinById(id) {
         return SKINS.find(function (skin) { return skin.id === id; }) || SKINS.find(function (skin) { return skin.id === DEFAULT_SKIN; }) || SKINS[0];
@@ -194,39 +191,6 @@
         panel.querySelectorAll('.skin-weather-btn').forEach(function (button) {
             button.classList.toggle('is-active', button.dataset.weather === weatherMode);
         });
-    }
-
-    function installPointerAtmosphere() {
-        if (reducedMotion || !global.matchMedia || !global.matchMedia('(hover:hover) and (pointer:fine)').matches) return;
-        var halo = document.createElement('i');
-        var dot = document.createElement('i');
-        halo.id = 'skin-cursor-halo';
-        dot.id = 'skin-cursor-dot';
-        halo.setAttribute('aria-hidden', 'true');
-        dot.setAttribute('aria-hidden', 'true');
-        document.body.appendChild(halo);
-        document.body.appendChild(dot);
-
-        function drawPointer() {
-            mouseFrame = 0;
-            halo.style.transform = 'translate3d(' + (pointerX - halo.offsetWidth / 2) + 'px,' + (pointerY - halo.offsetHeight / 2) + 'px,0)';
-            dot.style.transform = 'translate3d(' + (pointerX - 2.5) + 'px,' + (pointerY - 2.5) + 'px,0)';
-            var nx = pointerX / Math.max(global.innerWidth, 1) - .5;
-            var ny = pointerY / Math.max(global.innerHeight, 1) - .5;
-            document.documentElement.style.setProperty('--skin-shift-x', (-nx * 12).toFixed(2) + 'px');
-            document.documentElement.style.setProperty('--skin-shift-y', (-ny * 8).toFixed(2) + 'px');
-        }
-
-        document.addEventListener('pointermove', function (event) {
-            if (event.pointerType && event.pointerType !== 'mouse') return;
-            pointerX = event.clientX;
-            pointerY = event.clientY;
-            document.body.classList.add('skin-pointer-visible');
-            var actionable = event.target.closest && event.target.closest('button,a,input,select,textarea,[role="button"],.suite-card,.tool-card');
-            document.body.classList.toggle('skin-pointer-action', Boolean(actionable));
-            if (!mouseFrame) mouseFrame = global.requestAnimationFrame(drawPointer);
-        }, { passive: true });
-        document.documentElement.addEventListener('mouseleave', function () { document.body.classList.remove('skin-pointer-visible'); });
     }
 
     function init() {
