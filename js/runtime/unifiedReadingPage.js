@@ -1830,6 +1830,10 @@
     }
 
     function compareQuestionAnswer(questionId, userAnswer, correctAnswer, dataset = state.dataset) {
+        const acceptedAnswers = dataset?.acceptedAnswers?.[questionId];
+        if (Array.isArray(acceptedAnswers) && acceptedAnswers.length > 0) {
+            return acceptedAnswers.some((answer) => compareAnswers(userAnswer, answer));
+        }
         if (isMultiChoiceQuestion(questionId, dataset) && Array.isArray(correctAnswer)) {
             const core = getAnswerMatchCore();
             if (core && typeof core.compareAnswerSets === 'function') {
