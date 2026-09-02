@@ -73,7 +73,7 @@
     "q8": "B",
     "q9": "D",
     "q10": "A",
-    "q11": "managers or sportsmen",
+    "q11": ["managers", "sportsmen"],
     "q12": "driving",
     "q13": "Pharmaceutical companies"
   },

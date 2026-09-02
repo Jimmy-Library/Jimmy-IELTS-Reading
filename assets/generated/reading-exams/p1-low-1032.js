@@ -73,14 +73,11 @@
     "q7": "A",
     "q8": "A",
     "q9": "A",
-    "q10": "animal rights",
+    "q10": ["animal rights", "the environment"],
     "q11": "workshops",
     "q12": "picnic lunch",
     "q13": "Dominican Sisters",
     "q14": "incomes"
-  },
-  "acceptedAnswers": {
-    "q10": ["animal rights", "the environment"]
   },
   "questionOrder": [
     "q1",

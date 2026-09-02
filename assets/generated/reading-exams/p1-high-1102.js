@@ -68,7 +68,7 @@
     "q10": "Stepfather",
     "q11": "Scholarship",
     "q12": "Commonwealth Games",
-    "q13": "400 meters/ metres/ m",
+    "q13": ["400 meters", "400 metres", "400 m"],
     "q14": "gold medal"
   },
   "questionOrder": [

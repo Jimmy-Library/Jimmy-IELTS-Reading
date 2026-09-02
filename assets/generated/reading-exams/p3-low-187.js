@@ -76,7 +76,7 @@
     ],
     "q8": "babies",
     "q9": "brain activity",
-    "q10": "(vigorous) exercise",
+    "q10": ["vigorous exercise", "exercise"],
     "q11": "temperature",
     "q12": "scanning techniques",
     "q13": "drug",

@@ -72,7 +72,7 @@
     "q8": "limited",
     "q9": "unchanging",
     "q10": "eggs",
-    "q11": "4/four",
+    "q11": ["4", "four"],
     "q12": "chefs",
     "q13": "consumers"
   },

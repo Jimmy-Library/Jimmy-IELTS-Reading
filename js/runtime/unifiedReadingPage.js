@@ -372,7 +372,7 @@
                 const userAnswer = answers[questionId] || '';
                 const correctAnswer = answerKey[questionId];
                 const isCorrect = compareQuestionAnswer(questionId, userAnswer, correctAnswer, dataset);
-                const weight = questionWeight(correctAnswer);
+                const weight = questionWeight(questionId, correctAnswer, dataset);
                 total += weight;
                 if (isCorrect) correct += weight;
                 return {
@@ -1849,9 +1849,9 @@
         return compareAnswers(userAnswer, correctAnswer);
     }
 
-    function questionWeight(correctAnswer) {
+    function questionWeight(questionId, correctAnswer, dataset = state.dataset) {
         const normalized = normalizeAnswerValue(correctAnswer);
-        if (Array.isArray(normalized) && normalized.length > 0) {
+        if (isMultiChoiceQuestion(questionId, dataset) && Array.isArray(normalized) && normalized.length > 0) {
             return normalized.length;
         }
         return 1;
@@ -1876,7 +1876,7 @@
             const userAnswer = answers[questionId] || '';
             const correctAnswer = answerKey[questionId];
             const isCorrect = compareQuestionAnswer(questionId, userAnswer, correctAnswer, state.dataset);
-            const weight = questionWeight(correctAnswer);
+            const weight = questionWeight(questionId, correctAnswer, state.dataset);
             totalQuestions += weight;
             if (isCorrect) {
                 correctCount += weight;
