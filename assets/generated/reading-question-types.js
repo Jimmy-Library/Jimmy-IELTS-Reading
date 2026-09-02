@@ -86,7 +86,15 @@
     }
   ],
   "byExamId": {
-        "p1-medium-1019": ["summary", "matching"],
+          "p1-low-1029": ["matching", "summary"],
+  "p1-high-1030": ["matching", "mc"],
+  "p1-high-1031": ["tfng", "short-answer"],
+  "p1-low-1032": ["matching", "summary"],
+  "p1-low-1038": ["tfng", "summary"],
+  "p1-medium-1040": ["tfng", "summary"],
+  "p1-medium-1042": ["matching", "sentence-completion"],
+  "p1-medium-1043": ["tfng", "short-answer"],
+"p1-medium-1019": ["summary", "matching"],
   "p1-high-1021": ["tfng", "summary"],
   "p1-high-1028": ["matching", "short-answer"],
 "p1-medium-1003": ["matching", "short-answer"],

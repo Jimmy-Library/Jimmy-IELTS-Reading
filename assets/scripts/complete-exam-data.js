@@ -3,6 +3,31 @@
 // 数据版本: v3.2
 window.completeExamIndex = [
 {
+        id: "p1-low-1029", title: "Achieving a Work–life Balance 实现工作与生活的平衡", category: "P1", frequency: "low", path: "assets/generated/reading-exams/", filename: "p1-low-1029.js", hasHtml: true, hasPdf: false,
+    },
+{
+        id: "p1-high-1030", title: "ADAM'S WINE 亚当之酒", category: "P1", frequency: "high", path: "assets/generated/reading-exams/", filename: "p1-high-1030.js", hasHtml: true, hasPdf: false,
+    },
+{
+        id: "p1-high-1031", title: "Advertising Needs Attention 广告需要关注", category: "P1", frequency: "high", path: "assets/generated/reading-exams/", filename: "p1-high-1031.js", hasHtml: true, hasPdf: false,
+    },
+{
+        id: "p1-low-1032", title: "Agriculture and Tourism 农业与旅游", category: "P1", frequency: "low", path: "assets/generated/reading-exams/", filename: "p1-low-1032.js", hasHtml: true, hasPdf: false,
+    },
+{
+        id: "p1-low-1038", title: "An early cultural tourist 早期的文化旅游者", category: "P1", frequency: "low", path: "assets/generated/reading-exams/", filename: "p1-low-1038.js", hasHtml: true, hasPdf: false,
+    },
+{
+        id: "p1-medium-1040", title: "An important language development 重要的语言发展", category: "P1", frequency: "medium", path: "assets/generated/reading-exams/", filename: "p1-medium-1040.js", hasHtml: true, hasPdf: false,
+    },
+{
+        id: "p1-medium-1042", title: "Ancient Storytelling 古代说书", category: "P1", frequency: "medium", path: "assets/generated/reading-exams/", filename: "p1-medium-1042.js", hasHtml: true, hasPdf: false,
+    },
+{
+        id: "p1-medium-1043", title: "Andrea Palladio, Italian Architect 意大利建筑师安德烈亚·帕拉迪奥", category: "P1", frequency: "medium", path: "assets/generated/reading-exams/", filename: "p1-medium-1043.js", hasHtml: true, hasPdf: false,
+    },
+
+{
         id: "p1-medium-1019", title: "A review of Nigel Townson's The British at Play 奈杰尔·汤森《玩耍的英国人》书评", category: "P1", frequency: "medium", path: "assets/generated/reading-exams/", filename: "p1-medium-1019.js", hasHtml: true, hasPdf: false,
     },
 {

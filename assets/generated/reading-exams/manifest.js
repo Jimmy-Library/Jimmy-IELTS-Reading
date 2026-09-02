@@ -1,7 +1,63 @@
 (function registerReadingExamManifest(global) {
   'use strict';
   global.__READING_EXAM_MANIFEST__ = {
-         "p1-medium-1019": {
+           "p1-low-1029": {
+    "examId": "p1-low-1029",
+    "dataKey": "p1-low-1029",
+    "script": "./p1-low-1029.js",
+    "title": "Achieving a Work–life Balance 实现工作与生活的平衡",
+    "category": "P1"
+  },
+  "p1-high-1030": {
+    "examId": "p1-high-1030",
+    "dataKey": "p1-high-1030",
+    "script": "./p1-high-1030.js",
+    "title": "ADAM'S WINE 亚当之酒",
+    "category": "P1"
+  },
+  "p1-high-1031": {
+    "examId": "p1-high-1031",
+    "dataKey": "p1-high-1031",
+    "script": "./p1-high-1031.js",
+    "title": "Advertising Needs Attention 广告需要关注",
+    "category": "P1"
+  },
+  "p1-low-1032": {
+    "examId": "p1-low-1032",
+    "dataKey": "p1-low-1032",
+    "script": "./p1-low-1032.js",
+    "title": "Agriculture and Tourism 农业与旅游",
+    "category": "P1"
+  },
+  "p1-low-1038": {
+    "examId": "p1-low-1038",
+    "dataKey": "p1-low-1038",
+    "script": "./p1-low-1038.js",
+    "title": "An early cultural tourist 早期的文化旅游者",
+    "category": "P1"
+  },
+  "p1-medium-1040": {
+    "examId": "p1-medium-1040",
+    "dataKey": "p1-medium-1040",
+    "script": "./p1-medium-1040.js",
+    "title": "An important language development 重要的语言发展",
+    "category": "P1"
+  },
+  "p1-medium-1042": {
+    "examId": "p1-medium-1042",
+    "dataKey": "p1-medium-1042",
+    "script": "./p1-medium-1042.js",
+    "title": "Ancient Storytelling 古代说书",
+    "category": "P1"
+  },
+  "p1-medium-1043": {
+    "examId": "p1-medium-1043",
+    "dataKey": "p1-medium-1043",
+    "script": "./p1-medium-1043.js",
+    "title": "Andrea Palladio, Italian Architect 意大利建筑师安德烈亚·帕拉迪奥",
+    "category": "P1"
+  },
+"p1-medium-1019": {
     "examId": "p1-medium-1019",
     "dataKey": "p1-medium-1019",
     "script": "./p1-medium-1019.js",
