@@ -238,7 +238,6 @@
             weatherMode = savedWeather === 'rain' || savedWeather === 'snow' ? savedWeather : 'none';
         } catch (_) {}
         buildPanel();
-        installPointerAtmosphere();
     }
 
     // Apply the root attribute immediately enough for a footer-loaded script; the head bootstrap handles first paint.
