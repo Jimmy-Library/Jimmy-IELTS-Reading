@@ -605,7 +605,7 @@
         function createHighlightSpan(type = 'default') {
             const span = document.createElement('span');
             span.className = 'hl';
-            if (isReviewReadonly()) {
+            if (isPostSubmitHighlightMode()) {
                 span.dataset.reviewHighlight = 'true';
             }
             if (type === 'note') {
@@ -719,6 +719,10 @@
 
         function isReviewReadonly() {
             return document.body.classList.contains('review-readonly-mode');
+        }
+
+        function isPostSubmitHighlightMode() {
+            return isReviewReadonly() || document.body.classList.contains('single-submitted-mode');
         }
 
         function doHighlight() {
@@ -2151,29 +2155,36 @@
 }
 /* Submitted/replay review: keep saved marks unchanged; only new review marks fluoresce. */
 body.review-readonly-mode #btnHL,
-body.review-readonly-mode #btnUH {
+body.review-readonly-mode #btnUH,
+body.single-submitted-mode #btnHL,
+body.single-submitted-mode #btnUH {
     display: inline-flex !important;
 }
-body.review-readonly-mode .hl[data-review-highlight="true"] {
+body.review-readonly-mode .hl[data-review-highlight="true"],
+body.single-submitted-mode .hl[data-review-highlight="true"] {
     background-color: #dfff00 !important;
     color: #111827 !important;
     box-shadow: inset 0 -0.08em 0 rgba(163, 230, 53, 0.72), 0 0 0.42em rgba(217, 249, 157, 0.7);
 }
-body.review-readonly-mode .hl[data-review-highlight="true"][data-hl-type="pink"] {
+body.review-readonly-mode .hl[data-review-highlight="true"][data-hl-type="pink"],
+body.single-submitted-mode .hl[data-review-highlight="true"][data-hl-type="pink"] {
     background-color: #ff4fd8 !important;
     color: #1f1026 !important;
     box-shadow: inset 0 -0.08em 0 rgba(236, 72, 153, 0.62), 0 0 0.42em rgba(251, 113, 213, 0.66);
 }
-body.review-readonly-mode .hl[data-review-highlight="true"][data-hl-type="note"] {
+body.review-readonly-mode .hl[data-review-highlight="true"][data-hl-type="note"],
+body.single-submitted-mode .hl[data-review-highlight="true"][data-hl-type="note"] {
     background-color: #37fdfc !important;
     color: #082f49 !important;
     box-shadow: inset 0 -0.08em 0 rgba(6, 182, 212, 0.58), 0 0 0.42em rgba(103, 232, 249, 0.7);
 }
-body.review-readonly-mode .hl[data-review-highlight="true"][data-hl-type="note"].note-anchor-active {
+body.review-readonly-mode .hl[data-review-highlight="true"][data-hl-type="note"].note-anchor-active,
+body.single-submitted-mode .hl[data-review-highlight="true"][data-hl-type="note"].note-anchor-active {
     background-color: #00e5ff !important;
     box-shadow: 0 0 0 2px rgba(0, 229, 255, 0.48), 0 0 0.62em rgba(34, 211, 238, 0.8);
 }
-body.review-readonly-mode.notes-hide-marks .hl {
+body.review-readonly-mode.notes-hide-marks .hl,
+body.single-submitted-mode.notes-hide-marks .hl {
     background-color: transparent !important;
     color: inherit !important;
     box-shadow: none !important;

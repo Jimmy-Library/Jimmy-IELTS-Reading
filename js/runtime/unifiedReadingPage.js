@@ -2319,6 +2319,7 @@
     function resetToAnsweringPresentation() {
         state.lastResults = null;
         state.submitted = false;
+        document.body.classList.remove('single-submitted-mode');
         if (dom.results) {
             dom.results.style.display = 'none';
             dom.results.innerHTML = '';
@@ -3592,6 +3593,7 @@
         // 单篇模式：提交后标记完成并清除本地草稿（不再自动保存）
         if (!state.simulationMode) {
             state.submitted = true;
+            document.body.classList.add('single-submitted-mode');
             if (state.singleDraftSaveTimer) {
                 global.clearTimeout(state.singleDraftSaveTimer);
                 state.singleDraftSaveTimer = null;
