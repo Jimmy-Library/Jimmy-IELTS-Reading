@@ -605,6 +605,9 @@
         function createHighlightSpan(type = 'default') {
             const span = document.createElement('span');
             span.className = 'hl';
+            if (isReviewReadonly()) {
+                span.dataset.reviewHighlight = 'true';
+            }
             if (type === 'note') {
                 span.dataset.hlType = 'note';
             }
@@ -648,6 +651,7 @@
             if (end <= start) return false;
 
             const baseKind = hlNode.dataset && hlNode.dataset.hlType ? hlNode.dataset.hlType : '';
+            const isReviewHighlight = hlNode.dataset && hlNode.dataset.reviewHighlight === 'true';
             // 已是粉色且整体被选中——无需拆分
             if (baseKind === 'pink' && start === 0 && end === full.length) {
                 return false;
@@ -661,6 +665,7 @@
             const makeSpan = (text, kind) => {
                 const span = document.createElement('span');
                 span.className = 'hl';
+                if (isReviewHighlight) span.dataset.reviewHighlight = 'true';
                 if (kind) span.dataset.hlType = kind;
                 span.textContent = text;
                 return span;
@@ -718,11 +723,7 @@
 
         function doHighlight() {
             if (!selbar) return;
-            // 回顾只读模式：禁止新增/修改高亮
-            if (isReviewReadonly()) {
-                if (selbar) selbar.style.display = 'none';
-                return;
-            }
+
             const sel = window.getSelection();
 
             // 已存在高亮：第二次点击 Highlight 把棕色升级为粉色（不影响蓝色笔记）
@@ -771,11 +772,7 @@
         }
 
         function removeHighlight() {
-            // 回顾只读模式：禁止删除高亮
-            if (isReviewReadonly()) {
-                if (selbar) selbar.style.display = 'none';
-                return;
-            }
+
             const sel = window.getSelection();
             let targetNode = currentHlNode;
             if (!targetNode && lastRange) {
@@ -2152,23 +2149,27 @@
     cursor: pointer;
     transform: scale(1.15);
 }
-/* Submitted/replay review: vivid fluorescent annotation colours. */
-body.review-readonly-mode .hl {
+/* Submitted/replay review: keep saved marks unchanged; only new review marks fluoresce. */
+body.review-readonly-mode #btnHL,
+body.review-readonly-mode #btnUH {
+    display: inline-flex !important;
+}
+body.review-readonly-mode .hl[data-review-highlight="true"] {
     background-color: #dfff00 !important;
     color: #111827 !important;
     box-shadow: inset 0 -0.08em 0 rgba(163, 230, 53, 0.72), 0 0 0.42em rgba(217, 249, 157, 0.7);
 }
-body.review-readonly-mode .hl[data-hl-type="pink"] {
+body.review-readonly-mode .hl[data-review-highlight="true"][data-hl-type="pink"] {
     background-color: #ff4fd8 !important;
     color: #1f1026 !important;
     box-shadow: inset 0 -0.08em 0 rgba(236, 72, 153, 0.62), 0 0 0.42em rgba(251, 113, 213, 0.66);
 }
-body.review-readonly-mode .hl[data-hl-type="note"] {
+body.review-readonly-mode .hl[data-review-highlight="true"][data-hl-type="note"] {
     background-color: #37fdfc !important;
     color: #082f49 !important;
     box-shadow: inset 0 -0.08em 0 rgba(6, 182, 212, 0.58), 0 0 0.42em rgba(103, 232, 249, 0.7);
 }
-body.review-readonly-mode .hl[data-hl-type="note"].note-anchor-active {
+body.review-readonly-mode .hl[data-review-highlight="true"][data-hl-type="note"].note-anchor-active {
     background-color: #00e5ff !important;
     box-shadow: 0 0 0 2px rgba(0, 229, 255, 0.48), 0 0 0.62em rgba(34, 211, 238, 0.8);
 }
