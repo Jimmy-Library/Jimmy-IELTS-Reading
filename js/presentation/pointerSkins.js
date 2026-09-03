@@ -201,13 +201,25 @@
         panel = document.createElement('section'); panel.className = 'skin-pointer-workbench';
         panel.innerHTML = '<div class="skin-pointer-head"><span class="skin-pointer-title"><b>鼠标图标</b><small>猫咪与图标可独立开启</small></span><button type="button" class="skin-pointer-toggle" role="switch" data-pointer-toggle></button></div>' +
             '<div class="skin-pointer-presets">' + card('halo', '柔光环', '◎') + card('sparkle', '星屑', '✦') + card('bubble', '泡泡', '◉') + card('ribbon', '霓虹带', '◆') + card('custom', '自定义', '＋') + card('cat-1', cats['cat-1'].name, '') + card('cat-2', cats['cat-2'].name, '') + card('cat-3', cats['cat-3'].name, '') + card('cat-4', cats['cat-4'].name, '') + card('cat-5', cats['cat-5'].name, '') + '</div>' +
-            '<div class="skin-pointer-trail-row"><span>轨迹动画<small>关闭后只显示鼠标图标</small></span><button type="button" class="skin-pointer-toggle" role="switch" data-pointer-trail-toggle></button></div>' +
+            '<div class="skin-pointer-trail-row"><span>轨迹动画<small>默认关闭；开启会增加动画与内存负载，低性能设备可能卡顿</small></span><button type="button" class="skin-pointer-toggle" role="switch" data-pointer-trail-toggle></button></div>' +
             '<div class="skin-pointer-custom"><label class="skin-pointer-upload"><input type="file" accept="image/png,image/webp,image/gif,image/jpeg"><span>上传鼠标图片</span></label><label class="skin-pointer-size"><span>图标大小 <output data-pointer-size-output></output></span><input type="range" min="18" max="72" step="1" data-pointer-size></label></div>' +
             '<div class="skin-pointer-status" role="status">透明 PNG 或 WebP 效果最佳，最大 3 MB。</div>';
         drawer.appendChild(panel);
         Object.keys(cats).forEach(function (id) { var preview = panel.querySelector('[data-pointer-style="' + id + '"] .skin-pointer-preset__icon'); if (preview) { preview.style.backgroundImage = 'url("' + catUrl(id) + '")'; preview.style.backgroundSize = 'contain'; preview.style.backgroundPosition = 'center'; preview.style.backgroundRepeat = 'no-repeat'; } });
         panel.querySelector('[data-pointer-toggle]').addEventListener('click', function () { settings.enabled = !settings.enabled; save(); apply(); status(settings.enabled ? '鼠标图标已打开。' : (settings.trailEnabled ? '鼠标图标已关闭，轨迹动画继续显示。' : '鼠标图标已关闭。')); });
-        panel.querySelector('[data-pointer-trail-toggle]').addEventListener('click', function () { settings.trailEnabled = !settings.trailEnabled; save(); apply(); status(settings.trailEnabled ? '轨迹动画已打开。' : '轨迹动画已关闭，鼠标图标继续显示。'); });
+        panel.querySelector('[data-pointer-trail-toggle]').addEventListener('click', function () {
+            if (!settings.trailEnabled) {
+                var confirmed = global.confirm('开启鼠标轨迹动画会增加动画与内存负载，在低性能设备、开启多个网页或省电模式下可能出现卡顿。\n\n是否继续开启？');
+                if (!confirmed) {
+                    status('已取消开启轨迹动画，当前仍保持关闭。');
+                    return;
+                }
+            }
+            settings.trailEnabled = !settings.trailEnabled;
+            save();
+            apply();
+            status(settings.trailEnabled ? '轨迹动画已打开；如感觉卡顿，可随时关闭以降低资源占用。' : '轨迹动画已关闭，鼠标图标继续显示。');
+        });
         panel.querySelectorAll('[data-pointer-style]').forEach(function (button) { button.addEventListener('click', function () { choose(button.dataset.pointerStyle); }); });
         panel.querySelector('[data-pointer-size]').addEventListener('input', function () { settings.size = clamp(this.value, 18, 72); save(); apply(); });
         panel.querySelector('input[type="file"]').addEventListener('change', function () { var file = this.files && this.files[0]; this.value = ''; if (!file || !/^image\//i.test(file.type)) return status('请选择 PNG、WebP、GIF 或 JPG 图片。', true); if (file.size > 3 * 1024 * 1024) return status('鼠标图片请控制在 3 MB 以内。', true); status('正在优化并保存自定义鼠标图片…'); optimizePointerImage(file).then(function (optimized) { return dbPut(optimized).then(function () { return optimized; }); }).then(function (optimized) { customImage(optimized); choose('custom'); status('自定义鼠标图片已轻量化保存，刷新后仍会应用。'); }).catch(function () { status('图片保存失败，请换一张较小的图片重试。', true); }); });
