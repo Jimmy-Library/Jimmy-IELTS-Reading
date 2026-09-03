@@ -443,6 +443,7 @@
       this._forceCompletion = options.mandatory === true || !this._stateManager.isCompleted();
       this._currentStep = fromBeginning ? 0 : this._stateManager.getCurrentStep();
       this._isActive = true;
+      document.body.classList.add('onboarding-tour-active');
 
       // 根据题库内容动态更新引导步骤
       this._refreshDynamicSteps();
@@ -521,6 +522,7 @@
 
     stop() {
       this._isActive = false;
+      document.body.classList.remove('onboarding-tour-active');
       if (this._targetClickCleanup) {
         this._targetClickCleanup();
         this._targetClickCleanup = null;
@@ -561,21 +563,9 @@
     }
 
     _lockPointer() {
-      if (!document.getElementById('onboarding-pointer-intercept')) {
-        const intercept = document.createElement('div');
-        intercept.id = 'onboarding-pointer-intercept';
-        intercept.style.cssText = [
-          'position: fixed',
-          'inset: 0',
-          'z-index: 99998',   // 在遮罩层之下，在普通元素之上',
-          'background: transparent',
-          'pointer-events: all',
-          'cursor: not-allowed'
-        ].join(';');
-        // 防止有意的引导点击被拦截
-        intercept.addEventListener('click', e => e.stopPropagation());
-        document.body.appendChild(intercept);
-      }
+      // 向导只通过高亮目标本身控制误操作，不再铺设全屏鼠标拦截层。
+      // 这样原生鼠标和自定义鼠标在向导期间始终可见、可移动。
+      this._unlockPointer();
     }
 
     _unlockPointer() {

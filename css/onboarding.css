@@ -312,6 +312,10 @@
 .onboarding-highlight.onboarding-highlight--disabled {
   pointer-events: none !important;
 }
+/* 自定义鼠标必须显示在向导提示卡片上方，否则页面隐藏原生鼠标后会像“鼠标被挡住”。 */
+body.onboarding-tour-active #skin-pointer-icon {
+  z-index: calc(var(--onboarding-z-index-tooltip) + 3) !important;
+}
 .onboarding-tooltip.is-required-pulse {
   animation: onboarding-required-pulse .42s ease;
 }
