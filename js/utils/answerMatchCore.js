@@ -3,13 +3,9 @@
 
     const BOOLEAN_SYNONYMS = new Map([
         ['true', 'true'],
-        ['t', 'true'],
         ['yes', 'true'],
-        ['y', 'true'],
         ['false', 'false'],
-        ['f', 'false'],
-        ['no', 'false'],
-        ['n', 'false']
+        ['no', 'false']
     ]);
 
     const NOT_GIVEN_SYNONYMS = new Map([

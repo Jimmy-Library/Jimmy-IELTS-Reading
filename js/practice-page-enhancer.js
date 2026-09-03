@@ -743,9 +743,9 @@
                     if (typeof value === 'string') {
                         normalizedValue = value.trim();
 
-                        if (/^(true|t|yes|y|正确|是)$/i.test(normalizedValue)) {
+                        if (/^(true|yes|正确|是)$/i.test(normalizedValue)) {
                             normalizedValue = 'TRUE';
-                        } else if (/^(false|f|no|n|错误|否)$/i.test(normalizedValue)) {
+                        } else if (/^(false|no|错误|否)$/i.test(normalizedValue)) {
                             normalizedValue = 'FALSE';
                         }
 
@@ -4198,8 +4198,8 @@
                     .replace(/^[\s"'`()[\]{}<>.,;:!?]+|[\s"'`()[\]{}<>.,;:!?]+$/g, '');
                 if (!text) return '';
                 const lowered = text.toLowerCase();
-                if (['true', 't', 'yes', 'y'].includes(lowered)) return 'true';
-                if (['false', 'f', 'no', 'n'].includes(lowered)) return 'false';
+                if (['true', 'yes'].includes(lowered)) return 'true';
+                if (['false', 'no'].includes(lowered)) return 'false';
                 if (['ng', 'notgiven', 'not-given'].includes(lowered)) return 'not given';
                 if (/^[a-z]$/i.test(text)) return text.toUpperCase();
                 const leadingOption = text.match(/^([A-Za-z])(?:[.)])?\s+/);

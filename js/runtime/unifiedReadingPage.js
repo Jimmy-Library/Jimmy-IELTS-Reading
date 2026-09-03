@@ -1861,8 +1861,8 @@
             return '';
         }
         const lowered = cleaned.toLowerCase();
-        if (['true', 't', 'yes', 'y'].includes(lowered)) return 'true';
-        if (['false', 'f', 'no', 'n'].includes(lowered)) return 'false';
+        if (['true', 'yes'].includes(lowered)) return 'true';
+        if (['false', 'no'].includes(lowered)) return 'false';
         if (['ng', 'notgiven', 'not-given'].includes(lowered)) return 'not given';
         if (/^[a-z]$/i.test(cleaned)) return cleaned.toUpperCase();
         const leadingOption = cleaned.match(/^([A-Za-z])(?:[.)])?\s+/);
