@@ -425,6 +425,7 @@
     function closeDailyPrompt() {
         const modal = document.getElementById(DAILY_MODAL_ID);
         if (modal) modal.hidden = true;
+        if (document.body) document.body.classList.remove('daily-suite-modal-open');
     }
 
     function focusDailyRecommendation() {
@@ -508,6 +509,7 @@
         }
         writeJsonStorage(DAILY_PROMPT_DATE_KEY, getLocalDateKey());
         modal.hidden = false;
+        if (document.body) document.body.classList.add('daily-suite-modal-open');
         const startButton = modal.querySelector('[data-daily-action="start"]');
         if (startButton instanceof HTMLElement) startButton.focus({ preventScroll: true });
         return true;
