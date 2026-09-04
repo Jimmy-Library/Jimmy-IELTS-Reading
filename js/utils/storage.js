@@ -9,6 +9,11 @@ class StorageManager {
         this.localStorageAvailable = false;
         this.sessionStorageAvailable = false;
         this.backendPreferenceKey = this.prefix + 'storage_backend';
+        // This key deliberately lives outside the versioned namespace. App and
+        // service-worker updates may replace cached files, but must never erase
+        // a learner's completed practice history.
+        this.practiceRecordsBackupKey = 'jimmy_reading_practice_records_backup_v1';
+        this.versionUpgradeInProgress = false;
         this.indexedDBBlocked = false;
         this.volatileMode = false;
         this.mode = 'indexeddb';
@@ -115,6 +120,10 @@ class StorageManager {
             // 强制初始化 IndexedDB 以实现 Hybrid 模式，并在版本检查前确保 DB ready
             console.log('[Storage] 强制初始化 IndexedDB 以实现 Hybrid 模式');
             await this.initializeIndexedDBStorage();
+
+            // Recover the device-local safety copy before any version/default
+            // initialization can observe an empty canonical record list.
+            await this.recoverPracticeRecordsFromDurableBackup();
 
             // 初始化版本信息
             const currentVersion = await this.get('system_version', null, { skipReady: true });
@@ -309,7 +318,18 @@ class StorageManager {
                 try {
                     const value = localStorage.getItem(key);
                     if (value) {
-                        await this.setToIndexedDB(key, value);
+                        const existingValue = await this.getFromIndexedDB(key);
+                        if (key === this.getKey('practice_records')) {
+                            const incomingRecords = this.parseStoredEnvelope(value, []);
+                            const existingRecords = this.parseStoredEnvelope(existingValue, []);
+                            const mergedRecords = this.mergeRecords(existingRecords, incomingRecords);
+                            await this.setToIndexedDB(key, this.createStoredEnvelope(mergedRecords));
+                            await this.writeDurablePracticeRecordsBackup(mergedRecords);
+                        } else if (!existingValue) {
+                            // IndexedDB is canonical once it exists. A stale
+                            // localStorage shadow must not overwrite newer data.
+                            await this.setToIndexedDB(key, value);
+                        }
                         localStorage.removeItem(key);
                         migratedCount++;
                         console.log(`[Storage] 成功迁移键: ${key}`);
@@ -404,20 +424,31 @@ class StorageManager {
         await this.waitForInitialization(skipReady);
         console.log(`Upgrading storage from ${oldVersion || 'unknown'} to ${this.version}`);
 
-        // 在这里处理数据迁移逻辑
-        if (!oldVersion) {
-            // 首次安装，初始化默认数据
-            await this.initializeDefaultData({ skipReady });
-        }
+        this.versionUpgradeInProgress = true;
+        try {
+            await this.recoverPracticeRecordsFromDurableBackup();
 
-        await this.set('system_version', this.version, { skipReady });
+            // 在这里处理数据迁移逻辑
+            if (!oldVersion) {
+                // 首次安装，初始化默认数据
+                await this.initializeDefaultData({ skipReady });
+            }
 
-        // 执行遗留数据迁移（只运行一次）
-        if (!await this.get('migration_completed', null, { skipReady })) {
-            console.log('[Storage] 检测到未完成迁移，开始执行...');
-            await this.migrateLegacyData({ skipReady });
-        } else {
-            console.log('[Storage] 迁移已完成，跳过');
+            await this.set('system_version', this.version, { skipReady });
+
+            // 执行遗留数据迁移（只运行一次）
+            if (!await this.get('migration_completed', null, { skipReady })) {
+                console.log('[Storage] 检测到未完成迁移，开始执行...');
+                await this.migrateLegacyData({ skipReady });
+            } else {
+                console.log('[Storage] 迁移已完成，跳过');
+            }
+
+            // A migration is allowed to reshape records, never to discard
+            // them. Merge the pre-upgrade safety copy back afterwards.
+            await this.recoverPracticeRecordsFromDurableBackup();
+        } finally {
+            this.versionUpgradeInProgress = false;
         }
     }
 
@@ -522,17 +553,81 @@ class StorageManager {
         }
     }
 
+    readDurablePracticeRecordsBackup() {
+        if (!this.localStorageAvailable) return [];
+        try {
+            const raw = localStorage.getItem(this.practiceRecordsBackupKey);
+            if (!raw) return [];
+            const parsed = JSON.parse(raw);
+            const records = Array.isArray(parsed) ? parsed : parsed && parsed.records;
+            return Array.isArray(records) ? records : [];
+        } catch (error) {
+            console.warn('[Storage] 练习记录安全副本读取失败:', error);
+            return [];
+        }
+    }
+
+    async writeDurablePracticeRecordsBackup(records) {
+        if (!this.localStorageAvailable || !Array.isArray(records)) return false;
+        try {
+            const existing = this.readDurablePracticeRecordsBackup();
+            if (this.versionUpgradeInProgress && records.length === 0 && existing.length > 0) {
+                console.warn('[Storage] 版本升级期间拒绝用空记录覆盖安全副本');
+                return false;
+            }
+            localStorage.setItem(this.practiceRecordsBackupKey, JSON.stringify({
+                schemaVersion: 1,
+                updatedAt: new Date().toISOString(),
+                records
+            }));
+            return true;
+        } catch (error) {
+            // The canonical IndexedDB write remains valid if localStorage is
+            // unavailable or over quota.
+            console.warn('[Storage] 练习记录安全副本写入失败:', error);
+            return false;
+        }
+    }
+
+    async recoverPracticeRecordsFromDurableBackup() {
+        const backupRecords = this.readDurablePracticeRecordsBackup();
+        const storageKey = this.getKey('practice_records');
+        let canonicalRecords = [];
+        try {
+            const raw = this.indexedDB && !this.indexedDBBlocked
+                ? await this.getFromIndexedDB(storageKey)
+                : this.readWebStorageValue(localStorage, storageKey);
+            canonicalRecords = this.parseStoredEnvelope(raw, []);
+        } catch (error) {
+            console.warn('[Storage] 正式练习记录读取失败，将尝试安全副本:', error);
+        }
+
+        if (!Array.isArray(canonicalRecords)) canonicalRecords = [];
+        const mergedRecords = this.mergeRecords(canonicalRecords, backupRecords);
+        if (mergedRecords.length === 0) return [];
+
+        if (this.indexedDB && !this.indexedDBBlocked) {
+            await this.setToIndexedDB(storageKey, this.createStoredEnvelope(mergedRecords));
+        } else if (this.localStorageAvailable) {
+            this.writeWebStorageValue(localStorage, storageKey, this.createStoredEnvelope(mergedRecords));
+        }
+        await this.writeDurablePracticeRecordsBackup(mergedRecords);
+        return mergedRecords;
+    }
+
     async writePersistentValue(key, value) {
         const serializedValue = this.createStoredEnvelope(value);
         const storageKey = this.getKey(key);
 
         if (this.indexedDB && !this.indexedDBBlocked) {
             await this.setToIndexedDB(storageKey, serializedValue);
+            if (key === 'practice_records') await this.writeDurablePracticeRecordsBackup(value);
             this.dispatchStorageSync(key);
             return true;
         }
 
         if (this.localStorageAvailable && this.writeWebStorageValue(localStorage, storageKey, serializedValue)) {
+            if (key === 'practice_records') await this.writeDurablePracticeRecordsBackup(value);
             this.mode = 'localStorage';
             this.volatileMode = false;
             this.dispatchStorageSync(key);
@@ -540,6 +635,7 @@ class StorageManager {
         }
 
         if (this.sessionStorageAvailable && this.writeWebStorageValue(sessionStorage, storageKey, serializedValue)) {
+            if (key === 'practice_records') await this.writeDurablePracticeRecordsBackup(value);
             this.mode = 'sessionStorage';
             this.volatileMode = false;
             this.dispatchStorageSync(key);
@@ -548,6 +644,7 @@ class StorageManager {
 
         if (this.fallbackStorage) {
             this.fallbackStorage.set(storageKey, serializedValue);
+            if (key === 'practice_records') await this.writeDurablePracticeRecordsBackup(value);
             this.dispatchStorageSync(key);
             return true;
         }
@@ -556,6 +653,7 @@ class StorageManager {
         this.mode = 'volatile';
         this.fallbackStorage = this.fallbackStorage || new Map();
         this.fallbackStorage.set(storageKey, serializedValue);
+        if (key === 'practice_records') await this.writeDurablePracticeRecordsBackup(value);
         this.dispatchStorageSync(key);
         return true;
     }
@@ -600,7 +698,8 @@ class StorageManager {
         return true;
     }
 
-    async clearPersistentStorage() {
+    async clearPersistentStorage(options = {}) {
+        const { clearPracticeRecordsBackup = false } = options;
         if (this.fallbackStorage) {
             this.fallbackStorage.clear();
         }
@@ -625,6 +724,10 @@ class StorageManager {
                 .filter((key) => key.startsWith(this.prefix))
                 .forEach((key) => sessionStorage.removeItem(key));
         } catch (_) { }
+
+        if (clearPracticeRecordsBackup && this.localStorageAvailable) {
+            try { localStorage.removeItem(this.practiceRecordsBackupKey); } catch (_) { }
+        }
 
         this.clearBackendPreference();
         window.dispatchEvent(new CustomEvent('storage-sync', { detail: { key: '*' } }));
@@ -844,7 +947,7 @@ class StorageManager {
         await this.waitForInitialization(skipReady);
         try {
             await this.ensureIndexedDBReady();
-            return await this.clearPersistentStorage();
+            return await this.clearPersistentStorage(options);
         } catch (error) {
             console.error('Storage clear error:', error);
             return false;
@@ -1186,8 +1289,9 @@ class StorageManager {
                         const merged = this.mergeRecords(currentPracticeRecords, legacyData);
                         await this.set('practice_records', merged, { skipReady });
 
-                        // 删除旧键
-                        await this.removeFromIndexedDB(oldMyMelodyKey);
+                        // oldMyMelodyKey is the same canonical key used by the
+                        // current store. Deleting it here erased the records
+                        // that were just merged, so retain the canonical value.
                         console.log(`[Storage] 成功迁移 MyMelody 数据: ${legacyData.length} 项合并到 practice_records`);
                     } else {
                         console.log('[Storage] 无 MyMelody 遗留数据需要迁移');
@@ -1398,7 +1502,7 @@ class StorageManager {
 
             try {
                 // 清空现有数据
-                await this.clear({ skipReady });
+                await this.clear({ skipReady, clearPracticeRecordsBackup: true });
 
                 // 导入新数据
                 const importPromises = Object.entries(importedData.data).map(([key, value]) => {
@@ -1411,7 +1515,7 @@ class StorageManager {
             } catch (importError) {
                 // 恢复备份
                 console.error('Import failed, restoring backup:', importError);
-                await this.clear({ skipReady });
+                await this.clear({ skipReady, clearPracticeRecordsBackup: true });
 
                 if (backup && backup.data) {
                     const restorePromises = Object.entries(backup.data).map(([key, value]) => {

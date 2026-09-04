@@ -3258,7 +3258,7 @@ async function clearCache() {
 
     try {
         if (window.storage && typeof storage.clear === 'function') {
-            await storage.clear();
+            await storage.clear({ clearPracticeRecordsBackup: true });
         } else if (window.PracticeCore && window.PracticeCore.store && typeof window.PracticeCore.store.replacePracticeRecords === 'function') {
             await window.PracticeCore.store.replacePracticeRecords([]);
         } else if (window.simpleStorageWrapper && typeof window.simpleStorageWrapper.savePracticeRecords === 'function') {
