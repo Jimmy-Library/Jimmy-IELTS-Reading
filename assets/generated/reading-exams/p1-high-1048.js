@@ -1,7 +1,7 @@
 (function registerReadingExamData(global) {
   'use strict';
-  if (!global.__READING_EXAM_DATA__ || typeof global.__READING_EXAM_DATA__.register !== "function") {
-    throw new Error("reading_exam_registry_missing");
+  if (!global.__READING_EXAM_DATA__ || typeof global.__READING_EXAM_DATA__.register !== 'function') {
+    throw new Error('reading_exam_registry_missing');
   }
   global.__READING_EXAM_DATA__.register("p1-high-1048", {
   "schemaVersion": "ReadingExamSourceV1",
@@ -54,8 +54,8 @@
   ],
   "answerKey": {
     "q1": "NOT GIVEN",
-    "q2": "FALSE",
-    "q3": "TRUE",
+    "q2": "NOT GIVEN",
+    "q3": "FALSE",
     "q4": "TRUE",
     "q5": "TRUE",
     "q6": "TRUE",
@@ -92,4 +92,4 @@
     "q11": "11"
   }
 });
-})(typeof window !== "undefined" ? window : this);
+})(typeof window !== 'undefined' ? window : this);

@@ -24,7 +24,7 @@ window.completeExamIndex = [
         id: "p1-low-1056", title: "Assessing the risk 风险评估", category: "P1", frequency: "low", path: "assets/generated/reading-exams/", filename: "p1-low-1056.js", hasHtml: true, hasPdf: false,
     },
 {
-        id: "p3-low-1061", title: "Australia's Megafauna Controversy 澳大利亚巨型动物群之争", category: "P1", frequency: "low", path: "assets/generated/reading-exams/", filename: "p1-low-1061.js", hasHtml: true, hasPdf: false,
+        id: "p3-low-1061", title: "Australia's Megafauna Controversy 澳大利亚巨型动物群之争", category: "P3", frequency: "low", path: "assets/generated/reading-exams/", filename: "p3-low-1061.js", hasHtml: true, hasPdf: false,
     },
 {
         id: "p1-medium-1063", title: "Australian Culture and Culture Shock 澳大利亚文化与文化冲击", category: "P1", frequency: "medium", path: "assets/generated/reading-exams/", filename: "p1-medium-1063.js", hasHtml: true, hasPdf: false,
@@ -42,7 +42,7 @@ window.completeExamIndex = [
         id: "p1-high-1071", title: "Biodiversity 生物多样性", category: "P1", frequency: "high", path: "assets/generated/reading-exams/", filename: "p1-high-1071.js", hasHtml: true, hasPdf: false,
     },
 {
-        id: "p2-low-1072", title: "Biology of Bitterness 苦味生物学", category: "P1", frequency: "low", path: "assets/generated/reading-exams/", filename: "p1-low-1072.js", hasHtml: true, hasPdf: false,
+        id: "p2-low-1072", title: "Biology of Bitterness 苦味生物学", category: "P2", frequency: "low", path: "assets/generated/reading-exams/", filename: "p2-low-1072.js", hasHtml: true, hasPdf: false,
     },
 {
         id: "p1-high-1073", title: "Bioluminescence 生物发光", category: "P1", frequency: "high", path: "assets/generated/reading-exams/", filename: "p1-high-1073.js", hasHtml: true, hasPdf: false,
@@ -154,9 +154,6 @@ window.completeExamIndex = [
 
 {
         id: "p1-high-1783", title: "Thomas Young - The Last True know-it-all 托马斯·杨——最后的真通才", category: "P1", frequency: "high", path: "assets/generated/reading-exams/", filename: "p1-high-1783.js", hasHtml: true, hasPdf: false,
-    },
-{
-        id: "p2-low-1823", title: "The return of monkey life 猴群的回归", category: "P2", frequency: "high", path: "assets/generated/reading-exams/", filename: "p2-low-1823.js", hasHtml: true, hasPdf: false,
     },
 {
         id: "p3-high-1051", title: "Art-based training for engineers 面向工程师的艺术培训", category: "P3", frequency: "high", path: "assets/generated/reading-exams/", filename: "p3-high-1051.js", hasHtml: true, hasPdf: false,

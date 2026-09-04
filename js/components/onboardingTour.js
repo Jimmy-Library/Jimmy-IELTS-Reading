@@ -18,91 +18,91 @@
     {
       id: 'welcome', target: null, position: 'center', activateView: 'overview',
       title: '👋 欢迎来到 Jimmy 的阅读题库',
-      content: '第一次进入需要完成一次使用向导。接下来会在真实页面中依次认识：自选组题、固定套题、单篇练习、练习记录与 PDF、数据备份，以及皮肤和鼠标设置。向导只演示，不会自动开始考试或修改你的练习答案。',
-      showSkip: false, showPrev: false, nextText: '开始向导'
+      content: '向导会在真实页面中带你认识完整流程，但不会自动开始考试或修改答案。你可以点击“开始向导”逐步查看，也可以点击“暂时跳过”；以后随时可从网页抬头下方重新打开。',
+      showSkip: true, showPrev: false, nextText: '开始向导'
     },
     {
       id: 'custom-suite-builder', target: '#category-overview [data-action="start-suite-mode"]', position: 'bottom', activateView: 'overview', waitForElement: true,
       title: '1　自选组题：组合 P1、P2、P3',
-      content: '从这里进入组题设置。实际使用时：点击“开启套题模式” → 在“抽题范围”选择“自选套题（P1/P2/P3）” → 依次挑选一篇 P1、P2、P3 → 在浮动清单确认开始。流程模式可选择模拟、经典或驻足模式。',
+      content: '<strong>入口：</strong>首页“开启套题模式”。<br><strong>操作：</strong>抽题范围选择“自选套题（P1/P2/P3）”，再分别选择一篇 P1、P2、P3，最后在浮动清单确认。<br><strong>提示：</strong>流程模式可选择模拟、经典或驻足模式。',
       showSkip: true, showPrev: true, nextText: '了解固定套题', lockScroll: true, lockPointer: true, disableHighlightPointer: true
     },
     {
       id: 'suite-catalog', target: '#suite-list', position: 'top', activateView: 'suite', waitForElement: true,
-      title: '2　固定套题：直接练习完整三篇',
-      content: '“套题模式”已经把 P1、P2、P3 配成完整套题。每张卡片都会列出三篇文章、总题数与历史最好成绩；未完成的套题会显示“继续做题 / 重新做题 / 删除记录”。',
+      title: '2　套题模式：每日推荐与固定套题',
+      content: '<strong>每日推荐：</strong>页面最上方会根据高频题和练习记录，优先组合一套未做过的 P1、P2、P3；同一天的推荐保持不变。<br><strong>固定套题：</strong>下方每张卡片列出三篇文章、总题数和最好成绩。<br><strong>断点续做：</strong>有未完成记录时，可选择“继续做题”“重新做题”或“删除记录”。',
       showSkip: true, showPrev: true, nextText: '查看开始方式', lockScroll: true, lockPointer: true, disableHighlightPointer: true
     },
     {
       id: 'suite-start', target: '#suite-list .suite-card__start', position: 'left', activateView: 'suite', waitForElement: true,
       title: '3　开始套题与计时方式',
-      content: '点击任一“开始”后，可选择自由模式或 60 分钟模考模式。套题会保存三篇的共同进度；P1、P2 可部分提交并继续，最后统一查看成绩、回顾和导出 PDF。',
+      content: '<strong>操作：</strong>点击套题卡片的“开始”，再选择自由模式或 60 分钟模考模式。<br><strong>保存：</strong>P1、P2 可先提交当前篇，退出后仍能继续下一篇。<br><strong>完成：</strong>三篇结束后统一查看成绩、回顾并导出 PDF。',
       showSkip: true, showPrev: true, nextText: '了解单篇练习', lockScroll: true, lockPointer: true, disableHighlightPointer: true
     },
     {
       id: 'single-practice-search', target: '#browse-view .search-row', position: 'bottom', activateView: 'browse', waitForElement: true,
       title: '4　单篇练习：搜索与筛选',
-      content: '题库浏览适合单篇专项练习。可按关键词、P1/P2/P3、月份新增、题型和出题频率筛选；排序选项能让高频题优先显示。',
+      content: '<strong>入口：</strong>顶部导航“题库浏览”。<br><strong>查找：</strong>输入文章中英文关键词，或按 P1/P2/P3、月份新增、题型、出题频率筛选。<br><strong>排序：</strong>需要重点练习时，可让高频题优先显示。',
       showSkip: true, showPrev: true, nextText: '查看题目卡片', lockScroll: true, lockPointer: true, disableHighlightPointer: true
     },
     {
       id: 'single-practice-card', target: '#exam-list-container', position: 'top', activateView: 'browse', waitForElement: true,
       title: '5　打开文章并完成单篇练习',
-      content: '在题目卡片点击“开始练习”进入机考页。答题页支持计时、标记、高亮、笔记、Reset 重做和 Submit 提交；提交后仍可回顾解析并使用新的高亮颜色，页面底部可导出本次 PDF。',
+      content: '<strong>操作：</strong>在文章卡片点击“开始练习”。<br><strong>做题：</strong>可计时、标记题号、高亮原文和添加笔记；Reset 清空重做，Submit 提交。<br><strong>提交后：</strong>可继续回顾解析、高亮内容，并从底部导出本次 PDF。',
       showSkip: true, showPrev: true, nextText: '查看练习记录', lockScroll: true, lockPointer: true, disableHighlightPointer: true
     },
     {
       id: 'practice-history', target: '#history-list', position: 'top', activateView: 'practice', waitForElement: true,
       title: '6　练习记录与继续做题',
-      content: '已提交的单篇和套题成绩会自动保存在这里；未完成内容也可继续。点击记录可查看用时、正确率、逐题答案、原文标记与回顾内容，还能按状态和时间筛选。',
+      content: '<strong>入口：</strong>顶部导航“练习记录”。<br><strong>查看：</strong>点击一条记录可查看用时、正确率、逐题答案、原文标记和回顾内容。<br><strong>继续：</strong>未完成的单篇或套题可从记录中接着做。',
       showSkip: true, showPrev: true, nextText: '学习导出 PDF', lockScroll: true, lockPointer: true, disableHighlightPointer: true
     },
     {
       id: 'practice-pdf', target: '#export-practice-pdf-btn', position: 'bottom', activateView: 'practice', waitForElement: true,
       title: '7　导出练习记录 PDF',
-      content: '点击“导出 PDF”可选择需要导出的练习记录。PDF 会包含成绩、答案、回顾信息和已保存的标记；单篇做题页也可以直接导出当前练习。',
+      content: '<strong>操作：</strong>在练习记录页点击“导出 PDF”，勾选要导出的记录后确认。<br><strong>内容：</strong>PDF 包含成绩、答案、回顾信息和已保存标记。<br><strong>另一入口：</strong>单篇做题页底部也可直接导出当前练习。',
       showSkip: true, showPrev: true, nextText: '了解数据备份', lockScroll: true, lockPointer: true, disableHighlightPointer: true
     },
     {
       id: 'data-backup', target: '.data-management-panel', position: 'top', activateView: 'settings', waitForElement: true,
       title: '8　备份、迁移和恢复记录',
-      content: '“创建备份”用于本机快照；“导出数据”会保存完整记录文件，换电脑或升级版本后可用“导入数据”恢复。建议定期导出，避免浏览器缓存被清理后丢失进度。',
+      content: '<strong>入口：</strong>设置页“数据管理”。<br><strong>区别：</strong>“创建备份”保存本机快照；“导出数据”下载完整记录文件；“导入数据”用于换电脑或升级后恢复。<br><strong>建议：</strong>定期导出一份文件。',
       showSkip: true, showPrev: true, nextText: '设置页面皮肤', lockScroll: true, lockPointer: true, disableHighlightPointer: true
     },
     {
       id: 'skin-handle', target: '#image-skin-panel .skin-handle', position: 'right', activateView: 'overview', waitForElement: true,
       title: '9　打开皮肤工作台',
-      content: '点击左下角的调色板按钮，亲自打开皮肤工作台。这里的设置只改变主页外观，不会改变阅读题目内部的标准机考界面。',
+      content: '<strong>现在操作：</strong>点击左下角调色板按钮，打开皮肤工作台后向导会自动进入下一步。<br><strong>说明：</strong>皮肤只改变首页和题库浏览外观，阅读题目内部始终保持标准机考样式。',
       showSkip: true, showPrev: true, hideNext: true, waitForClick: true, lockScroll: true
     },
     {
       id: 'skin-gallery', target: '#image-skin-panel .skin-grid', position: 'right', activateView: 'overview', waitForElement: true, action: 'openSkinPanel',
       title: '10　实时切换图片皮肤',
-      content: '点击任意皮肤卡片即可实时预览背景、抬头、按钮和题库卡片配色。雨滴、飘雪等氛围动画可独立开关；需要流畅省电时建议关闭动态效果。',
+      content: '<strong>操作：</strong>点击任意皮肤卡片即可实时切换。<br><strong>变化：</strong>背景、抬头、首页按钮和题库卡片配色会同步更新。<br><strong>性能：</strong>雨滴、飘雪等氛围动画可独立关闭。',
       showSkip: true, showPrev: true, nextText: '了解自定义皮肤', lockScroll: true, lockPointer: true, disableHighlightPointer: true
     },
     {
       id: 'custom-skin', target: '#image-skin-panel .custom-skin-editor', position: 'right', activateView: 'overview', waitForElement: true, action: 'openCustomSkinEditor',
       title: '11　自定义图片、颜色、字体与形状',
-      content: '自定义工作台支持上传背景、调整大小/位置/透明度、自动推荐图片色系，以及选择字体和 UI 形状。可另存为新皮肤卡片，也可修改已经保存的皮肤；所有内容持续保存在本机。',
+      content: '<strong>操作：</strong>展开“自定义”，上传背景后调整缩放、横向/纵向位置和透明度。<br><strong>设计：</strong>可采用推荐色系，也可自行选择颜色、字体和 UI 形状。<br><strong>保存：</strong>可另存为新名称，或更新已保存皮肤；设置保存在本机。',
       showSkip: true, showPrev: true, nextText: '设置鼠标图标', lockScroll: true, lockPointer: true, disableHighlightPointer: true
     },
     {
       id: 'pointer-style', target: '#image-skin-panel .skin-pointer-workbench', position: 'right', activateView: 'overview', waitForElement: true, action: 'openSkinPanel',
       title: '12　鼠标图标与自定义图片',
-      content: '鼠标图标可以独立开关。可选择柔光、星屑、泡泡、霓虹和猫咪，也能上传自己的透明图片；上传内容会自动轻量化并保存在这台设备。下方滑块可实时调整图标大小。',
+      content: '<strong>操作：</strong>先打开“鼠标图标”，再选择柔光、星屑、泡泡、霓虹或猫咪。<br><strong>自定义：</strong>可上传自己的透明图片，并用大小滑块实时调整。<br><strong>说明：</strong>鼠标图标与轨迹动画可分开使用。',
       showSkip: true, showPrev: true, nextText: '了解轨迹动画', lockScroll: true, lockPointer: true, disableHighlightPointer: true
     },
     {
       id: 'pointer-trail', target: '#image-skin-panel [data-pointer-trail-toggle]', position: 'right', activateView: 'overview', waitForElement: true, action: 'openSkinPanel',
       title: '13　轨迹动画与性能提示',
-      content: '轨迹动画默认关闭，且可与鼠标图标分开控制。开启前会提示确认；低性能设备、多标签页或省电模式下可能卡顿，遇到不流畅时关闭轨迹即可立即释放动画画布。',
+      content: '<strong>操作：</strong>单独打开“轨迹动画”，选择喜欢的轨迹样式。<br><strong>提示：</strong>首次开启会确认可能造成卡顿；低性能设备、多标签页或省电模式下建议保持关闭。<br><strong>关闭后：</strong>动画画布会立即停止并释放资源。',
       showSkip: true, showPrev: true, nextText: '完成向导', lockScroll: true, lockPointer: true, disableHighlightPointer: true
     },
     {
       id: 'completion', target: null, position: 'center', activateView: 'overview', action: 'closeSkinPanel',
       title: '🎉 使用向导完成',
-      content: '你已经了解完整流程：自选组题 → 固定套题 → 单篇练习 → 回顾与 PDF → 数据备份 → 皮肤与鼠标设置。以后可随时点击抬头下方的“使用向导”重新查看。',
+      content: '完整流程已经介绍完毕：自选组题 → 固定套题 → 单篇练习 → 练习回顾与 PDF → 数据备份 → 皮肤与鼠标设置。点击“开始练习”返回首页；以后可随时点击网页抬头下方的“使用向导”再次查看。',
       showSkip: false, showPrev: true, nextText: '开始练习'
     }
   ];
@@ -374,7 +374,10 @@
           <div class="onboarding-welcome__icon">🎓</div>
           <h3 class="onboarding-tooltip__title">${step.title}</h3>
           <p class="onboarding-tooltip__content">${step.content}</p>
-          <button class="onboarding-tooltip__btn onboarding-tooltip__btn--primary" data-action="next" style="margin-top: 16px;">${step.nextText}</button>
+          <div class="onboarding-tooltip__actions onboarding-welcome__actions" style="margin-top: 16px;">
+            ${step.showSkip ? '<button class="onboarding-tooltip__btn onboarding-tooltip__btn--skip" data-action="skip">暂时跳过</button>' : '<div></div>'}
+            <button class="onboarding-tooltip__btn onboarding-tooltip__btn--primary" data-action="next">${step.nextText}</button>
+          </div>
         </div>
       `;
 
@@ -432,7 +435,7 @@
           return;
         }
         if (this._stateManager.isCompleted() || this._isActive) return;
-        this.start(false, { mandatory: true });
+        this.start(false);
       };
       setTimeout(startWhenReady, 500);
     }
@@ -440,7 +443,7 @@
     start(fromBeginning = false, options = {}) {
       if (this._isActive) return;
 
-      this._forceCompletion = options.mandatory === true || !this._stateManager.isCompleted();
+      this._forceCompletion = options.mandatory === true;
       this._currentStep = fromBeginning ? 0 : this._stateManager.getCurrentStep();
       this._isActive = true;
       document.body.classList.add('onboarding-tour-active');

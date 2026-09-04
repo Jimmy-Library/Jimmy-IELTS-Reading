@@ -1,7 +1,7 @@
 (function registerReadingExamData(global) {
   'use strict';
-  if (!global.__READING_EXAM_DATA__ || typeof global.__READING_EXAM_DATA__.register !== "function") {
-    throw new Error("reading_exam_registry_missing");
+  if (!global.__READING_EXAM_DATA__ || typeof global.__READING_EXAM_DATA__.register !== 'function') {
+    throw new Error('reading_exam_registry_missing');
   }
   global.__READING_EXAM_DATA__.register("p1-high-1071", {
   "schemaVersion": "ReadingExamSourceV1",
@@ -62,12 +62,15 @@
     "q5": "FALSE",
     "q6": "NOT GIVEN",
     "q7": "NOT GIVEN",
-    "q8": "keystone",
+    "q8": [
+      "keystone",
+      "keystone species"
+    ],
     "q9": "fig family",
     "q10": "sea urchins",
     "q11": "cactus moth",
     "q12": "Australia",
-    "q13": "Public education"
+    "q13": "public education"
   },
   "questionOrder": [
     "q1",
@@ -100,4 +103,4 @@
     "q13": "13"
   }
 });
-})(typeof window !== "undefined" ? window : this);
+})(typeof window !== 'undefined' ? window : this);

@@ -6,7 +6,7 @@
 (function registerReadingQuestionTypes(global) {
   'use strict';
   global.__READING_QUESTION_TYPES__ = {
-  "generatedAt": "2026-08-29",
+  "generatedAt": "2026-09-04",
   "source": "人工分类索引 + 题目数据自动识别",
   "types": [
     {
@@ -86,43 +86,7 @@
     }
   ],
   "byExamId": {
-            "p1-medium-1045": ["matching", "tfng"],
-  "p1-high-1046": ["matching", "summary", "mc"],
-  "p1-high-1048": ["tfng", "sentence-completion"],
-  "p1-high-1049": ["tfng", "summary"],
-  "p1-high-1052": ["matching", "summary"],
-  "p1-medium-1054": ["matching", "mc", "sentence-completion"],
-  "p1-low-1056": ["tfng", "summary", "mc"],
-  "p3-low-1061": ["ynng", "summary", "mc"],
-  "p1-medium-1063": ["tfng", "table"],
-  "p1-medium-1064": ["matching", "mc", "summary"],
-  "p1-high-1067": ["tfng", "summary"],
-  "p1-medium-1068": ["diagram", "tfng", "summary"],
-  "p1-high-1071": ["tfng", "summary"],
-  "p2-low-1072": ["matching", "summary", "mc"],
-  "p1-high-1073": ["matching", "mc", "sentence-completion"],
-"p1-low-1029": ["matching", "summary"],
-  "p1-high-1030": ["matching", "mc"],
-  "p1-high-1031": ["tfng", "short-answer"],
-  "p1-low-1032": ["matching", "summary"],
-  "p1-low-1038": ["tfng", "summary"],
-  "p1-medium-1040": ["tfng", "summary"],
-  "p1-medium-1042": ["matching", "sentence-completion"],
-  "p1-medium-1043": ["tfng", "short-answer"],
-"p1-medium-1019": ["summary", "matching"],
-  "p1-high-1021": ["tfng", "summary"],
-  "p1-high-1028": ["matching", "short-answer"],
-"p1-medium-1003": ["matching", "short-answer"],
-  "p1-medium-1005": ["matching", "sentence-completion", "tfng"],
-  "p1-medium-1007": ["table", "tfng", "mc"],
-  "p1-high-1008": ["tfng", "summary"],
-  "p1-low-1009": ["tfng", "matching"],
-  "p1-low-1011": ["summary", "matching", "mc"],
-  "p3-high-1012": ["ynng", "sentence-completion", "mc"],
-  "p1-low-1014": ["tfng", "sentence-completion", "short-answer"],
-  "p1-high-1016": ["matching", "ynng"],
-  "p3-medium-1018": ["ynng", "mc", "matching"],
-"p1-high-01": [
+    "p1-high-01": [
       "matching-headings",
       "matching-features"
     ],
@@ -130,13 +94,55 @@
       "tfng",
       "note"
     ],
+    "p1-high-1008": [
+      "tfng"
+    ],
     "p1-high-101": [
       "ynng",
       "sentence"
     ],
+    "p1-high-1016": [
+      "ynng"
+    ],
+    "p1-high-1021": [
+      "tfng"
+    ],
+    "p1-high-1028": [
+      "short-answer"
+    ],
+    "p1-high-1030": [
+      "mc"
+    ],
+    "p1-high-1031": [
+      "tfng",
+      "short-answer"
+    ],
+    "p1-high-1046": [
+      "mc"
+    ],
+    "p1-high-1048": [
+      "tfng"
+    ],
+    "p1-high-1049": [
+      "tfng"
+    ],
     "p1-high-105": [
       "tfng",
       "note"
+    ],
+    "p1-high-1052": [
+      "matching-info",
+      "matching-features",
+      "summary-passage"
+    ],
+    "p1-high-1067": [
+      "tfng"
+    ],
+    "p1-high-1071": [
+      "tfng"
+    ],
+    "p1-high-1073": [
+      "mc"
     ],
     "p1-high-110": [
       "tfng",
@@ -240,6 +246,33 @@
     "p1-low-02": [
       "tfng",
       "matching-info"
+    ],
+    "p1-low-1009": [
+      "tfng"
+    ],
+    "p1-low-1011": [
+      "mc"
+    ],
+    "p1-low-1014": [
+      "tfng",
+      "short-answer"
+    ],
+    "p1-low-1029": [
+      "matching-info",
+      "matching-features",
+      "summary-passage"
+    ],
+    "p1-low-1032": [
+      "matching-info",
+      "matching-features",
+      "summary-passage"
+    ],
+    "p1-low-1038": [
+      "tfng"
+    ],
+    "p1-low-1056": [
+      "mc",
+      "tfng"
     ],
     "p1-low-106": [
       "tfng",
@@ -395,10 +428,54 @@
       "tfng",
       "note"
     ],
+    "p1-medium-1003": [
+      "short-answer"
+    ],
+    "p1-medium-1005": [
+      "tfng"
+    ],
+    "p1-medium-1007": [
+      "mc",
+      "tfng",
+      "table"
+    ],
+    "p1-medium-1019": [
+      "matching-endings",
+      "summary-passage"
+    ],
+    "p1-medium-1040": [
+      "tfng"
+    ],
     "p1-medium-1041": [
       "tfng",
       "note",
       "short-answer"
+    ],
+    "p1-medium-1042": [
+      "matching-info",
+      "matching-features",
+      "sentence"
+    ],
+    "p1-medium-1043": [
+      "tfng",
+      "short-answer"
+    ],
+    "p1-medium-1045": [
+      "tfng"
+    ],
+    "p1-medium-1054": [
+      "mc"
+    ],
+    "p1-medium-1063": [
+      "tfng",
+      "table"
+    ],
+    "p1-medium-1064": [
+      "mc"
+    ],
+    "p1-medium-1068": [
+      "tfng",
+      "diagram"
     ],
     "p1-medium-115": [
       "tfng",
@@ -649,6 +726,9 @@
       "matching-features",
       "summary-passage"
     ],
+    "p2-low-1072": [
+      "mc"
+    ],
     "p2-low-122": [
       "mc",
       "matching-info",
@@ -692,11 +772,6 @@
     "p2-low-148": [
       "mc",
       "matching-info",
-      "summary-passage"
-    ],
-    "p2-low-1823": [
-      "matching-info",
-      "matching-features",
       "summary-passage"
     ],
     "p2-low-222": [
@@ -868,6 +943,10 @@
       "ynng",
       "summary-list"
     ],
+    "p3-high-1012": [
+      "mc",
+      "ynng"
+    ],
     "p3-high-1051": [
       "mc",
       "ynng",
@@ -1022,6 +1101,10 @@
       "mc",
       "ynng",
       "matching-endings"
+    ],
+    "p3-low-1061": [
+      "mc",
+      "ynng"
     ],
     "p3-low-12": [
       "mc",
@@ -1202,6 +1285,10 @@
       "matching-info",
       "matching-endings"
     ],
+    "p3-medium-1018": [
+      "mc",
+      "ynng"
+    ],
     "p3-medium-152": [
       "mc",
       "tfng",
@@ -1302,17 +1389,21 @@
     ]
   },
   "autoDetectedExamIds": [
+    "p1-high-1052",
     "p1-high-1102",
     "p1-high-1783",
     "p1-high-1928",
     "p1-high-1931",
     "p1-high-240",
+    "p1-low-1029",
+    "p1-low-1032",
     "p1-low-1930",
+    "p1-medium-1019",
     "p1-medium-1041",
+    "p1-medium-1042",
     "p1-medium-1255",
     "p1-medium-1923",
     "p2-high-1015",
-    "p2-low-1823",
     "p2-low-240",
     "p2-low-242",
     "p2-medium-1925",

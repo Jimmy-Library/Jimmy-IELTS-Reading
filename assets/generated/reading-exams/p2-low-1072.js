@@ -1,7 +1,7 @@
 (function registerReadingExamData(global) {
   'use strict';
-  if (!global.__READING_EXAM_DATA__ || typeof global.__READING_EXAM_DATA__.register !== "function") {
-    throw new Error("reading_exam_registry_missing");
+  if (!global.__READING_EXAM_DATA__ || typeof global.__READING_EXAM_DATA__.register !== 'function') {
+    throw new Error('reading_exam_registry_missing');
   }
   global.__READING_EXAM_DATA__.register("p2-low-1072", {
   "schemaVersion": "ReadingExamSourceV1",
@@ -72,10 +72,10 @@
     "q6": "H",
     "q7": "A",
     "q8": "D",
-    "q9": "NARINGIN",
-    "q10": "POISONOUS",
-    "q11": "SUPERTASTERS",
-    "q12": "TASTEBUDS",
+    "q9": "naringin",
+    "q10": "poisonous",
+    "q11": "supertasters",
+    "q12": "taste buds",
     "q13": "A",
     "q14": "D"
   },
@@ -112,4 +112,4 @@
     "q14": "14"
   }
 });
-})(typeof window !== "undefined" ? window : this);
+})(typeof window !== 'undefined' ? window : this);

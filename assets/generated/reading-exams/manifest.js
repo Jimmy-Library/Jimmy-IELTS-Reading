@@ -2050,7 +2050,7 @@
     "dataKey": "p3-low-1061",
     "script": "./p3-low-1061.js",
     "title": "Australia's Megafauna Controversy 澳大利亚巨型动物群之争",
-    "category": "P1"
+    "category": "P3"
   },
   "p1-high-1062": {
     "examId": "p1-high-1062",
@@ -2120,7 +2120,7 @@
     "dataKey": "p2-low-1072",
     "script": "./p2-low-1072.js",
     "title": "Biology of Bitterness 苦味生物学",
-    "category": "P1"
+    "category": "P2"
   },
   "p1-high-1073": {
     "examId": "p1-high-1073",
@@ -7021,13 +7021,6 @@
     "script": "./p1-low-1822.js",
     "title": "The Research for Intelligence 智力研究",
     "category": "P1"
-  },
-  "p2-low-1823": {
-    "examId": "p2-low-1823",
-    "dataKey": "p2-low-1823",
-    "script": "./p2-low-1823.js",
-    "title": "The return of monkey life 猴群的回归",
-    "category": "P2"
   },
   "p2-low-1825": {
     "examId": "p2-low-1825",

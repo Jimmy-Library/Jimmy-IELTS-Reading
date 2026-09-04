@@ -102,6 +102,104 @@
         return pools;
     }
 
+    function frequencyRank(value) {
+        const normalized = String(value == null ? '' : value).trim().toLowerCase();
+        if (['high', '高频', 'ultra-high', '超高频', 'very-high', 'high frequency'].includes(normalized)) return 0;
+        if (['medium', 'mid', '次高频', '中频', 'medium frequency'].includes(normalized)) return 1;
+        if (['low', '低频', 'low frequency'].includes(normalized)) return 2;
+        return 3;
+    }
+
+    function normalizePracticeStats(rawStats) {
+        const stats = new Map();
+        if (rawStats instanceof Map) {
+            rawStats.forEach((value, key) => stats.set(String(key), value || {}));
+            return stats;
+        }
+        if (rawStats && typeof rawStats === 'object') {
+            Object.keys(rawStats).forEach((key) => stats.set(String(key), rawStats[key] || {}));
+        }
+        return stats;
+    }
+
+    function dailyTieBreak(dateKey, category, examId) {
+        const text = `${dateKey}|${category}|${examId}`;
+        let hash = 2166136261;
+        for (let i = 0; i < text.length; i += 1) {
+            hash ^= text.charCodeAt(i);
+            hash = Math.imul(hash, 16777619);
+        }
+        return hash >>> 0;
+    }
+
+    /**
+     * 每日推荐：未做过优先，其次按高频→次高频→低频排列；同级题目按日期稳定轮换。
+     * practiceStats: { [examId]: { count, lastAt } }
+     */
+    function buildDailyRecommendation(options = {}) {
+        const dateKey = String(options.dateKey || new Date().toISOString().slice(0, 10));
+        const stats = normalizePracticeStats(options.practiceStats);
+        const pools = buildPools();
+        const missing = CATEGORIES.filter((category) => !pools[category].length);
+        if (missing.length) return null;
+
+        const preferredExamIds = Array.isArray(options.examIds)
+            ? options.examIds.map((id) => String(id))
+            : [];
+        const preferredEntries = CATEGORIES.map((category, index) => (
+            pools[category].find((entry) => entry.id === preferredExamIds[index]) || null
+        ));
+        const canReuseSavedRecommendation = preferredEntries.every(Boolean);
+
+        const entries = canReuseSavedRecommendation ? preferredEntries : CATEGORIES.map((category) => {
+            const ranked = pools[category].slice().sort((left, right) => {
+                const leftStat = stats.get(String(left.id)) || {};
+                const rightStat = stats.get(String(right.id)) || {};
+                const leftCount = Math.max(0, Number(leftStat.count) || 0);
+                const rightCount = Math.max(0, Number(rightStat.count) || 0);
+                const unseenDifference = Number(leftCount > 0) - Number(rightCount > 0);
+                if (unseenDifference) return unseenDifference;
+                const frequencyDifference = frequencyRank(left.frequency) - frequencyRank(right.frequency);
+                if (frequencyDifference) return frequencyDifference;
+                if (leftCount !== rightCount) return leftCount - rightCount;
+                const leftLastAt = Number(leftStat.lastAt) || 0;
+                const rightLastAt = Number(rightStat.lastAt) || 0;
+                if (leftCount > 0 && leftLastAt !== rightLastAt) return leftLastAt - rightLastAt;
+                return dailyTieBreak(dateKey, category, left.id) - dailyTieBreak(dateKey, category, right.id);
+            });
+            return ranked[0];
+        });
+
+        const unseenCount = entries.filter((entry) => {
+            const stat = stats.get(String(entry.id)) || {};
+            return !(Number(stat.count) > 0);
+        }).length;
+        const highFrequencyCount = entries.filter((entry) => frequencyRank(entry.frequency) === 0).length;
+        return {
+            id: 'daily-recommendation-' + dateKey,
+            number: 0,
+            name: '今日推荐练习',
+            dateKey,
+            isDailyRecommendation: true,
+            entries,
+            examIds: entries.map((entry) => entry.id),
+            totalQuestions: entries.reduce((sum, entry) => sum + (entry.questionCount || 0), 0),
+            recommendationMeta: {
+                unseenCount,
+                highFrequencyCount,
+                allUnseen: unseenCount === entries.length
+            }
+        };
+    }
+
+    const dynamicSuites = new Map();
+
+    function getDailyRecommendation(options = {}) {
+        const suite = buildDailyRecommendation(options);
+        if (suite) dynamicSuites.set(suite.id, suite);
+        return suite;
+    }
+
     /**
      * 生成不重复的取用序列：把候选池整体打乱后依次取用，取完再重新打乱，
      * 这样 100 套里同一篇的出现次数尽量均摊，而不是随机撞车。
@@ -164,7 +262,9 @@
 
     function getSuite(suiteId) {
         const key = String(suiteId == null ? '' : suiteId);
-        return getCatalog().find((s) => s.id === key || String(s.number) === key) || null;
+        return dynamicSuites.get(key)
+            || getCatalog().find((s) => s.id === key || String(s.number) === key)
+            || null;
     }
 
     function invalidate() {
@@ -177,6 +277,7 @@
         STANDARD_QUESTION_COUNT: STANDARD_QUESTION_COUNT,
         getCatalog: getCatalog,
         getSuite: getSuite,
+        getDailyRecommendation: getDailyRecommendation,
         invalidate: invalidate
     };
 })(typeof window !== 'undefined' ? window : globalThis);

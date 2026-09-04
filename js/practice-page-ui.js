@@ -1142,32 +1142,61 @@
             return 'Part 1';
         }
 
-        const DRAGGABLE_ITEM_SELECTOR = '.drag-item, .drag-item-clone, .draggable-word, .card';
-        const ACTIVE_DRAG_ITEM_SELECTOR = '.drag-item, .draggable-word, .card';
-        const POOL_CONTAINER_SELECTOR = '.pool-items, .cardpool, #word-options';
-        const POOL_OPTION_SELECTOR = '.pool-items .drag-item, .cardpool .drag-item, .cardpool .card, #word-options .draggable-word';
+        const DRAGGABLE_ITEM_SELECTOR = [
+            '.drag-item', '.drag-item-clone', '.draggable-word', '.card',
+            '[draggable="true"][data-option]', '[draggable="true"][data-value]',
+            '[draggable="true"][data-word]', '[draggable="true"][data-heading]',
+            '[draggable="true"][data-key]'
+        ].join(', ');
+        const ACTIVE_DRAG_ITEM_SELECTOR = [
+            '.drag-item:not(.drag-item-clone)', '.draggable-word', '.card',
+            '[draggable="true"][data-option]', '[draggable="true"][data-value]',
+            '[draggable="true"][data-word]', '[draggable="true"][data-heading]',
+            '[draggable="true"][data-key]'
+        ].join(', ');
+        // 兼容现有题库及未来导入题目：新题可使用任一常见类名，或显式添加 data-option-pool。
+        const POOL_CONTAINER_SELECTOR = [
+            '.pool-items', '.cardpool', '#word-options', '.word-options', '.word-bank',
+            '.option-pool', '.options-pool', '.drag-options', '.matching-options',
+            '[data-option-pool]', '[data-drag-pool]', '[data-practice-option-pool="true"]'
+        ].join(', ');
         const DROP_ZONE_SELECTOR = '.paragraph-dropzone .dropped-items, .match-dropzone, .dropzone, .drop-target-summary';
         const GENERIC_DROP_ZONE_SELECTOR = '.dropzone, .drop-target-summary';
 
         function getPoolContainers() {
-            return document.querySelectorAll(POOL_CONTAINER_SELECTOR);
+            const pools = new Set(document.querySelectorAll(POOL_CONTAINER_SELECTOR));
+            document.querySelectorAll(ACTIVE_DRAG_ITEM_SELECTOR).forEach((item) => {
+                if (item.getAttribute('draggable') !== 'true' && !item.dataset.originPool) return;
+                const pool = item.closest(POOL_CONTAINER_SELECTOR) || inferOptionPool(item);
+                if (pool) pools.add(pool);
+            });
+            return Array.from(pools);
         }
 
         function isPoolContainer(element) {
-            return !!(element && ((element.classList && (element.classList.contains('pool-items') || element.classList.contains('cardpool'))) || element.id === 'word-options'));
+            return !!(element && element.matches && element.matches(POOL_CONTAINER_SELECTOR));
+        }
+
+        function inferOptionPool(item) {
+            if (!item || !(item instanceof HTMLElement)) return null;
+            let candidate = item.parentElement;
+            while (candidate && candidate !== document.body && candidate !== document.documentElement) {
+                if (isAnswerValueContainer(candidate)) return null;
+                const directOptions = Array.from(candidate.children).filter((child) =>
+                    isDragItemElement(child) && child.getAttribute('draggable') === 'true'
+                );
+                if (directOptions.length >= 2) {
+                    candidate.dataset.practiceOptionPool = 'true';
+                    return candidate;
+                }
+                if (candidate.matches('.group, .question-group, .unified-group')) break;
+                candidate = candidate.parentElement;
+            }
+            return null;
         }
 
         function isDragItemElement(element) {
-            return !!(
-                element &&
-                element.classList &&
-                (
-                    element.classList.contains('drag-item') ||
-                    element.classList.contains('drag-item-clone') ||
-                    element.classList.contains('draggable-word') ||
-                    element.classList.contains('card')
-                )
-            );
+            return !!(element && element.matches && element.matches(DRAGGABLE_ITEM_SELECTOR));
         }
 
         function isDropTargetContainer(element) {
@@ -1248,6 +1277,58 @@
             return false;
         }
 
+        function getDirectPoolOptions(pool) {
+            if (!pool) return [];
+            return Array.from(pool.children).filter((child) => isDragItemElement(child));
+        }
+
+        function ensurePoolOrderAnchor(pool, items) {
+            if (!pool) return null;
+            let anchor = pool._practiceOptionOrderAnchor;
+            if (!anchor || anchor.parentNode !== pool) {
+                anchor = document.createComment('practice-option-order-anchor');
+                const optionItems = items || getDirectPoolOptions(pool);
+                const lastOption = optionItems[optionItems.length - 1];
+                pool.insertBefore(anchor, lastOption ? lastOption.nextSibling : null);
+                pool._practiceOptionOrderAnchor = anchor;
+            }
+            return anchor;
+        }
+
+        function capturePoolOptionOrder(pool) {
+            if (!pool) return;
+            const items = getDirectPoolOptions(pool);
+            let nextOrder = items.reduce((next, item) => {
+                const order = Number.parseInt(item.dataset.poolOrder || '', 10);
+                return Number.isFinite(order) ? Math.max(next, order + 1) : next;
+            }, 0);
+            items.forEach((item) => {
+                const order = Number.parseInt(item.dataset.poolOrder || '', 10);
+                if (!Number.isFinite(order)) {
+                    item.dataset.poolOrder = String(nextOrder++);
+                }
+            });
+            ensurePoolOrderAnchor(pool, items);
+        }
+
+        function restorePoolOptionOrder(pool) {
+            if (!pool) return;
+            capturePoolOptionOrder(pool);
+            const anchor = ensurePoolOrderAnchor(pool);
+            getDirectPoolOptions(pool)
+                .sort((left, right) => {
+                    const leftOrder = Number.parseInt(left.dataset.poolOrder || '', 10);
+                    const rightOrder = Number.parseInt(right.dataset.poolOrder || '', 10);
+                    return (Number.isFinite(leftOrder) ? leftOrder : Number.MAX_SAFE_INTEGER)
+                        - (Number.isFinite(rightOrder) ? rightOrder : Number.MAX_SAFE_INTEGER);
+                })
+                .forEach((item) => pool.insertBefore(item, anchor));
+        }
+
+        function restoreAllPoolOptionOrder() {
+            getPoolContainers().forEach((pool) => restorePoolOptionOrder(pool));
+        }
+
         function markAssignedItem(item, sourcePool, isPoolClone) {
             if (!item) return item;
             if (sourcePool?.id && !item.dataset.originPool) {
@@ -1277,21 +1358,60 @@
                     pool.id = `practice-pool-${index}`;
                 }
                 detectPoolReuse(pool);
-            });
-
-            document.querySelectorAll(POOL_OPTION_SELECTOR).forEach((item) => {
-                if (!item.dataset.originPool) {
-                    const pool = item.closest(POOL_CONTAINER_SELECTOR);
-                    if (pool?.id) {
-                        item.dataset.originPool = pool.id;
-                    }
-                }
-                delete item.dataset.assignedItem;
-                delete item.dataset.poolClone;
+                getDirectPoolOptions(pool).forEach((item) => {
+                    if (!item.dataset.originPool) item.dataset.originPool = pool.id;
+                    delete item.dataset.assignedItem;
+                    delete item.dataset.poolClone;
+                });
+                capturePoolOptionOrder(pool);
+                restorePoolOptionOrder(pool);
             });
         }
 
         ensurePoolIds();
+
+        // 统一阅读页会在本脚本初始化后再动态渲染题目；在用户首次操作前记录其原始选项顺序。
+        let dynamicPoolIndex = getPoolContainers().length;
+        function initializeDynamicPool(pool) {
+            if (!pool || !isPoolContainer(pool)) return;
+            if (!pool.id) {
+                do {
+                    pool.id = `practice-pool-dynamic-${dynamicPoolIndex++}`;
+                } while (document.getElementById(pool.id) !== pool);
+            }
+            detectPoolReuse(pool);
+            getDirectPoolOptions(pool).forEach((item) => {
+                if (!item.dataset.originPool) {
+                    item.dataset.originPool = pool.id;
+                }
+            });
+            capturePoolOptionOrder(pool);
+        }
+
+        if (typeof MutationObserver === 'function' && document.body) {
+            const poolOrderObserver = new MutationObserver((mutations) => {
+                const pools = new Set();
+                mutations.forEach((mutation) => {
+                    mutation.addedNodes.forEach((node) => {
+                        if (!(node instanceof HTMLElement)) return;
+                        if (isPoolContainer(node)) pools.add(node);
+                        const parentPool = node.closest(POOL_CONTAINER_SELECTOR);
+                        if (parentPool) pools.add(parentPool);
+                        node.querySelectorAll?.(POOL_CONTAINER_SELECTOR).forEach((pool) => pools.add(pool));
+                        const addedOptions = [];
+                        if (isDragItemElement(node)) addedOptions.push(node);
+                        node.querySelectorAll?.(ACTIVE_DRAG_ITEM_SELECTOR).forEach((item) => addedOptions.push(item));
+                        addedOptions.forEach((item) => {
+                            if (item.getAttribute('draggable') !== 'true' && !item.dataset.originPool) return;
+                            const inferredPool = item.closest(POOL_CONTAINER_SELECTOR) || inferOptionPool(item);
+                            if (inferredPool) pools.add(inferredPool);
+                        });
+                    });
+                });
+                pools.forEach((pool) => initializeDynamicPool(pool));
+            });
+            poolOrderObserver.observe(document.body, { childList: true, subtree: true });
+        }
 
         function focusQuestionById(questionId) {
             const normalized = normalizeQuestionId(questionId) || questionId;
@@ -1534,13 +1654,14 @@
             }
             let targetPool = pool;
             if (!targetPool) {
-                targetPool = document.querySelector(POOL_CONTAINER_SELECTOR);
+                targetPool = getPoolContainers().find((candidate) => getDirectPoolOptions(candidate).length > 0) || null;
             }
             if (!targetPool) return;
             item.classList.remove('dragging');
             delete item.dataset.assignedItem;
             delete item.dataset.poolClone;
             targetPool.appendChild(item);
+            restorePoolOptionOrder(targetPool);
         }
 
         function clearDropzone(zone, exceptItem) {
@@ -1655,7 +1776,7 @@
         function handleDragStart(event) {
             const target = event.target.closest(ACTIVE_DRAG_ITEM_SELECTOR);
             if (!target) return;
-            const sourcePool = target.closest(POOL_CONTAINER_SELECTOR);
+            const sourcePool = target.closest(POOL_CONTAINER_SELECTOR) || inferOptionPool(target);
             dragState.item = target;
             dragState.sourceContainer = target.parentElement;
             dragState.sourcePool = sourcePool || getOriginPool(target);
@@ -1699,7 +1820,8 @@
             if (genericZone) {
                 return genericZone;
             }
-            const pool = target.closest(POOL_CONTAINER_SELECTOR);
+            const dragItem = target.closest(ACTIVE_DRAG_ITEM_SELECTOR);
+            const pool = target.closest(POOL_CONTAINER_SELECTOR) || (dragItem ? inferOptionPool(dragItem) : null);
             if (pool) {
                 return pool;
             }
@@ -1737,6 +1859,7 @@
                 delete item.dataset.assignedItem;
                 delete item.dataset.poolClone;
                 container.appendChild(item);
+                restorePoolOptionOrder(container);
                 return;
             }
 
@@ -1789,7 +1912,7 @@
         function applyClickAssign(targetContainer) {
             if (!clickSelectedItem || !targetContainer) return;
             const sourceContainer = clickSelectedItem.parentElement;
-            const sourcePool = clickSelectedItem.closest(POOL_CONTAINER_SELECTOR) || getOriginPool(clickSelectedItem);
+            const sourcePool = clickSelectedItem.closest(POOL_CONTAINER_SELECTOR) || getOriginPool(clickSelectedItem) || inferOptionPool(clickSelectedItem);
             const sourceAllowsReuse = !!(sourcePool && detectPoolReuse(sourcePool));
             dragState.item = clickSelectedItem;
             dragState.sourceContainer = sourceContainer;
@@ -1895,6 +2018,7 @@
                 item.setAttribute('draggable', 'true');
                 item.classList.remove('drag-item-locked');
             });
+            restoreAllPoolOptionOrder();
 
             document.querySelectorAll('.answer-correct, .answer-wrong').forEach((el) => {
                 el.classList.remove('answer-correct', 'answer-wrong');

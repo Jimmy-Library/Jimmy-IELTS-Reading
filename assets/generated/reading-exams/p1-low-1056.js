@@ -1,7 +1,7 @@
 (function registerReadingExamData(global) {
   'use strict';
-  if (!global.__READING_EXAM_DATA__ || typeof global.__READING_EXAM_DATA__.register !== "function") {
-    throw new Error("reading_exam_registry_missing");
+  if (!global.__READING_EXAM_DATA__ || typeof global.__READING_EXAM_DATA__.register !== 'function') {
+    throw new Error('reading_exam_registry_missing');
   }
   global.__READING_EXAM_DATA__.register("p1-low-1056", {
   "schemaVersion": "ReadingExamSourceV1",
@@ -50,7 +50,7 @@
         "q12",
         "q13"
       ],
-      "bodyHtml": "<div class=\"group\" id=\"q7-8-9-10-11-12-13-anchor\"><h4>Questions 7-13</h4><p>Complete the summary below.</p><p>Choose <strong>NO MORE THAN THREE WORDS</strong> from the passage for each answer.</p><p>When applying the precautionary principle to decide whether to invent a new technology, people should also the consideration of the <strong>7</strong> <input class=\"blank\" name=\"q7\" type=\"text\">, along with the usual consideration of <strong>8</strong> <input class=\"blank\" name=\"q8\" type=\"text\"> . For example, though risky and dangerous enough, people still enjoy <strong>9</strong> <input class=\"blank\" name=\"q9\" type=\"text\"> for the excitement it provides. On the other hand, experts believe that future population desperately needs <strong>10</strong> <input class=\"blank\" name=\"q10\" type=\"text\"> in spite of their undefined risks. However, the researchers conducted so far have not been directed towards increasing the yield of <strong>11</strong> <input class=\"blank\" name=\"q11\" type=\"text\">, but to reduce the cost of <strong>12</strong> <input class=\"blank\" name=\"q12\" type=\"text\"> and to bring more profit out of it. In the end, such selfish use of the precautionary principle for business and political gain has often led people to <strong>13</strong> <input class=\"blank\" name=\"q13\" type=\"text\"> science for they believe scientists are not to be trusted.</p></div>",
+      "bodyHtml": "<div class=\"group\" id=\"q7-8-9-10-11-12-13-anchor\"><h4>Questions 7-13</h4><p>Complete the summary below.</p><p>Choose <strong>NO MORE THAN THREE WORDS</strong> from the passage for each answer.</p><p>When applying the precautionary principle to decide whether to invent a new technology, people should also take into consideration the <strong>7</strong> <input class=\"blank\" name=\"q7\" type=\"text\">, along with the usual consideration of <strong>8</strong> <input class=\"blank\" name=\"q8\" type=\"text\"> . For example, though risky and dangerous enough, people still enjoy <strong>9</strong> <input class=\"blank\" name=\"q9\" type=\"text\"> for the excitement it provides. On the other hand, experts believe that future population desperately needs <strong>10</strong> <input class=\"blank\" name=\"q10\" type=\"text\"> in spite of their undefined risks. However, the research conducted so far has not been directed towards increasing the yield of <strong>11</strong> <input class=\"blank\" name=\"q11\" type=\"text\">, but to reduce the cost of <strong>12</strong> <input class=\"blank\" name=\"q12\" type=\"text\"> and to bring more profit out of it. In the end, such selfish use of the precautionary principle for business and political gain has often led people to <strong>13</strong> <input class=\"blank\" name=\"q13\" type=\"text\"> science for they believe scientists are not to be trusted.</p></div>",
       "leadHtml": ""
     },
     {
@@ -59,7 +59,7 @@
       "questionIds": [
         "q14"
       ],
-      "bodyHtml": "<div class=\"group\" id=\"q14-anchor\"><h4>Question 14</h4><p>Choose the correct letter, A, B, C or D.</p><a id=\"q14-anchor\"></a><div><p>14. What is the main theme of the passage?</p><div class=\"mcq-options\"><div class=\"mcq-option\"><label><input type=\"radio\" name=\"q14\" value=\"A\"> A. people have the right to doubt science and technologies</label></div><div class=\"mcq-option\"><label><input type=\"radio\" name=\"q14\" value=\"B\"> B. the precautionary principle could have prevented the development of science and technology</label></div><div class=\"mcq-option\"><label><input type=\"radio\" name=\"q14\" value=\"C\"> C. there are not enough people who truly understand the precautionary principle</label></div><div class=\"mcq-option\"><label><input type=\"radio\" name=\"q14\" value=\"D\"> D. the precautionary principle bids us take risks at all costs</label></div></div></div></div>",
+      "bodyHtml": "<div class=\"group\" id=\"q14-anchor\"><h4>Question 14</h4><p>Choose the correct letter, A, B, C or D.</p><a id=\"q14-anchor\"></a><div><p>14. What is the main theme of the passage?</p><div class=\"mcq-options\"><div class=\"mcq-option\"><label><input type=\"radio\" name=\"q14\" value=\"A\"> A. People have the right to doubt science and technologies</label></div><div class=\"mcq-option\"><label><input type=\"radio\" name=\"q14\" value=\"B\"> B. The precautionary principle could have prevented the development of science and technology</label></div><div class=\"mcq-option\"><label><input type=\"radio\" name=\"q14\" value=\"C\"> C. There are not enough people who truly understand the precautionary principle</label></div><div class=\"mcq-option\"><label><input type=\"radio\" name=\"q14\" value=\"D\"> D. The precautionary principle bids us take risks at all costs</label></div></div></div></div>",
       "leadHtml": ""
     }
   ],
@@ -69,10 +69,10 @@
     "q3": "FALSE",
     "q4": "NOT GIVEN",
     "q5": "TRUE",
-    "q6": "NOT GIVEN",
+    "q6": "FALSE",
     "q7": "consumer's right",
     "q8": "risk and benefit",
-    "q9": "Skiing",
+    "q9": "skiing",
     "q10": "GM crops",
     "q11": "wheat and rice",
     "q12": "production",
@@ -112,4 +112,4 @@
     "q14": "14"
   }
 });
-})(typeof window !== "undefined" ? window : this);
+})(typeof window !== 'undefined' ? window : this);
