@@ -304,6 +304,8 @@ async function initializeLegacyComponents() {
     startPracticeRecordsSyncInBackground('boot'); // 后台静默加载练习记录，避免阻塞首页
     setupMessageListener(); // Listen for updates from child windows
     setupStorageSyncListener(); // Listen for storage changes from other tabs
+    // Recover any completion that was locally queued before its save acknowledgement arrived.
+    window.setTimeout(() => recoverOfflinePracticeCompletions(), 600);
 }
 
 // Clean up old cache and configurations
@@ -763,6 +765,96 @@ function setupMessageListener() {
     });
 }
 
+
+async function recoverOfflinePracticeCompletions() {
+    const offlineReady = window.OfflineReady;
+    if (!offlineReady || typeof offlineReady.recoverPendingCompletions !== 'function') {
+        return { recovered: 0, pending: 0 };
+    }
+
+    const result = await offlineReady.recoverPendingCompletions(async (envelope) => {
+        const data = envelope && envelope.data && typeof envelope.data === 'object'
+            ? envelope.data
+            : null;
+        if (!data || data.partialSubmit === true) return true;
+
+        const examId = String(data.examId || data.metadata?.examId || '').trim();
+        if (!examId) return false;
+
+        // Preserve all three sections when a completed suite has to be recovered after a page restart.
+        if (data.finalizeSuite === true && Array.isArray(data.suiteSections) && data.suiteSections.length) {
+            let total = 0;
+            let correct = 0;
+            const answers = {};
+            const correctAnswers = {};
+            const answerComparison = {};
+            data.suiteEntries = data.suiteSections.map((section) => {
+                const sectionId = String(section.examId || '').trim();
+                const comparison = section.answerComparison && typeof section.answerComparison === 'object'
+                    ? section.answerComparison
+                    : {};
+                Object.keys(comparison).forEach((questionId) => {
+                    const row = comparison[questionId] || {};
+                    const key = sectionId + ':' + questionId;
+                    answers[key] = row.userAnswer ?? '';
+                    correctAnswers[key] = row.correctAnswer ?? '';
+                    answerComparison[key] = Object.assign({}, row, { examId: sectionId, questionId });
+                });
+                const sectionScore = section.scoreInfo || {};
+                total += Math.max(0, Number(sectionScore.total) || Object.keys(comparison).length);
+                correct += Math.max(0, Number(sectionScore.correct) || 0);
+                return {
+                    examId: sectionId,
+                    title: section.title || '',
+                    category: section.category || '',
+                    answers: section.answers || {},
+                    answerComparison: comparison,
+                    scoreInfo: sectionScore,
+                    markedQuestions: section.markedQuestions || [],
+                    highlights: section.highlights || []
+                };
+            });
+            data.answers = answers;
+            data.correctAnswers = correctAnswers;
+            data.answerComparison = answerComparison;
+            data.scoreInfo = {
+                correct,
+                total,
+                accuracy: total > 0 ? correct / total : 0,
+                percentage: total > 0 ? Math.round((correct / total) * 100) : 0
+            };
+            data.totalQuestions = total;
+            data.score = correct;
+            data.correctAnswerCount = correct;
+            data.suiteMode = true;
+            data.practiceMode = 'suite';
+            data.frequency = 'suite';
+            data.metadata = Object.assign({}, data.metadata || {}, {
+                suiteEntries: data.suiteEntries,
+                practiceMode: 'suite',
+                frequency: 'suite',
+                allowStandaloneSave: true,
+                offlineRecovered: true
+            });
+        }
+
+        const appInstance = window.app || app;
+        if (appInstance && typeof appInstance.handlePracticeComplete === 'function') {
+            return (await appInstance.handlePracticeComplete(examId, data, null)) !== false;
+        }
+        const saved = await savePracticeRecordFallback(examId, data);
+        return !!saved;
+    });
+
+    if (result.recovered > 0) {
+        try {
+            await syncPracticeRecords({ forceRender: true });
+            showMessage('已自动恢复 ' + result.recovered + ' 条离线练习记录', 'success');
+        } catch (_) {}
+    }
+    return result;
+}
+
 function setupStorageSyncListener() {
     window.addEventListener('storage-sync', (event) => {
         console.log('[System] 收到存储同步事件，正在更新练习记录...', event.detail);
@@ -1086,8 +1178,10 @@ async function savePracticeRecordFallback(examId, realData) {
             await storage.set(practiceKey, arr);
         }
         console.log('[Fallback] 真实数据已保存到 practice_records');
+        return record;
     } catch (e) {
         console.error('[Fallback] 保存练习记录失败:', e);
+        return null;
     }
 }
 

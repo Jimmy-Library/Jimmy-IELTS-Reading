@@ -1608,6 +1608,17 @@
                 return false;
             };
 
+            const acknowledgeOfflineCompletion = (targetWindow, data) => {
+                const offlineCompletionId = data && data.offlineCompletionId;
+                if (!offlineCompletionId || !targetWindow || targetWindow.closed) return;
+                try {
+                    targetWindow.postMessage({
+                        type: 'PRACTICE_SAVED',
+                        data: { offlineCompletionId: String(offlineCompletionId) }
+                    }, '*');
+                } catch (_) {}
+            };
+
             const messageHandler = async (event) => {
                 // 取得当前题目窗口引用（可能在 handshake 期间被更新）
                 const storedInfo = (this.examWindows && this.examWindows.get(examId)) || {};
@@ -1764,7 +1775,8 @@
                             windowInfo.suiteSessionId = data.suiteSessionId;
                             this.examWindows && this.examWindows.set(examId, windowInfo);
                         }
-                        await this.handlePracticeComplete(examId, data, sourceWindow || expectedWindow);
+                        const practiceSaved = await this.handlePracticeComplete(examId, data, sourceWindow || expectedWindow);
+                        if (practiceSaved !== false) acknowledgeOfflineCompletion(sourceWindow || expectedWindow, data);
                         break;
                     case 'ERROR_OCCURRED':
                         this.handleDataCollectionError(examId, data);
@@ -1839,7 +1851,8 @@
                         if (windowInfo && windowInfo.reviewMode) {
                             break;
                         }
-                        await this.handlePracticeComplete(examId, data, sourceWindow || expectedWindow);
+                        const suiteSaved = await this.handlePracticeComplete(examId, data, sourceWindow || expectedWindow);
+                        if (suiteSaved !== false) acknowledgeOfflineCompletion(sourceWindow || expectedWindow, data);
                         break;
                     default:
                 }
@@ -3169,7 +3182,7 @@
                 try {
                     const handled = await this.handleSuitePracticeComplete(examId, data, sourceWindow);
                     if (handled) {
-                        return;
+                        return true;
                     }
                     suiteHandlerDeclined = true;
                 } catch (suiteError) {
@@ -3241,10 +3254,12 @@
                     updatePracticeView();
                 }
 
+                return true;
             } catch (error) {
                 console.error('[DataCollection] 处理练习完成数据失败:', error);
                 // 即使出错也要显示通知
                 window.showMessage('练习已完成，但数据保存可能有问题', 'warning');
+                return false;
             } finally {
                 // 清理会话
                 this.cleanupExamSession(examId);

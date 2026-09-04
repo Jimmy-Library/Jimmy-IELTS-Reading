@@ -30,6 +30,7 @@
             } catch (e) {}
         })();
     </script>
+    <script src="js/runtime/offlineReady.js"></script>
     <script src="js/runtime/openAtTop.js"></script>
 </head>
 
@@ -375,10 +376,10 @@
                 <span class="hero-header__brand">
                     <span class="hero-header__title">📚<span>IELTS 阅读机考练习系统</span></span>
                     <span class="offline-download-row">
-                        <a class="offline-download-btn" href="downloads/Jimmy-IELTS-Reading-Offline-2026-09-03.zip" download="Jimmy-IELTS-Reading-Offline-2026-09-03.zip" aria-label="下载适用于 Windows 和 macOS 的离线版">
+                        <a class="offline-download-btn" href="downloads/Jimmy-IELTS-Reading-Offline-2026-09-04.zip" download="Jimmy-IELTS-Reading-Offline-2026-09-04.zip" aria-label="下载适用于 Windows 和 macOS 的离线版">
                             <span aria-hidden="true">↓</span><span>下载离线版</span>
                         </a>
-                        <span class="offline-download-version">Windows · macOS　|　更新于 2026-09-03</span>
+                        <span class="offline-download-version">Windows · macOS　|　更新于 2026-09-04</span>
                         <button class="usage-guide-btn" id="header-usage-guide-btn" type="button" onclick="window.OnboardingTour && window.OnboardingTour.start(true)" aria-label="打开 Jimmy 阅读题库使用向导">
                             <span aria-hidden="true">✦</span><span>使用向导</span>
                         </button>
@@ -1045,15 +1046,22 @@
     <script>
         // ── 浏览器提示横幅 ──
         (function () {
-            // 本会话已关闭过就不再弹出
+            // 仅首次打开显示；一旦展示就永久记住，刷新或下次打开不再占用页面顶部。
+            var noticeSeenKey = 'browser_notice_seen_v1';
             try {
-                if (sessionStorage.getItem('browser_notice_dismissed')) return;
-            } catch (_) {}
+                if (localStorage.getItem(noticeSeenKey)) return;
+                localStorage.setItem(noticeSeenKey, '1');
+            } catch (_) {
+                try {
+                    if (sessionStorage.getItem(noticeSeenKey)) return;
+                    sessionStorage.setItem(noticeSeenKey, '1');
+                } catch (_) {}
+            }
 
             var notice = document.getElementById('browser-notice');
             if (!notice) return;
 
-            // 显示横幅
+            // 首次显示横幅
             notice.removeAttribute('hidden');
 
             // 关闭按钮
@@ -1061,7 +1069,7 @@
             if (closeBtn) {
                 closeBtn.addEventListener('click', function () {
                     notice.setAttribute('hidden', '');
-                    try { sessionStorage.setItem('browser_notice_dismissed', '1'); } catch (_) {}
+                    try { localStorage.setItem(noticeSeenKey, '1'); } catch (_) {}
                 });
             }
 

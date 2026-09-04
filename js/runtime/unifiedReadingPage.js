@@ -16,6 +16,20 @@
     ]);
     const navStatus = new Map();
     const scriptCache = new Map();
+    let offlineRuntimePromise = null;
+
+    function ensureOfflineRuntime() {
+        if (global.OfflineReady) return Promise.resolve(global.OfflineReady);
+        if (offlineRuntimePromise) return offlineRuntimePromise;
+        offlineRuntimePromise = loadScript('../../../js/runtime/offlineReady.js')
+            .then(() => global.OfflineReady || null)
+            .catch((error) => {
+                console.warn('[UnifiedReadingPage] Offline support unavailable:', error);
+                return null;
+            });
+        return offlineRuntimePromise;
+    }
+
     function getAnswerMatchCore() {
         const core = global.AnswerMatchCore;
         if (!core || typeof core !== 'object') {
@@ -668,6 +682,10 @@
             }
             return loadDatasetFor(examId);
         }));
+        const missingDatasetIndex = datasets.findIndex((dataset) => !dataset || !dataset.answerKey);
+        if (missingDatasetIndex >= 0) {
+            throw new Error('suite_dataset_incomplete:' + ids[missingDatasetIndex]);
+        }
 
         const passages = ids.map((examId, index) => {
             const dataset = datasets[index];
@@ -2568,6 +2586,13 @@
 
     function postMessage(type, payload) {
         const envelope = buildEnvelope(type, payload);
+        if ((type === 'PRACTICE_COMPLETE' || type === 'SIMULATION_SUBMIT')
+            && envelope.data
+            && envelope.data.partialSubmit !== true
+            && global.OfflineReady
+            && typeof global.OfflineReady.queueCompletion === 'function') {
+            global.OfflineReady.queueCompletion(envelope);
+        }
         const candidates = [global.opener, state.parentWindow, global.parent];
         const visited = new Set();
         for (let index = 0; index < candidates.length; index += 1) {
@@ -4202,7 +4227,12 @@
         if (state.simulationMode
             && Array.isArray(state.suiteSequenceExamIds)
             && state.suiteSequenceExamIds.length > 1) {
-            ensureSuiteBlueprint().catch(() => {});
+            await ensureSuiteBlueprint();
+        }
+        // Cache the opened page, all loaded question data, and answer keys for offline submission.
+        const offlineRuntime = await ensureOfflineRuntime();
+        if (offlineRuntime && typeof offlineRuntime.cacheCurrentPage === 'function') {
+            offlineRuntime.cacheCurrentPage().catch(() => {});
         }
         // 回顾只读模式：加载即应用只读（设 body 类，禁用输入/高亮），等回放数据到达再冻结计时
         if (state.reviewMode || state.readOnly) {
