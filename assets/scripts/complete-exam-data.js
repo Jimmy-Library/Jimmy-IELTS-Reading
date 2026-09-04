@@ -3,6 +3,52 @@
 // 数据版本: v3.2
 window.completeExamIndex = [
 {
+        id: "p1-medium-1045", title: "Burying greenhouse gases to slow global warming 掩埋温室气体以减缓全球变暖", category: "P1", frequency: "medium", path: "assets/generated/reading-exams/", filename: "p1-medium-1045.js", hasHtml: true, hasPdf: false,
+    },
+{
+        id: "p1-high-1046", title: "Antarctica – in from the cold? 南极洲——走出寒冷？", category: "P1", frequency: "high", path: "assets/generated/reading-exams/", filename: "p1-high-1046.js", hasHtml: true, hasPdf: false,
+    },
+{
+        id: "p1-high-1048", title: "Antonio Stradivari - violin maker supreme 小提琴制作大师安东尼奥·斯特拉迪瓦里", category: "P1", frequency: "high", path: "assets/generated/reading-exams/", filename: "p1-high-1048.js", hasHtml: true, hasPdf: false,
+    },
+{
+        id: "p1-high-1049", title: "Archaeologists discover evidence of prehistoric island settlers 考古学家发现史前岛民定居的证据", category: "P1", frequency: "high", path: "assets/generated/reading-exams/", filename: "p1-high-1049.js", hasHtml: true, hasPdf: false,
+    },
+{
+        id: "p1-high-1052", title: "Art in Iron and Steel 钢铁艺术", category: "P1", frequency: "high", path: "assets/generated/reading-exams/", filename: "p1-high-1052.js", hasHtml: true, hasPdf: false,
+    },
+{
+        id: "p1-medium-1054", title: "Artificial Intelligence in Sport 体育中的人工智能", category: "P1", frequency: "medium", path: "assets/generated/reading-exams/", filename: "p1-medium-1054.js", hasHtml: true, hasPdf: false,
+    },
+{
+        id: "p1-low-1056", title: "Assessing the risk 风险评估", category: "P1", frequency: "low", path: "assets/generated/reading-exams/", filename: "p1-low-1056.js", hasHtml: true, hasPdf: false,
+    },
+{
+        id: "p3-low-1061", title: "Australia's Megafauna Controversy 澳大利亚巨型动物群之争", category: "P1", frequency: "low", path: "assets/generated/reading-exams/", filename: "p1-low-1061.js", hasHtml: true, hasPdf: false,
+    },
+{
+        id: "p1-medium-1063", title: "Australian Culture and Culture Shock 澳大利亚文化与文化冲击", category: "P1", frequency: "medium", path: "assets/generated/reading-exams/", filename: "p1-medium-1063.js", hasHtml: true, hasPdf: false,
+    },
+{
+        id: "p1-medium-1064", title: "Australian parrots and their adaptation to habitat change 澳大利亚鹦鹉及其对栖息地变化的适应", category: "P1", frequency: "medium", path: "assets/generated/reading-exams/", filename: "p1-medium-1064.js", hasHtml: true, hasPdf: false,
+    },
+{
+        id: "p1-high-1067", title: "Back to Wild 重返荒野", category: "P1", frequency: "high", path: "assets/generated/reading-exams/", filename: "p1-high-1067.js", hasHtml: true, hasPdf: false,
+    },
+{
+        id: "p1-medium-1068", title: "Becoming an Expert 成为专家", category: "P1", frequency: "medium", path: "assets/generated/reading-exams/", filename: "p1-medium-1068.js", hasHtml: true, hasPdf: false,
+    },
+{
+        id: "p1-high-1071", title: "Biodiversity 生物多样性", category: "P1", frequency: "high", path: "assets/generated/reading-exams/", filename: "p1-high-1071.js", hasHtml: true, hasPdf: false,
+    },
+{
+        id: "p2-low-1072", title: "Biology of Bitterness 苦味生物学", category: "P1", frequency: "low", path: "assets/generated/reading-exams/", filename: "p1-low-1072.js", hasHtml: true, hasPdf: false,
+    },
+{
+        id: "p1-high-1073", title: "Bioluminescence 生物发光", category: "P1", frequency: "high", path: "assets/generated/reading-exams/", filename: "p1-high-1073.js", hasHtml: true, hasPdf: false,
+    },
+
+{
         id: "p1-low-1029", title: "Achieving a Work–life Balance 实现工作与生活的平衡", category: "P1", frequency: "low", path: "assets/generated/reading-exams/", filename: "p1-low-1029.js", hasHtml: true, hasPdf: false,
     },
 {

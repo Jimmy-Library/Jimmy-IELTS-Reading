@@ -1952,6 +1952,19 @@
             if (!(event.target instanceof HTMLElement)) {
                 return;
             }
+            // 多选 checkbox 限制：data-limit 组内最多勾选 N 个（如 Which FOUR 限 4 个）
+            if (event.target instanceof HTMLInputElement && event.target.type === 'checkbox' && event.target.checked) {
+                const group = event.target.closest('.checkbox-options');
+                if (group) {
+                    const limit = Number(group.getAttribute('data-limit'));
+                    if (Number.isFinite(limit) && limit > 0) {
+                        const checkedCount = group.querySelectorAll('input[type="checkbox"]:checked').length;
+                        if (checkedCount > limit) {
+                            event.target.checked = false;
+                        }
+                    }
+                }
+            }
             handleAnswerInteraction(event.target);
         }, true);
 
