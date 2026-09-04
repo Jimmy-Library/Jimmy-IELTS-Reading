@@ -202,8 +202,6 @@
                 const frequencyFilteredIndex = normalizedIndex.filter(item => (
                     this._isSuiteFrequencyIncluded(item && item.frequency, frequencyScope)
                 ));
-                const practicedExamIds = await this._collectPracticedReadingExamIds();
-
                 const categories = ['P1', 'P2', 'P3'];
                 const sequence = [];
                 for (const category of categories) {
@@ -215,18 +213,9 @@
                         window.showMessage && window.showMessage('当前抽题范围（' + scopeLabel + '）缺少 ' + category + ' 阅读题目，无法开启套题练习。', 'warning');
                         return;
                     }
-                    const unpracticedPool = pool.filter(item => !practicedExamIds.has(String(item.id)));
-                    const selectionPool = unpracticedPool.length ? unpracticedPool : pool;
-                    if (!unpracticedPool.length) {
-                        const scopeLabel = frequencyScope === 'high'
-                            ? '仅高频'
-                            : (frequencyScope === 'high_medium' ? '高频+次高频' : '全部频率');
-                        window.showMessage && window.showMessage(
-                            '当前抽题范围（' + scopeLabel + '）中的 ' + category + ' 已全部练习过，已自动放宽为允许重复抽题。',
-                            'warning'
-                        );
-                    }
-                    const picked = selectionPool[Math.floor(Math.random() * selectionPool.length)];
+                    const picked = pool.slice().sort((left, right) => (
+                        String(left.id).localeCompare(String(right.id))
+                    ))[0];
                     sequence.push({ examId: picked.id, exam: picked });
                 }
 
@@ -793,6 +782,7 @@
                 const snapshot = {
                     id: session.id,
                     sequence: session.sequence,
+                    lockedExamIds: (session.sequence || []).map((item) => String(item.examId)),
                     currentIndex: session.currentIndex,
                     draftsByExam: session.draftsByExam || {},
                     elapsedByExam: session.elapsedByExam || {},
@@ -830,10 +820,13 @@
                         && session.sequence[0].exam && session.sequence[0].exam.title) || '';
                     const progress = Object.assign({}, snapshot, {
                         kind: 'suite',
-                        title: '套题练习（' + (session.sequence ? session.sequence.length : 0) + '篇）'
-                            + (firstTitle ? ' · ' + firstTitle : ''),
+                        title: session.catalogSuiteName || ('\u5957\u9898\u7ec3\u4e60\uff08'
+                            + (session.sequence ? session.sequence.length : 0) + '\u7bc7\uff09'
+                            + (firstTitle ? ' \u00b7 ' + firstTitle : '')),
                         answeredCount: answeredCount,
-                        totalQuestions: 0,
+                        totalQuestions: global.SuiteCatalog && Number(global.SuiteCatalog.TOTAL_QUESTIONS)
+                            ? Number(global.SuiteCatalog.TOTAL_QUESTIONS)
+                            : 40,
                         elapsed: elapsed,
                         updatedAt: Date.now()
                     });
@@ -886,13 +879,13 @@
             } catch (_) { return null; }
         },
 
-        _clearSessionStorage() {
+        _clearSessionStorage(options = {}) {
             try {
                 if (global.sessionStorage) {
                     global.sessionStorage.removeItem('ielts_sim_session');
                 }
                 // 清除 localStorage 中的套题进度（套题完成/中止时）
-                if (global.localStorage) {
+                if (global.localStorage && options.preserveLocalProgress !== true) {
                     let key = this._persistedSuiteProgressKey;
                     if (!key && this.currentSuiteSession && this.currentSuiteSession.id) {
                         key = 'ielts_suite_progress::' + this.currentSuiteSession.id;
@@ -917,6 +910,46 @@
         },
 
         // 从「未完成」列表继续做未完成的套题
+        _hydrateSuiteSnapshotDrafts(snapshot, suiteSessionId) {
+            if (!snapshot || !Array.isArray(snapshot.sequence) || !global.localStorage) return snapshot;
+            const sequenceIds = snapshot.sequence.map((item) => String(item && item.examId || '')).filter(Boolean);
+            const lockedIds = Array.isArray(snapshot.lockedExamIds)
+                ? snapshot.lockedExamIds.map(String).filter(Boolean)
+                : sequenceIds.slice();
+            if (lockedIds.length !== sequenceIds.length
+                || lockedIds.some((examId, index) => examId !== sequenceIds[index])) {
+                return null;
+            }
+            snapshot.lockedExamIds = lockedIds;
+            snapshot.draftsByExam = snapshot.draftsByExam && typeof snapshot.draftsByExam === 'object'
+                ? snapshot.draftsByExam
+                : {};
+            snapshot.elapsedByExam = snapshot.elapsedByExam && typeof snapshot.elapsedByExam === 'object'
+                ? snapshot.elapsedByExam
+                : {};
+            let newestAt = Number(snapshot.updatedAt || snapshot.savedAt) || 0;
+            let newestIndex = Number.isInteger(snapshot.currentIndex) ? snapshot.currentIndex : 0;
+            sequenceIds.forEach((examId, index) => {
+                try {
+                    const raw = global.localStorage.getItem('ielts_suite_draft::' + suiteSessionId + '::' + examId);
+                    const saved = raw ? JSON.parse(raw) : null;
+                    if (!saved || !saved.draft || typeof saved.draft !== 'object') return;
+                    snapshot.draftsByExam[examId] = saved.draft;
+                    if (Number.isFinite(Number(saved.elapsed))) {
+                        snapshot.elapsedByExam[examId] = Math.max(0, Number(saved.elapsed));
+                    }
+                    const savedAt = Number(saved.savedAt) || 0;
+                    if (savedAt >= newestAt) {
+                        newestAt = savedAt;
+                        newestIndex = index;
+                    }
+                } catch (_) {}
+            });
+            snapshot.currentIndex = Math.min(Math.max(0, newestIndex), sequenceIds.length - 1);
+            snapshot.activeExamId = sequenceIds[snapshot.currentIndex] || sequenceIds[0] || '';
+            return snapshot;
+        },
+
         async resumeSuiteDraft(suiteSessionId) {
             if (!suiteSessionId) return false;
             let snapshot = null;
@@ -924,6 +957,7 @@
                 const raw = global.localStorage && global.localStorage.getItem('ielts_suite_progress::' + suiteSessionId);
                 snapshot = raw ? JSON.parse(raw) : null;
             } catch (_) { snapshot = null; }
+            snapshot = this._hydrateSuiteSnapshotDrafts(snapshot, suiteSessionId);
             if (!snapshot || !Array.isArray(snapshot.sequence) || !snapshot.sequence.length) {
                 window.showMessage && window.showMessage('未找到可继续的套题进度。', 'warning');
                 return false;
@@ -957,6 +991,7 @@
                 status: 'initializing',
                 startTime: snapshot.startTime || Date.now(),
                 sequence: normalizedSequence,
+                lockedExamIds: normalizedSequence.map((item) => String(item.examId)),
                 currentIndex: resumeIndex,
                 results: Array.isArray(snapshot.results) ? snapshot.results : [],
                 draftsByExam: snapshot.draftsByExam || {},
@@ -2223,6 +2258,7 @@
                     status: 'initializing',
                     startTime: startedAt,
                     sequence: normalizedSequence,
+                    lockedExamIds: normalizedSequence.map((item) => String(item.examId)),
                     currentIndex: 0,
                     results: [],
                     draftsByExam: {},
@@ -2762,7 +2798,9 @@
             if (typeof this._clearSuiteHandshakes === 'function') {
                 this._clearSuiteHandshakes();
             }
-            this._clearSessionStorage();
+            this._clearSessionStorage({
+                preserveLocalProgress: options.preserveLocalProgress === true
+            });
         },
 
         async _abortSuiteSession(session, options = {}) {
@@ -2794,7 +2832,7 @@
                 this.refreshOverviewData && this.refreshOverviewData();
             }
 
-            await this._teardownSuiteSession(session);
+            await this._teardownSuiteSession(session, { preserveLocalProgress: true });
         },
 
         _openNamedSuiteWindow(windowName, session = null) {

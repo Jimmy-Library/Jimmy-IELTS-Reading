@@ -2887,30 +2887,85 @@
         );
     }
 
+    function countAnsweredAcrossSuiteDrafts(draftsByExam) {
+        let count = 0;
+        Object.values(draftsByExam || {}).forEach((draft) => {
+            const answers = draft && draft.answers && typeof draft.answers === 'object' ? draft.answers : {};
+            Object.values(answers).forEach((value) => {
+                if (Array.isArray(value) ? value.length > 0 : value !== null && value !== undefined && String(value).trim() !== '') {
+                    count += 1;
+                }
+            });
+        });
+        return count;
+    }
+
+    function mirrorSuiteProgressFromPage(draft, savedAt, elapsed) {
+        if (!global.localStorage || !state.suiteSessionId || !state.examId) return;
+        const progressKey = 'ielts_suite_progress::' + String(state.suiteSessionId);
+        try {
+            const raw = global.localStorage.getItem(progressKey);
+            const progress = raw ? JSON.parse(raw) : null;
+            if (!progress || !Array.isArray(progress.sequence) || !progress.sequence.length) return;
+            const sequenceIds = progress.sequence.map((item) => String(item && item.examId || '')).filter(Boolean);
+            const pageIds = Array.isArray(state.suiteSequenceExamIds)
+                ? state.suiteSequenceExamIds.map(String).filter(Boolean)
+                : [];
+            const lockedIds = Array.isArray(progress.lockedExamIds)
+                ? progress.lockedExamIds.map(String).filter(Boolean)
+                : sequenceIds.slice();
+            const isSameSequence = lockedIds.length === sequenceIds.length
+                && lockedIds.every((examId, index) => examId === sequenceIds[index])
+                && (!pageIds.length || (pageIds.length === lockedIds.length
+                    && pageIds.every((examId, index) => examId === lockedIds[index])));
+            if (!isSameSequence || !lockedIds.includes(String(state.examId))) return;
+            progress.lockedExamIds = lockedIds;
+            progress.draftsByExam = progress.draftsByExam && typeof progress.draftsByExam === 'object'
+                ? progress.draftsByExam
+                : {};
+            progress.elapsedByExam = progress.elapsedByExam && typeof progress.elapsedByExam === 'object'
+                ? progress.elapsedByExam
+                : {};
+            progress.draftsByExam[String(state.examId)] = draft;
+            progress.elapsedByExam[String(state.examId)] = Math.max(0, Number(elapsed) || 0);
+            const contextIndex = Number(state.simulationCtx && state.simulationCtx.currentIndex);
+            const fallbackIndex = lockedIds.indexOf(String(state.examId));
+            progress.currentIndex = Number.isInteger(contextIndex) && contextIndex >= 0 && contextIndex < lockedIds.length
+                ? contextIndex
+                : Math.max(0, fallbackIndex);
+            progress.activeExamId = lockedIds[progress.currentIndex] || String(state.examId);
+            progress.answeredCount = countAnsweredAcrossSuiteDrafts(progress.draftsByExam);
+            progress.totalQuestions = Number(progress.totalQuestions) || 40;
+            progress.elapsed = Math.round(Object.values(progress.elapsedByExam).reduce((sum, value) => (
+                sum + (Number.isFinite(Number(value)) ? Math.max(0, Number(value)) : 0)
+            ), 0));
+            progress.updatedAt = savedAt;
+            global.localStorage.setItem(progressKey, JSON.stringify(progress));
+        } catch (_) {}
+    }
+
     function saveSuiteDraft(reason = 'auto') {
-        if (!isSuiteDraftEligible()) {
-            return;
-        }
+        if (!isSuiteDraftEligible()) return;
         const key = getSuiteDraftStorageKey();
-        if (!key || !global.localStorage) {
-            return;
-        }
+        if (!key || !global.localStorage) return;
         const draft = cloneDraftSafely(collectCurrentDraft());
-        if (!draftHasContent(draft)) {
-            return;
-        }
+        if (!draft) return;
+        const savedAt = Date.now();
+        const elapsed = getPageElapsedSeconds();
         try {
             global.localStorage.setItem(key, JSON.stringify({
                 draft,
-                savedAt: Date.now(),
+                savedAt,
                 fingerprint: buildDraftFingerprint(draft),
-                elapsed: getPageElapsedSeconds(),
+                elapsed,
                 examTitle: state.dataset?.meta?.title || '',
+                examId: String(state.examId),
+                sequenceIndex: Number(state.simulationCtx && state.simulationCtx.currentIndex) || 0,
+                sequenceExamIds: Array.isArray(state.suiteSequenceExamIds) ? state.suiteSequenceExamIds.map(String) : [],
                 suiteSessionId: state.suiteSessionId
             }));
-        } catch (_) {
-            // ignore localStorage failures
-        }
+            mirrorSuiteProgressFromPage(draft, savedAt, elapsed);
+        } catch (_) {}
     }
 
     function readSuiteDraft() {
@@ -3186,6 +3241,19 @@
         });
     }
 
+    function bindSuiteDraftFlushHandlers() {
+        if (state.suiteDraftFlushHandlersBound) return;
+        state.suiteDraftFlushHandlersBound = true;
+        const flush = () => syncSimulationDraftSnapshot('flush');
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) flush();
+        });
+        global.addEventListener('pagehide', flush);
+        global.addEventListener('beforeunload', flush);
+        document.addEventListener('change', flush, true);
+        document.addEventListener('input', flush, true);
+    }
+
     function refreshSimulationDraftSyncLifecycle() {
         const shouldSync = Boolean(
             state.simulationMode
@@ -3198,6 +3266,7 @@
             stopSimulationDraftSync();
             return;
         }
+        bindSuiteDraftFlushHandlers();
         if (!state.simulationDraftSyncTimer) {
             state.simulationDraftSyncTimer = setInterval(() => {
                 syncSimulationDraftSnapshot('periodic');

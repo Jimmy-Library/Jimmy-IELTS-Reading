@@ -3595,7 +3595,7 @@
             if (this.suiteExamMap && this.suiteExamMap.has(examId) && this.currentSuiteSession && this.currentSuiteSession.status === 'active' && this.suiteExamMap.get(examId) === this.currentSuiteSession.id) {
                 window.showMessage && window.showMessage('套题练习窗口已关闭，套题模式将被中断并回退到普通模式。', 'warning');
                 if (typeof this._abortSuiteSession === 'function') {
-                    this._abortSuiteSession(this.currentSuiteSession, {}).catch(error => {
+                    this._abortSuiteSession(this.currentSuiteSession, { reason: 'window_closed', preserveLocalProgress: true }).catch(error => {
                         console.error('[SuitePractice] 中断套题失败:', error);
                     });
                 }

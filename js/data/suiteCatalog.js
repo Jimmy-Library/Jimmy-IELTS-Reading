@@ -5,8 +5,7 @@
  * - 每套 = 1 篇 P1 + 1 篇 P2 + 1 篇 P3，合计正好 40 题，与雅思 40 题
  *   分数表对齐；因此只选用标准题量的篇目（见 STANDARD_QUESTION_COUNT），
  *   题量异常的个别篇目不参与组卷。
- * - 确定性：同一份题库下，第 N 套永远是同样三篇（种子 PRNG + 按 examId
- *   排序的候选池），用户可以反复重做同一套、进度也能对上号。
+ * - Fixed catalog: every suite keeps the same three exam IDs across reloads and future question additions.
  * - 允许单篇在不同套题中重复出现（题库篇数不足以支撑 100 套全不重复）。
  */
 (function initSuiteCatalog(global) {
@@ -15,24 +14,514 @@
     const SUITE_COUNT = 100;
     const CATEGORIES = ['P1', 'P2', 'P3'];
 
+    // Frozen mapping: newly added questions must never reshuffle existing suites.
+    const FIXED_CATALOG_EXAM_IDS = [
+        [
+            "p1-low-111",
+            "p2-low-147",
+            "p3-high-181"
+        ],
+        [
+            "p1-high-200",
+            "p2-high-234",
+            "p3-low-71"
+        ],
+        [
+            "p1-medium-119",
+            "p2-high-225",
+            "p3-medium-152"
+        ],
+        [
+            "p1-medium-1045",
+            "p2-high-236",
+            "p3-high-174"
+        ],
+        [
+            "p1-medium-1041",
+            "p2-medium-10",
+            "p3-medium-18"
+        ],
+        [
+            "p1-low-1038",
+            "p2-high-16",
+            "p3-high-89"
+        ],
+        [
+            "p1-low-138",
+            "p2-high-123",
+            "p3-low-85"
+        ],
+        [
+            "p1-high-101",
+            "p2-medium-121",
+            "p3-medium-154"
+        ],
+        [
+            "p1-low-99",
+            "p2-low-06",
+            "p3-low-95"
+        ],
+        [
+            "p1-medium-1003",
+            "p2-high-134",
+            "p3-low-07"
+        ],
+        [
+            "p1-low-13",
+            "p2-high-124",
+            "p3-medium-179"
+        ],
+        [
+            "p1-low-67",
+            "p2-low-62",
+            "p3-low-78"
+        ],
+        [
+            "p1-low-114",
+            "p2-low-051",
+            "p3-low-198"
+        ],
+        [
+            "p1-high-05",
+            "p2-medium-58",
+            "p3-high-157"
+        ],
+        [
+            "p1-low-127",
+            "p2-high-136",
+            "p3-low-100"
+        ],
+        [
+            "p1-low-02",
+            "p2-low-94",
+            "p3-low-38"
+        ],
+        [
+            "p1-low-47",
+            "p2-low-39",
+            "p3-low-74"
+        ],
+        [
+            "p1-high-1071",
+            "p2-low-50",
+            "p3-medium-169"
+        ],
+        [
+            "p1-low-48",
+            "p2-high-235",
+            "p3-high-212"
+        ],
+        [
+            "p1-low-53",
+            "p2-high-239",
+            "p3-low-98"
+        ],
+        [
+            "p1-medium-161",
+            "p2-medium-217",
+            "p3-high-159"
+        ],
+        [
+            "p1-medium-63",
+            "p2-low-242",
+            "p3-medium-244"
+        ],
+        [
+            "p1-medium-1019",
+            "p2-low-102",
+            "p3-low-1061"
+        ],
+        [
+            "p1-high-92",
+            "p2-medium-243",
+            "p3-low-166"
+        ],
+        [
+            "p1-low-113",
+            "p2-high-201",
+            "p3-medium-168"
+        ],
+        [
+            "p1-low-223",
+            "p2-low-75",
+            "p3-high-218"
+        ],
+        [
+            "p1-low-80",
+            "p2-low-51",
+            "p3-low-55"
+        ],
+        [
+            "p1-medium-29",
+            "p2-high-137",
+            "p3-medium-197"
+        ],
+        [
+            "p1-low-84",
+            "p2-low-73",
+            "p3-low-999"
+        ],
+        [
+            "p1-high-105",
+            "p2-medium-146",
+            "p3-low-165"
+        ],
+        [
+            "p1-medium-117",
+            "p2-low-41",
+            "p3-high-04"
+        ],
+        [
+            "p1-high-1021",
+            "p2-low-140",
+            "p3-high-221"
+        ],
+        [
+            "p1-low-107",
+            "p2-medium-86",
+            "p3-medium-66"
+        ],
+        [
+            "p1-high-171",
+            "p2-high-130",
+            "p3-medium-185"
+        ],
+        [
+            "p1-low-52",
+            "p2-high-139",
+            "p3-high-229"
+        ],
+        [
+            "p1-low-68",
+            "p2-low-240",
+            "p3-high-164"
+        ],
+        [
+            "p1-high-1008",
+            "p2-low-49",
+            "p3-high-32"
+        ],
+        [
+            "p1-high-1931",
+            "p2-high-145",
+            "p3-high-150"
+        ],
+        [
+            "p1-low-1009",
+            "p2-high-21",
+            "p3-high-228"
+        ],
+        [
+            "p1-medium-1043",
+            "p2-low-122",
+            "p3-low-59"
+        ],
+        [
+            "p1-low-1029",
+            "p2-high-131",
+            "p3-low-28"
+        ],
+        [
+            "p1-low-116",
+            "p2-high-1015",
+            "p3-low-56"
+        ],
+        [
+            "p1-medium-33",
+            "p2-low-125",
+            "p3-low-175"
+        ],
+        [
+            "p1-medium-20",
+            "p2-high-19",
+            "p3-low-151"
+        ],
+        [
+            "p1-low-1014",
+            "p2-high-23",
+            "p3-low-190"
+        ],
+        [
+            "p3-medium-1018",
+            "p2-medium-213",
+            "p3-low-76"
+        ],
+        [
+            "p1-high-1046",
+            "p2-high-232",
+            "p3-low-43"
+        ],
+        [
+            "p1-low-160",
+            "p2-high-17",
+            "p3-low-88"
+        ],
+        [
+            "p1-high-1073",
+            "p2-high-14",
+            "p3-high-206"
+        ],
+        [
+            "p1-low-70",
+            "p2-high-09",
+            "p3-high-184"
+        ],
+        [
+            "p1-high-31",
+            "p2-medium-209",
+            "p3-high-189"
+        ],
+        [
+            "p1-medium-1007",
+            "p2-medium-058",
+            "p3-high-192"
+        ],
+        [
+            "p1-high-1783",
+            "p2-low-104",
+            "p3-low-83"
+        ],
+        [
+            "p1-medium-1389",
+            "p2-high-128",
+            "p3-high-1051"
+        ],
+        [
+            "p1-medium-115",
+            "p2-low-222",
+            "p3-medium-22"
+        ],
+        [
+            "p1-low-45",
+            "p2-high-120",
+            "p3-high-204"
+        ],
+        [
+            "p1-high-211",
+            "p2-high-141",
+            "p3-medium-177"
+        ],
+        [
+            "p1-medium-1042",
+            "p2-high-133",
+            "p3-low-186"
+        ],
+        [
+            "p1-low-30",
+            "p2-low-77",
+            "p3-medium-188"
+        ],
+        [
+            "p1-medium-1005",
+            "p2-medium-93",
+            "p3-low-42"
+        ],
+        [
+            "p1-medium-1063",
+            "p2-medium-144",
+            "p3-high-180"
+        ],
+        [
+            "p1-high-1031",
+            "p2-high-233",
+            "p3-high-03"
+        ],
+        [
+            "p1-high-79",
+            "p2-low-148",
+            "p3-low-12"
+        ],
+        [
+            "p1-medium-1040",
+            "p2-low-65",
+            "p3-low-97"
+        ],
+        [
+            "p1-low-81",
+            "p2-low-37",
+            "p3-low-158"
+        ],
+        [
+            "p1-high-118",
+            "p2-low-64",
+            "p3-low-163"
+        ],
+        [
+            "p1-high-230",
+            "p2-high-25",
+            "p3-low-172"
+        ],
+        [
+            "p1-high-01",
+            "p2-low-103",
+            "p3-medium-162"
+        ],
+        [
+            "p1-high-231",
+            "p2-low-135",
+            "p3-low-153"
+        ],
+        [
+            "p1-low-46",
+            "p2-low-142",
+            "p3-medium-155"
+        ],
+        [
+            "p1-high-227",
+            "p2-low-132",
+            "p3-medium-183"
+        ],
+        [
+            "p1-high-240",
+            "p2-low-143",
+            "p3-low-44"
+        ],
+        [
+            "p1-low-112",
+            "p2-medium-126",
+            "p3-low-54"
+        ],
+        [
+            "p1-medium-182",
+            "p2-high-192",
+            "p3-medium-241"
+        ],
+        [
+            "p1-high-90",
+            "p2-medium-129",
+            "p3-high-173"
+        ],
+        [
+            "p1-medium-60",
+            "p2-high-91",
+            "p3-high-15"
+        ],
+        [
+            "p1-high-82",
+            "p2-high-233",
+            "p3-low-240"
+        ],
+        [
+            "p1-low-11",
+            "p2-high-21",
+            "p3-high-178"
+        ],
+        [
+            "p1-low-35",
+            "p2-high-232",
+            "p3-medium-1929"
+        ],
+        [
+            "p1-low-72",
+            "p2-low-147",
+            "p3-low-187"
+        ],
+        [
+            "p1-low-149",
+            "p2-medium-129",
+            "p3-low-36"
+        ],
+        [
+            "p1-low-106",
+            "p2-low-103",
+            "p3-high-167"
+        ],
+        [
+            "p1-low-69",
+            "p2-medium-243",
+            "p3-high-170"
+        ],
+        [
+            "p1-low-1011",
+            "p2-low-62",
+            "p3-high-161"
+        ],
+        [
+            "p3-high-1012",
+            "p2-low-64",
+            "p3-medium-176"
+        ],
+        [
+            "p1-high-24",
+            "p2-high-136",
+            "p3-high-89"
+        ],
+        [
+            "p1-low-34",
+            "p2-medium-217",
+            "p3-low-36"
+        ],
+        [
+            "p1-low-40",
+            "p2-low-140",
+            "p3-low-163"
+        ],
+        [
+            "p1-high-1049",
+            "p2-high-137",
+            "p3-high-173"
+        ],
+        [
+            "p1-medium-1068",
+            "p2-high-128",
+            "p3-high-212"
+        ],
+        [
+            "p1-low-109",
+            "p2-medium-126",
+            "p3-low-1061"
+        ],
+        [
+            "p1-high-1028",
+            "p2-low-65",
+            "p3-medium-162"
+        ],
+        [
+            "p1-high-216",
+            "p2-high-234",
+            "p3-high-192"
+        ],
+        [
+            "p1-high-110",
+            "p2-high-14",
+            "p3-medium-197"
+        ],
+        [
+            "p1-medium-1054",
+            "p2-high-91",
+            "p3-low-43"
+        ],
+        [
+            "p1-high-27",
+            "p2-high-235",
+            "p3-medium-244"
+        ],
+        [
+            "p1-high-229",
+            "p2-high-130",
+            "p3-low-74"
+        ],
+        [
+            "p1-high-194",
+            "p2-high-131",
+            "p3-medium-183"
+        ],
+        [
+            "p1-medium-1255",
+            "p2-high-225",
+            "p3-high-167"
+        ],
+        [
+            "p1-low-108",
+            "p2-medium-209",
+            "p3-high-228"
+        ]
+    ];
+
     // 各部分的标准题量，三者相加 = 40
     const STANDARD_QUESTION_COUNT = { P1: 13, P2: 13, P3: 14 };
     const TOTAL_QUESTIONS = 40;
 
-    // 固定种子：保证每次生成的 100 套完全一致
-    const SEED = 0x51ED7E5;
-
-    /** mulberry32：小巧的确定性 PRNG */
-    function createRandom(seed) {
-        let t = seed >>> 0;
-        return function random() {
-            t = (t + 0x6D2B79F5) >>> 0;
-            let x = t;
-            x = Math.imul(x ^ (x >>> 15), x | 1);
-            x ^= x + Math.imul(x ^ (x >>> 7), x | 61);
-            return ((x ^ (x >>> 14)) >>> 0) / 4294967296;
-        };
-    }
 
     function getQuestionCount(examId) {
         const registry = global.__READING_EXAM_DATA__;
@@ -200,25 +689,6 @@
         return suite;
     }
 
-    /**
-     * 生成不重复的取用序列：把候选池整体打乱后依次取用，取完再重新打乱，
-     * 这样 100 套里同一篇的出现次数尽量均摊，而不是随机撞车。
-     */
-    function makeDealer(pool, random) {
-        let bag = [];
-        return function deal() {
-            if (!bag.length) {
-                bag = pool.slice();
-                for (let i = bag.length - 1; i > 0; i -= 1) {
-                    const j = Math.floor(random() * (i + 1));
-                    const tmp = bag[i];
-                    bag[i] = bag[j];
-                    bag[j] = tmp;
-                }
-            }
-            return bag.pop();
-        };
-    }
 
     let cachedCatalog = null;
 
@@ -230,25 +700,27 @@
             return [];
         }
 
-        const random = createRandom(SEED);
-        const dealers = {
-            P1: makeDealer(pools.P1, random),
-            P2: makeDealer(pools.P2, random),
-            P3: makeDealer(pools.P3, random)
-        };
+        const entriesById = new Map();
+        CATEGORIES.forEach((category) => {
+            pools[category].forEach((entry) => entriesById.set(String(entry.id), entry));
+        });
 
         const suites = [];
-        for (let i = 0; i < SUITE_COUNT; i += 1) {
-            const entries = CATEGORIES.map((c) => dealers[c]());
+        FIXED_CATALOG_EXAM_IDS.forEach((examIds, index) => {
+            const entries = examIds.map((examId) => entriesById.get(String(examId)) || null);
+            if (entries.some((entry) => !entry)) {
+                console.warn('[SuiteCatalog] fixed suite is missing an exam:', index + 1, examIds);
+                return;
+            }
             suites.push({
-                id: 'suite-' + String(i + 1).padStart(3, '0'),
-                number: i + 1,
-                name: '套题 ' + String(i + 1).padStart(3, '0'),
+                id: 'suite-' + String(index + 1).padStart(3, '0'),
+                number: index + 1,
+                name: '\u5957\u9898 ' + String(index + 1).padStart(3, '0'),
                 entries: entries,
-                examIds: entries.map((e) => e.id),
-                totalQuestions: entries.reduce((sum, e) => sum + (e.questionCount || 0), 0)
+                examIds: examIds.slice(),
+                totalQuestions: entries.reduce((sum, entry) => sum + (entry.questionCount || 0), 0)
             });
-        }
+        });
         return suites;
     }
 

@@ -359,7 +359,7 @@
         const best = readBestScores();
         // 打开套题模式即询问是否继续未完成的套题（断点重做）
         const unfinished = readUnfinishedSuiteProgress();
-        const bannerHtml = unfinished.length ? resumeBannerHtml(unfinished[0]) : '';
+        const bannerHtml = unfinished.slice(0, 3).map((draft) => resumeBannerHtml(draft)).join('');
         const dailyHtml = dailyRecommendation
             ? dailyRecommendationCardHtml(dailyRecommendation, best[dailyRecommendation.id])
             : '';
