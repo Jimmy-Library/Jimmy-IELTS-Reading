@@ -599,36 +599,6 @@
             font-weight: 700;
         }
 
-        /* 套题：每篇题目末尾的交卷条 */
-        #part-submit-bar[hidden] {
-            display: none;
-        }
-
-        #part-submit-bar {
-            display: inline-flex;
-            align-items: center;
-        }
-
-        #part-submit-btn {
-            border: none;
-            border-radius: 8px;
-            background: var(--accent);
-            color: #fff;
-            padding: 10px 26px;
-            font-size: 0.95rem;
-            font-weight: 700;
-            cursor: pointer;
-        }
-
-        #part-submit-btn:hover {
-            filter: brightness(1.08);
-        }
-
-        #part-submit-btn:disabled {
-            opacity: 0.5;
-            cursor: default;
-        }
-
         /* 套题结果：三篇分节呈现 */
         .suite-result-total {
             font-size: 1.02rem;
@@ -1526,10 +1496,6 @@
             <button id="exit-btn" type="button" title="退出" style="margin-right: 8px; display: none;">Exit</button>
             <button id="export-pdf-btn" type="button" title="导出整页与练习详情为 PDF">导出PDF</button>
             <button id="reset-btn" type="button">Reset</button>
-            <!-- P1/P2 可只提交当前篇，保存后仍可续做其他篇 -->
-            <span id="part-submit-bar" hidden>
-                <button id="part-submit-btn" class="primary" type="button">Submit</button>
-            </span>
             <button id="submit-btn" class="primary" type="button">Submit</button>
         </div>
     </div>
@@ -1537,6 +1503,7 @@
     <script src="../../../js/runtime/readingExamRegistry.js"></script>
     <script src="../../../js/runtime/readingExplanationRegistry.js"></script>
     <script src="./manifest.js"></script>
+    <script src="../../../js/runtime/suiteResources.js"></script>
     <script src="../../../js/utils/answerMatchCore.js"></script>
     <script src="../../../js/practice-page-ui.js"></script>
     <!-- 套题交卷后按雅思分数表换算三篇合计成绩 -->

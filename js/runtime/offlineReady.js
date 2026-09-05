@@ -11,6 +11,8 @@
   })();
   const rootUrl = new URL('../../', scriptUrl);
   let registrationPromise = null;
+  const cachedUrls = new Set();
+  const pendingUrls = new Map();
 
   function safeClone(value) {
     try {
@@ -121,20 +123,52 @@
     return Array.from(urls);
   }
 
+  function sendCacheBatch(worker, urls) {
+    return new Promise((resolve) => {
+      const channel = new MessageChannel();
+      let finished = false;
+      let timer;
+      const finish = (result) => {
+        if (finished) return;
+        finished = true;
+        global.clearTimeout(timer);
+        channel.port1.onmessage = null;
+        channel.port1.close();
+        try { channel.port2.close(); } catch (_) {}
+        resolve(result);
+      };
+      timer = global.setTimeout(() => finish({ ok: false, saved: 0, total: urls.length }), 12000);
+      channel.port1.onmessage = (event) => {
+        const result = event.data || {};
+        const saved = Array.isArray(result.cachedUrls)
+          ? result.cachedUrls
+          : result.ok && result.saved === urls.length ? urls : [];
+        saved.forEach((url) => { if (urls.includes(url)) cachedUrls.add(url); });
+        finish(result);
+      };
+      try {
+        worker.postMessage({ type: 'CACHE_URLS', urls }, [channel.port2]);
+      } catch (_) {
+        finish({ ok: false, saved: 0, total: urls.length });
+      }
+    });
+  }
+
   async function cacheUrls(urls) {
     const registration = await register();
     const worker = navigator.serviceWorker && (navigator.serviceWorker.controller || registration && registration.active);
     if (!worker || typeof MessageChannel === 'undefined') return { ok: false, saved: 0, total: 0 };
     const uniqueUrls = collectPageUrls(urls);
-    return await new Promise((resolve) => {
-      const channel = new MessageChannel();
-      const timer = global.setTimeout(() => resolve({ ok: false, saved: 0, total: uniqueUrls.length }), 12000);
-      channel.port1.onmessage = (event) => {
-        global.clearTimeout(timer);
-        resolve(event.data || { ok: true, saved: uniqueUrls.length, total: uniqueUrls.length });
-      };
-      worker.postMessage({ type: 'CACHE_URLS', urls: uniqueUrls }, [channel.port2]);
-    });
+    const missing = uniqueUrls.filter((url) => !cachedUrls.has(url) && !pendingUrls.has(url));
+    if (missing.length) {
+      const request = sendCacheBatch(worker, missing).finally(() => {
+        missing.forEach((url) => pendingUrls.delete(url));
+      });
+      missing.forEach((url) => pendingUrls.set(url, request));
+    }
+    await Promise.all(Array.from(new Set(uniqueUrls.map((url) => pendingUrls.get(url)).filter(Boolean))));
+    const saved = uniqueUrls.filter((url) => cachedUrls.has(url)).length;
+    return { ok: saved === uniqueUrls.length, saved, total: uniqueUrls.length };
   }
 
   function cacheCurrentPage(extraUrls) {
@@ -160,6 +194,11 @@
   };
 
   register().then(() => {
-    [300, 1800, 5000].forEach((delay) => global.setTimeout(() => cacheCurrentPage().catch(() => {}), delay));
+    const warmCurrentPage = () => cacheCurrentPage().catch(() => {});
+    if (typeof global.requestIdleCallback === 'function') {
+      global.requestIdleCallback(warmCurrentPage, { timeout: 2000 });
+    } else {
+      global.setTimeout(warmCurrentPage, 1000);
+    }
   });
 })(typeof window !== 'undefined' ? window : globalThis);

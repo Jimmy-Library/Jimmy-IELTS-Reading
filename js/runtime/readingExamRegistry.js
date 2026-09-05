@@ -29,6 +29,10 @@
         keys() {
             return Array.from(store.keys());
         },
+        retain(ids) {
+            const keep = new Set(ids.map(String));
+            for (const id of store.keys()) if (!keep.has(id)) store.delete(id);
+        },
         clear() {
             store.clear();
         }

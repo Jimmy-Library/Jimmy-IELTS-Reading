@@ -424,7 +424,7 @@
 
     function closeDailyPrompt() {
         const modal = document.getElementById(DAILY_MODAL_ID);
-        if (modal) modal.hidden = true;
+        if (modal) { modal.hidden = true; modal.remove(); }
         if (document.body) document.body.classList.remove('daily-suite-modal-open');
     }
 
@@ -474,9 +474,11 @@
             + '</div>';
         document.body.appendChild(modal);
         modal.addEventListener('click', (event) => {
-            const target = event.target instanceof HTMLElement ? event.target : null;
+            const target = event.target instanceof Element ? event.target : event.target && event.target.parentElement;
             const button = target && target.closest('[data-daily-action]');
             if (!button) return;
+            event.preventDefault();
+            event.stopPropagation();
             const action = button.getAttribute('data-daily-action');
             closeDailyPrompt();
             if (action === 'start' && dailyRecommendation) {
@@ -484,6 +486,9 @@
             } else if (action === 'view') {
                 focusDailyRecommendation();
             }
+        }, true);
+        modal.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') { event.preventDefault(); closeDailyPrompt(); }
         });
         return modal;
     }

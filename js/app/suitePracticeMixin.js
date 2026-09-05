@@ -979,8 +979,16 @@
                 ? Math.min(Math.max(0, snapshot.currentIndex), normalizedSequence.length - 1)
                 : 0;
 
+            try {
+                window.showMessage && window.showMessage('正在准备整套三篇题目和答案…', 'info');
+                await global.SuiteResources.prepare(normalizedSequence.map(item => item.examId));
+            } catch (error) {
+                window.showMessage && window.showMessage('三篇题目尚未准备完整，请重试。已保留续做进度。', 'error');
+                return false;
+            }
+
             // 续做时间不计入关页时段：把全局计时锚点前移到「保存时已过的时长」
-            const savedElapsedMs = (snapshot.updatedAt && snapshot.globalTimerAnchorMs)
+            const savedElapsedMs = Number.isFinite(Number(snapshot.elapsed)) ? Math.max(0, Number(snapshot.elapsed) * 1000) : (snapshot.updatedAt && snapshot.globalTimerAnchorMs)
                 ? Math.max(0, snapshot.updatedAt - snapshot.globalTimerAnchorMs)
                 : 0;
             const resumedAnchorMs = Date.now() - savedElapsedMs;
@@ -1243,6 +1251,12 @@
 
                 session.currentIndex = targetIdx;
                 session.activeExamId = targetEntry.examId;
+
+                if (data.localNavigation === true) {
+                    session.windowRef = sourceWindow || session.windowRef;
+                    this._mirrorSessionToStorage(session);
+                    return true;
+                }
 
                 const targetWindow = await this.openExam(targetEntry.examId, {
                     target: 'tab',
@@ -2248,6 +2262,9 @@
 
                 this._clearSuiteHandshakes();
 
+                window.showMessage && window.showMessage('正在准备整套三篇题目和答案…', 'info');
+                await global.SuiteResources.prepare(normalizedSequence.map(item => item.examId));
+
                 const suiteSessionId = this._generateSuiteSessionId();
                 const lockedAutoAdvance = flowMode === 'stationary'
                     ? false
@@ -3168,7 +3185,6 @@
     global.ExamSystemAppMixins = global.ExamSystemAppMixins || {};
     global.ExamSystemAppMixins.suitePractice = mixin;
 })(typeof window !== 'undefined' ? window : globalThis);
-
 
 
 

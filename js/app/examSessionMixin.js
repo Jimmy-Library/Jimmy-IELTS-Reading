@@ -719,6 +719,9 @@
         },
 
         _shouldUsePlaceholderPage() {
+            // A local/offline browser is a real practice environment. Only an
+            // explicitly configured test harness may use placeholder exams.
+            if (window.__USE_EXAM_PLACEHOLDER__ !== true) return false;
             try {
                 if (window.EnvironmentDetector && typeof window.EnvironmentDetector.isInTestEnvironment === 'function') {
                     return window.EnvironmentDetector.isInTestEnvironment();
@@ -1727,14 +1730,18 @@
                     data.sessionId = expectedSessionId;
                 }
 
-                if (payloadExamId && payloadExamId !== expectedExamId) {
+                const localSuiteMessage = sourceMatched && payloadSuiteSessionId === activeSuiteSessionId
+                    && isExamInActiveSuite && ['SIMULATION_DRAFT_SYNC', 'SIMULATION_NAVIGATE', 'SIMULATION_SUBMIT'].includes(type)
+                    && this.currentSuiteSession.sequence.some(item => item && String(item.examId) === payloadExamId);
+                const suiteRoutedExamId = localSuiteMessage ? payloadExamId : examId;
+                if (payloadExamId && payloadExamId !== expectedExamId && !localSuiteMessage) {
                     const allowedLegacy = payloadExamId === 'session';
                     if (!allowedLegacy) {
                         return;
                     }
                 }
 
-                data.examId = examId;
+                data.examId = suiteRoutedExamId;
                 if (!data.sessionId && expectedSessionId) {
                     data.sessionId = expectedSessionId;
                 }
@@ -1836,7 +1843,17 @@
                         break;
                     case 'SIMULATION_DRAFT_SYNC':
                         if (this.currentSuiteSession && data && data.draft) {
-                            this.currentSuiteSession.draftsByExam[examId] = data.draft;
+                            if (data.restartSuite === true) {
+                                this.currentSuiteSession.draftsByExam = {};
+                                this.currentSuiteSession.elapsedByExam = {};
+                                this.currentSuiteSession.results = [];
+                                this.currentSuiteSession.currentIndex = 0;
+                                this.currentSuiteSession.activeExamId = this.currentSuiteSession.sequence[0].examId;
+                                this.currentSuiteSession.globalTimerAnchorMs = data.suiteTimerAnchorMs || Date.now();
+                                this.currentSuiteSession.suiteTimerAnchorMs = this.currentSuiteSession.globalTimerAnchorMs;
+                            }
+                            this.currentSuiteSession.draftsByExam[suiteRoutedExamId] = data.draft;
+                            if (Number.isFinite(Number(data.elapsed))) this.currentSuiteSession.elapsedByExam[suiteRoutedExamId] = Number(data.elapsed);
                             if (typeof this._mirrorSessionToStorage === 'function') {
                                 this._mirrorSessionToStorage(this.currentSuiteSession);
                             }
@@ -1844,14 +1861,14 @@
                         break;
                     case 'SIMULATION_NAVIGATE':
                         if (typeof this._handleSimulationNavigate === 'function') {
-                            await this._handleSimulationNavigate(examId, data, sourceWindow || expectedWindow);
+                            await this._handleSimulationNavigate(suiteRoutedExamId, data, sourceWindow || expectedWindow);
                         }
                         break;
                     case 'SIMULATION_SUBMIT':
                         if (windowInfo && windowInfo.reviewMode) {
                             break;
                         }
-                        const suiteSaved = await this.handlePracticeComplete(examId, data, sourceWindow || expectedWindow);
+                        const suiteSaved = await this.handlePracticeComplete(suiteRoutedExamId, data, sourceWindow || expectedWindow);
                         if (suiteSaved !== false) acknowledgeOfflineCompletion(sourceWindow || expectedWindow, data);
                         break;
                     default:

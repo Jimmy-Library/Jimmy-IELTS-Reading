@@ -68,14 +68,28 @@ self.addEventListener('message', (event) => {
   event.waitUntil((async () => {
     const cache = await caches.open(CACHE_VERSION);
     const urls = Array.from(new Set(data.urls.map(String))).filter(Boolean);
-    const results = await Promise.allSettled(urls.map(async (rawUrl) => {
-      const url = new URL(rawUrl, self.location.href);
-      if (url.origin !== self.location.origin) return;
-      const request = new Request(url.href, { credentials: 'same-origin' });
-      const response = await fetch(request);
-      await putResponse(cache, request, response);
+    const cachedUrls = [];
+    let cursor = 0;
+    await Promise.all(Array.from({ length: Math.min(4, urls.length) }, async () => {
+      while (cursor < urls.length) {
+        const rawUrl = urls[cursor++];
+        try {
+          const url = new URL(rawUrl, self.location.href);
+          if (url.origin !== self.location.origin) continue;
+          const request = new Request(url.href, { credentials: 'same-origin' });
+          if (!isCacheable(request)) continue;
+          if (!await cache.match(request)) {
+            const response = await fetch(request);
+            await putResponse(cache, request, response);
+          }
+          if (await cache.match(request)) cachedUrls.push(rawUrl);
+        } catch (_) { /* Retry missing resources on a later request. */ }
+      }
     }));
-    const saved = results.filter((result) => result.status === 'fulfilled').length;
-    if (event.ports && event.ports[0]) event.ports[0].postMessage({ ok: true, saved, total: urls.length });
+    const saved = cachedUrls.length;
+    if (event.ports && event.ports[0]) {
+      event.ports[0].postMessage({ ok: saved === urls.length, saved, total: urls.length, cachedUrls });
+      event.ports[0].close();
+    }
   })());
 });

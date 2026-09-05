@@ -73,6 +73,10 @@
         singleDraftSaveTimer: null,
         singleDraftHandlersBound: false,
         suiteSequenceExamIds: [],
+        suiteBooting: true,
+        suiteRestoreDone: false,
+        suiteDatasets: null,
+        suiteNavigating: false,
         // 交卷后的本地三篇回顾：{ summary, answersByExam }
         suiteLocalReview: null,
         suiteBlueprint: null,
@@ -214,8 +218,6 @@
         dom.results = document.getElementById('results');
         dom.nav = document.getElementById('question-nav');
         dom.submitBtn = document.getElementById('submit-btn');
-        dom.partSubmitBar = document.getElementById('part-submit-bar');
-        dom.partSubmitBtn = document.getElementById('part-submit-btn');
         dom.resetBtn = document.getElementById('reset-btn');
     }
 
@@ -230,8 +232,8 @@
             const script = document.createElement('script');
             script.src = url;
             script.defer = true;
-            script.onload = () => resolve(true);
-            script.onerror = () => reject(new Error(`reading_exam_script_failed:${url}`));
+            script.onload = () => { script.remove(); resolve(true); };
+            script.onerror = () => { script.remove(); scriptCache.delete(url); reject(new Error(`reading_exam_script_failed:${url}`)); };
             document.head.appendChild(script);
         });
         scriptCache.set(url, promise);
@@ -271,6 +273,7 @@
     // 加载指定 examId 的数据集（不修改当前页 state，供套题导航构建全局题号）
     async function loadDatasetFor(examId) {
         if (!examId) return null;
+        if (state.suiteDatasets && state.suiteDatasets.has(String(examId))) return state.suiteDatasets.get(String(examId));
         let manifest = {};
         try {
             manifest = await ensureManifest();
@@ -342,7 +345,10 @@
             const localRaw = global.localStorage
                 ? global.localStorage.getItem('ielts_suite_draft::' + suiteSessionId + '::' + targetExamId)
                 : null;
-            const parsed = JSON.parse(sessionRaw || localRaw || 'null');
+            const sessionSaved = JSON.parse(sessionRaw || 'null');
+            const localSaved = JSON.parse(localRaw || 'null');
+            const parsed = !sessionSaved || (localSaved && Number(localSaved.savedAt) >= Number(sessionSaved.savedAt || 0))
+                ? localSaved : sessionSaved;
             return parsed && parsed.draft && typeof parsed.draft === 'object' ? parsed.draft : {};
         } catch (_) {
             return {};
@@ -2321,15 +2327,6 @@
         const simulationEnabled = Boolean(state.simulationMode && ctx);
         syncSimulationRuntimeFlags();
 
-        // P1/P2：在“下一题”旁显示分篇 Submit；P3 由主按钮提交整套
-        if (dom.partSubmitBar) {
-            const showPartSubmit = simulationEnabled && !ctx.isLast && !state.reviewMode && !state.readOnly;
-            dom.partSubmitBar.hidden = !showPartSubmit;
-            if (dom.partSubmitBtn) {
-                dom.partSubmitBtn.disabled = state.readOnly;
-                dom.partSubmitBtn.title = '提交当前篇并保存进度，之后可继续完成套题';
-            }
-        }
         if (!simulationEnabled || state.reviewMode) {
             if (dom.submitBtn) {
                 dom.submitBtn.style.display = '';
@@ -2666,13 +2663,16 @@
 
     function startInitLoop() {
         stopInitLoop();
+        if ((!global.opener || global.opener.closed) && global.parent === global) return;
+        let attempts = 0;
+        postMessage('REQUEST_INIT', {});
         state.initTimer = setInterval(() => {
-            if (state.sessionId) {
+            if (state.sessionId || ++attempts > 20) {
                 stopInitLoop();
                 return;
             }
-            dispatchReady();
-        }, 500);
+            postMessage('REQUEST_INIT', {});
+        }, INIT_RETRY_MS);
     }
 
     function getSimulationDraftStorageKey() {
@@ -2769,6 +2769,9 @@
         return {
             answers,
             highlights: collectHighlights(),
+            notes: typeof global.getPracticeNotes === 'function' ? global.getPracticeNotes() : [],
+            scrollLeft: dom.left ? dom.left.scrollTop : 0,
+            scrollQuestions: document.getElementById('right')?.scrollTop || 0,
             markedQuestions: (typeof global.getPracticeMarkedQuestions === 'function')
                 ? global.getPracticeMarkedQuestions()
                 : [],
@@ -2879,6 +2882,7 @@
     function isSuiteDraftEligible() {
         return Boolean(
             state.simulationMode
+            && !state.suiteBooting
             && !state.readOnly
             && !state.reviewMode
             && !state.submitted
@@ -3051,7 +3055,7 @@
     }
 
     // 续做弹窗：检测到已保存草稿时询问「继续 / 重做」
-    function showResumePrompt(savedDraft) {
+    function showResumePrompt(savedDraft, isSuite = false) {
         return new Promise((resolve) => {
             const overlay = document.createElement('div');
             overlay.id = 'single-draft-resume-overlay';
@@ -3079,11 +3083,11 @@
 
             const title = document.createElement('div');
             title.style.cssText = 'font-size:1.05rem;font-weight:600;margin-bottom:8px;';
-            title.textContent = '检测到未完成的做题记录';
+            title.textContent = isSuite ? '检测到未完成的套题练习' : '检测到未完成的做题记录';
 
             const desc = document.createElement('div');
             desc.style.cssText = 'font-size:0.85rem;opacity:0.7;margin-bottom:20px;line-height:1.5;';
-            desc.textContent = `要从上次的进度继续，还是重新开始？${elapsedText}`;
+            desc.textContent = `${isSuite ? '整套三篇的答案与标记已保存。' : ''}要从上次的进度继续，还是重新开始？${elapsedText}`;
 
             const btnRow = document.createElement('div');
             btnRow.style.cssText = 'display:flex;gap:12px;justify-content:center;';
@@ -3219,7 +3223,7 @@
     }
 
     function syncSimulationDraftSnapshot(reason = 'periodic') {
-        if (!state.simulationMode || state.readOnly || !state.suiteSessionId) {
+        if (!state.simulationMode || state.suiteBooting || state.readOnly || state.submitted || !state.suiteSessionId) {
             return;
         }
         const draft = collectCurrentDraft();
@@ -3237,8 +3241,10 @@
         saveSuiteDraft(reason);
         postMessage('SIMULATION_DRAFT_SYNC', {
             draft: mirroredDraft,
+            restartSuite: state.suiteRestartPending === true,
             elapsed: getPageElapsedSeconds()
         });
+        state.suiteRestartPending = false;
     }
 
     function bindSuiteDraftFlushHandlers() {
@@ -3257,6 +3263,8 @@
     function refreshSimulationDraftSyncLifecycle() {
         const shouldSync = Boolean(
             state.simulationMode
+            && !state.suiteBooting
+            && !state.submitted
             && state.simulationContextReady
             && !state.readOnly
             && state.suiteSessionId
@@ -3387,6 +3395,10 @@
         if (Array.isArray(draft.highlights)) {
             applyHighlights(draft.highlights);
         }
+        if (typeof global.setPracticeNotes === 'function') global.setPracticeNotes(draft.notes || []);
+        if (dom.left) dom.left.scrollTop = Number(draft.scrollLeft) || 0;
+        const rightPane = document.getElementById('right');
+        if (rightPane) rightPane.scrollTop = Number(draft.scrollQuestions) || 0;
         if (Array.isArray(draft.markedQuestions)) {
             const restoreMarks = () => {
                 if (typeof global.setPracticeMarkedQuestions === 'function') {
@@ -3604,12 +3616,8 @@
         if (!state.simulationMode || !state.simulationCtx || state.readOnly) {
             return;
         }
-        postMessage('SIMULATION_NAVIGATE', {
-            direction: direction === 'prev' ? 'prev' : 'next',
-            draft: collectCurrentDraft(),
-            resultSnapshot: buildResults(),
-            elapsed: getPageElapsedSeconds()
-        });
+        const currentIndex = Number(state.simulationCtx.currentIndex);
+        navigateSuiteLocally(currentIndex + (direction === 'prev' ? -1 : 1)).catch(showSuiteLoadError);
     }
 
     // 跨篇跳转到指定小节（套题题目导航）
@@ -3624,17 +3632,12 @@
         if (Number.isInteger(currentIndex) && targetIndex === currentIndex) {
             return;
         }
-        postMessage('SIMULATION_NAVIGATE', {
-            targetIndex,
-            draft: collectCurrentDraft(),
-            resultSnapshot: buildResults(),
-            elapsed: getPageElapsedSeconds()
-        });
+        navigateSuiteLocally(targetIndex).catch(showSuiteLoadError);
     }
 
     /**
      * 底栏主按钮：套题里非最后一篇时充当「下一题」，最后一篇才是整套交卷。
-     * P1/P2 旁边的 Submit 只提交当前篇，整套仍可继续。
+     * P1/P2 不单独交卷，作答会自动保存；最后一篇才提交整套。
      */
     async function handlePrimaryAction() {
         if (state.readOnly) {
@@ -3646,53 +3649,6 @@
             return;
         }
         await handleSubmit();
-    }
-
-    async function handlePartSubmit() {
-        if (state.readOnly || !state.simulationMode || !state.simulationCtx || state.simulationCtx.isLast) {
-            return;
-        }
-        if (dom.partSubmitBtn) {
-            dom.partSubmitBtn.disabled = true;
-            dom.partSubmitBtn.textContent = '提交中…';
-        }
-        try {
-            syncSimulationDraftSnapshot('submit');
-            const results = buildResults();
-            const draft = collectCurrentDraft();
-            const timing = resolvePracticeTiming(1);
-            postMessage('SIMULATION_SUBMIT', Object.assign({
-                duration: timing.duration,
-                startTime: new Date(timing.startTimeMs).toISOString(),
-                endTime: new Date(timing.endTimeMs).toISOString(),
-                highlights: draft.highlights || [],
-                markedQuestions: draft.markedQuestions || [],
-                scrollY: draft.scrollY || 0,
-                partialSubmit: true,
-                metadata: {
-                    examId: state.examId,
-                    examTitle: state.dataset?.meta?.title || '',
-                    title: state.dataset?.meta?.title || '',
-                    category: state.dataset?.meta?.category || '',
-                    frequency: state.dataset?.meta?.frequency || '',
-                    type: 'reading',
-                    examType: 'reading',
-                    practiceMode: 'suite',
-                    renderMode: 'unified-reading',
-                    dataKey: state.dataKey,
-                    markedQuestions: draft.markedQuestions || [],
-                    highlights: draft.highlights || []
-                }
-            }, results));
-            saveSuiteDraft('partial-submit');
-        } finally {
-            global.setTimeout(() => {
-                if (dom.partSubmitBtn && !state.readOnly) {
-                    dom.partSubmitBtn.disabled = false;
-                    dom.partSubmitBtn.textContent = 'Submit';
-                }
-            }, 1200);
-        }
     }
 
     async function handleSubmit() {
@@ -4003,8 +3959,6 @@
 
     function attachActionListeners() {
         dom.submitBtn?.addEventListener('click', handlePrimaryAction);
-        // P1/P2 分篇提交；结果写入未完成套题，之后仍可继续
-        dom.partSubmitBtn?.addEventListener('click', handlePartSubmit);
         dom.resetBtn?.addEventListener('click', handleReset);
         const exportBtn = document.getElementById('export-pdf-btn');
         exportBtn?.addEventListener('click', handleExportPdf);
@@ -4043,6 +3997,13 @@
         }
         const type = String(payload.type || payload.action || '').toUpperCase();
         const data = payload.data || {};
+        if (state.suiteRestoreDone && state.simulationMode && (type === 'INIT_SESSION' || type === 'INIT_EXAM_SESSION')) {
+            if (data.suiteSessionId && data.suiteSessionId !== state.suiteSessionId) return;
+            if (data.sessionId) state.sessionId = data.sessionId;
+            stopInitLoop();
+            if (!state.sessionReadySent) sendSessionReady();
+            return;
+        }
         if (type === 'INIT_SESSION' || type === 'INIT_EXAM_SESSION') {
             const initSignature = buildInitSignature(data);
             const isDuplicateInit = initSignature && initSignature === state.lastInitSignature;
@@ -4142,6 +4103,9 @@
             return;
         }
         if (type === 'SIMULATION_CONTEXT') {
+            // The page owns restored drafts and timing once its local startup
+            // finishes. Late host snapshots must not overwrite current edits.
+            if (state.suiteRestoreDone && state.simulationContextReady) return;
             const contextExamId = data && data.examId != null ? String(data.examId).trim() : '';
             const currentExamId = state.examId != null ? String(state.examId).trim() : '';
             if (contextExamId && currentExamId && contextExamId !== currentExamId) {
@@ -4262,6 +4226,14 @@
     async function bootstrap() {
         parseQuery();
         captureDom();
+        if (state.simulationMode && !state.reviewMode) {
+            const bridge = getPracticeTimerBridge();
+            bridge?.setRunning(false);
+            if (dom.groups) dom.groups.textContent = '正在准备整套三篇题目和答案…';
+            if (!global.SuiteResources) await loadScript('../../../js/runtime/suiteResources.js');
+            const bundle = await global.SuiteResources.prepare(state.suiteSequenceExamIds);
+            state.suiteDatasets = new Map(bundle.examIds.map((id, i) => [id, bundle.datasets[i]]));
+        }
         const dataset = await ensureDataset();
         renderDataset(dataset);
         buildQuestionNav();
@@ -4307,6 +4279,8 @@
         if (state.reviewMode || state.readOnly) {
             setReadOnlyMode(true);
         }
+        if (state.simulationMode && !state.reviewMode) await initSuiteDraftFlow();
+        state.suiteBooting = false;
         refreshSimulationDraftSyncLifecycle();
         // 单篇模式：检测本地草稿并询问续做
         initSingleDraftFlow().catch((error) => {
@@ -4315,11 +4289,128 @@
         startInitLoop();
     }
 
+    function showSuiteLoadError(error) {
+        console.error('[SuitePractice]', error);
+        global.alert('套题尚未加载完整，进度已保留。请检查网络后刷新重试。');
+    }
+
+    function readSuiteProgress() {
+        try {
+            const progress = JSON.parse(global.localStorage.getItem('ielts_suite_progress::' + state.suiteSessionId) || 'null');
+            const ids = progress && (progress.lockedExamIds || (progress.sequence || []).map(item => String(item.examId)));
+            if (!Array.isArray(ids) || ids.length !== 3 || !ids.every((id, i) => String(id) === state.suiteSequenceExamIds[i])) return null;
+            return progress;
+        } catch (_) { return null; }
+    }
+
+    function readSuiteSavedEntry(examId) {
+        try {
+            const entry = JSON.parse(global.localStorage.getItem('ielts_suite_draft::' + state.suiteSessionId + '::' + examId) || 'null');
+            if (entry && (!entry.sequenceExamIds || entry.sequenceExamIds.every((id, i) => id === state.suiteSequenceExamIds[i]))) return entry;
+        } catch (_) {}
+        const progress = readSuiteProgress();
+        return progress ? { draft: progress.draftsByExam?.[examId], elapsed: progress.elapsedByExam?.[examId] || 0 } : null;
+    }
+
+    async function initSuiteDraftFlow() {
+        const progress = readSuiteProgress();
+        const savedEntries = state.suiteSequenceExamIds.map(readSuiteSavedEntry);
+        const hasProgress = savedEntries.some(entry => entry && (Number(entry.elapsed) > 0 || draftHasContent(entry.draft)));
+        const navigationType = global.performance?.getEntriesByType('navigation')[0]?.type;
+        const choice = hasProgress && (navigationType === 'reload' || !state.forceResume)
+            ? await showResumePrompt({ elapsed: progress?.elapsed || 0 }, true)
+            : 'continue';
+        if (choice === 'restart') {
+            state.suiteRestartPending = true;
+            clearSuiteDraftsForSession(state.suiteSessionId);
+            state.suiteSequenceExamIds.forEach(id => {
+                try { global.sessionStorage.removeItem('ielts_sim_draft::' + state.suiteSessionId + '::' + id); } catch (_) {}
+            });
+            if (progress) {
+                progress.draftsByExam = {};
+                progress.elapsedByExam = {};
+                progress.results = [];
+                progress.elapsed = progress.answeredCount = progress.currentIndex = 0;
+                progress.globalTimerAnchorMs = progress.suiteTimerAnchorMs = Date.now();
+                global.localStorage.setItem('ielts_suite_progress::' + state.suiteSessionId, JSON.stringify(progress));
+            }
+        }
+        const elapsed = choice === 'restart' ? 0 : Math.max(0, Number(progress?.elapsed) || 0);
+        state.suiteTimerAnchorMs = state.simulationGlobalAnchorMs = Date.now() - elapsed * 1000;
+        const bridge = getPracticeTimerBridge();
+        bridge?.applySuiteTimerContext?.({
+            suiteTimerAnchorMs: state.suiteTimerAnchorMs,
+            suiteTimerMode: state.suiteTimerMode || 'elapsed',
+            suiteTimerLimitSeconds: state.suiteTimerLimitSeconds
+        }, 'resume');
+        state.simulationContextReady = true;
+        const idx = choice === 'restart' ? 0 : Number(progress?.currentIndex ?? state.simulationCtx.currentIndex);
+        await displaySuitePassage(Math.min(2, Math.max(0, idx)));
+        state.suiteRestoreDone = true;
+        global.__UNIFIED_SUITE_LOCAL_READY__ = true;
+        bridge?.setRunning(true);
+    }
+
+    async function displaySuitePassage(targetIndex) {
+        const examId = state.suiteSequenceExamIds[targetIndex];
+        const dataset = state.suiteDatasets?.get(examId);
+        if (!dataset) throw new Error('suite_dataset_incomplete:' + examId);
+        state.examId = examId;
+        state.dataKey = examId;
+        state.dataset = dataset;
+        state.explanation = null;
+        state.lastResults = null;
+        state.simulationCtx = { currentIndex: targetIndex, total: 3, isLast: targetIndex === 2,
+            canPrev: targetIndex > 0, canNext: targetIndex < 2, flowMode: 'simulation' };
+        state.simulationDraftFingerprint = '';
+        renderDataset(dataset);
+        attachDragDrop();
+        if (typeof global.setPracticeMarkedQuestions === 'function') global.setPracticeMarkedQuestions([]);
+        const saved = readSuiteSavedEntry(examId);
+        applyDraftToDom(saved?.draft || { answers: {}, highlights: [], notes: [], markedQuestions: [] });
+        state.pageStartTime = Date.now() - Math.max(0, Number(saved?.elapsed) || 0) * 1000;
+        state.pagePausedAtMs = null;
+        state.pagePausedOffsetMs = 0;
+        const url = new URL(global.location.href);
+        url.searchParams.set('examId', examId);
+        url.searchParams.set('dataKey', examId);
+        url.searchParams.set('suiteSequenceIndex', String(targetIndex));
+        url.searchParams.set('suiteTimerAnchorMs', String(state.suiteTimerAnchorMs));
+        try { global.history.replaceState(null, '', url.href); } catch (_) {}
+        syncPrimaryActionButtons();
+        syncAllCheckboxSelectionLimits();
+        await ensureSuiteBlueprint();
+    }
+
+    async function navigateSuiteLocally(targetIndex) {
+        if (state.suiteBooting || state.suiteNavigating || state.readOnly || targetIndex < 0 || targetIndex > 2) return;
+        state.suiteNavigating = true;
+        try {
+            const previousId = state.examId;
+            const draft = collectCurrentDraft();
+            const resultSnapshot = buildResults();
+            const elapsed = getPageElapsedSeconds();
+            syncSimulationDraftSnapshot('navigate');
+            await displaySuitePassage(targetIndex);
+            // Inform the host without asking it to open another URL.
+            postMessage('SIMULATION_NAVIGATE', { examId: previousId, localNavigation: true, targetIndex,
+                draft, resultSnapshot, elapsed });
+            syncSimulationDraftSnapshot('navigate');
+        } finally {
+            state.suiteNavigating = false;
+        }
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
         bootstrap().catch((error) => {
             console.error('[UnifiedReadingPage] 初始化失败:', error);
             if (dom.groups) {
-                dom.groups.innerHTML = `<div class="group"><h4>加载失败</h4><p>${error.message}</p></div>`;
+                dom.groups.textContent = '整套题目尚未准备完整，已保留练习进度。请检查网络后刷新重试。';
+                const retry = document.createElement('button');
+                retry.type = 'button';
+                retry.textContent = '重新加载';
+                retry.addEventListener('click', () => global.location.reload());
+                dom.groups.appendChild(retry);
             }
         });
     });

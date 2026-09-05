@@ -521,6 +521,20 @@
             renderNotesList();
         }
 
+        window.getPracticeNotes = () => notesList.map(note => ({ ...note }));
+        window.setPracticeNotes = (notes) => {
+            notesList = Array.isArray(notes) ? notes.map(note => ({ ...note })) : [];
+            activeNoteId = null;
+            notesList.forEach(note => {
+                noteIdCounter = Math.max(noteIdCounter, Number(String(note.id).replace('note-', '')) || 0);
+                const anchor = Array.from(document.querySelectorAll('.hl[data-hl-type="note"]'))
+                    .find(node => !node.dataset.noteId && node.textContent.trim() === String(note.text).trim());
+                if (anchor) anchor.dataset.noteId = note.id;
+            });
+            closeAllPanels();
+            renderNotesList();
+        };
+
         function deleteAllNotes() {
             if (notesList.length === 0) return;
             if (!confirm('确定要删除所有笔记吗？')) return;
@@ -2137,6 +2151,7 @@
                     || type === 'SIMULATION_CONTEXT'
                 ) {
                     const payload = msg.data && typeof msg.data === 'object' ? msg.data : {};
+                    if (window.__UNIFIED_SUITE_LOCAL_READY__) return;
                     applySuiteTimerContext(payload, type);
                 }
             });
