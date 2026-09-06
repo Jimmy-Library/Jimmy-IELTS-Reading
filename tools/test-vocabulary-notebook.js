@@ -5,6 +5,9 @@ const http = require('http');
 const assert = require('assert/strict');
 const root = path.resolve(__dirname, '..');
 const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
+const vocabularySource = fs.readFileSync(path.join(root, 'js', 'components', 'vocabularyNotebook.js'), 'utf8');
+assert.equal(vocabularySource.includes('联网后可按词性获取开放语料例句'), false);
+assert.equal(vocabularySource.includes('正在加载对应词性例句'), true);
 
 const types = { '.js': 'text/javascript', '.css': 'text/css', '.html': 'text/html', '.svg': 'image/svg+xml' };
 const server = http.createServer((req, res) => {
@@ -95,6 +98,10 @@ const server = http.createServer((req, res) => {
     assert.equal(rich.collocationsComplete, true);
     assert.ok(rich.ukAudio);
     assert.ok(rich.usAudio);
+    const headerSave = page.locator('.vocabulary-lookup-panel > header .lookup-header-save');
+    assert.equal(await headerSave.isVisible(), true);
+    assert.match(await headerSave.innerText(), /加入单词本/);
+    assert.equal(await page.locator('.vocabulary-lookup-body .lookup-actions').count(), 0);
     assert.ok(await page.locator('.lookup-section--chinese .lookup-sense-card--chinese').count() >= 2);
     assert.equal(await page.locator('.lookup-section--english .lookup-sense-card').count(), rich.senseCount);
     assert.equal(await page.locator('.lookup-section--chinese h3').filter({ hasText: '中文释义与对应例句' }).count(), 1);

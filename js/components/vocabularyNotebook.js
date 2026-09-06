@@ -511,7 +511,7 @@
     panel.id = 'vocabulary-lookup-panel';
     panel.className = 'vocabulary-lookup-panel';
     panel.setAttribute('aria-live', 'polite');
-    panel.innerHTML = '<header><div><span class="vocabulary-lookup-kicker">Jimmy Dictionary</span><h2 data-lookup-title>划词词典</h2></div><button type="button" data-lookup-close aria-label="关闭">×</button></header><div class="vocabulary-lookup-body" data-lookup-body></div>';
+    panel.innerHTML = '<header><div class="vocabulary-lookup-heading"><span class="vocabulary-lookup-kicker">Jimmy Dictionary</span><div class="vocabulary-lookup-title-row"><h2 data-lookup-title>划词词典</h2><button type="button" class="lookup-header-save" data-lookup-action="save" hidden>＋ 加入单词本</button></div></div><button type="button" data-lookup-close aria-label="关闭">×</button></header><div class="vocabulary-lookup-body" data-lookup-body></div>';
     document.body.appendChild(panel);
     panel.querySelector('[data-lookup-close]').addEventListener('click', () => panel.classList.remove('is-open'));
     panel.addEventListener('click', event => {
@@ -534,7 +534,7 @@
       }
       if (button.dataset.lookupAction === 'save') {
         saveLookup(state.activeLookup, state.activeLookup.context);
-        button.textContent = '✓ 已加入单词本';
+        button.textContent = button.dataset.savedLabel || '✓ 已加入单词本';
         button.disabled = true;
         showMessage('已保存到单词本', 'success');
       }
@@ -589,10 +589,18 @@
     const body = panel.querySelector('[data-lookup-body]');
     panel.querySelector('[data-lookup-title]').textContent = result.term || '句子翻译';
     const saved = readEntries().some(item => item.term.toLowerCase() === String(result.term || result.original).toLowerCase());
+    const headerSave = panel.querySelector('.lookup-header-save');
+    if (headerSave) {
+      headerSave.hidden = false;
+      headerSave.disabled = saved;
+      headerSave.dataset.savedLabel = mode === 'translate' ? '✓ 已保存句子' : '✓ 已加入单词本';
+      headerSave.textContent = saved ? headerSave.dataset.savedLabel : (mode === 'translate' ? '＋ 保存句子' : '＋ 加入单词本');
+    }
+    const exampleLoading = navigator.onLine ? '正在加载例句…' : '当前离线，暂无缓存例句。';
+    const posExampleLoading = navigator.onLine ? '正在加载对应词性例句…' : '当前离线，暂无缓存例句。';
     if (mode === 'translate') {
       body.innerHTML = '<section class="lookup-translation"><div class="lookup-translation__source"><span>原文 · 点击单词可继续查词</span><p>' + clickableEnglish(result.original) + '</p></div><div class="lookup-translation__result"><span>中文释义</span><p class="lookup-translation__zh">' + escapeHtml(result.translation || '当前离线且没有缓存译文，请联网后重试。') + '</p></div></section>'
         + pronunciationButtons(result, result.original, true)
-        + '<div class="lookup-actions"><button type="button" data-lookup-action="save" ' + (saved ? 'disabled' : '') + '>' + (saved ? '✓ 已在单词本' : '+ 保存句子') + '</button></div>'
         + '<p class="lookup-attribution">翻译来源：MyMemory 开放翻译记忆库；已查询内容会保存在本机。</p>';
       return;
     }
@@ -600,7 +608,7 @@
     const englishSenseHtml = senses.length ? senses.map((sense, index) => '<article class="lookup-sense-card" data-pos-group="' + escapeHtml(partOfSpeechGroup(sense.partOfSpeech)) + '">'
       + '<div class="lookup-sense-card__title"><span>' + escapeHtml(sense.partOfSpeech || String(index + 1)) + '</span><p>' + clickableEnglish(sense.definition) + '</p></div>'
       + '<div class="lookup-sense-example"><span>例句' + (sense.exampleSource ? ' · ' + escapeHtml(sense.exampleSource) : '') + '</span><p>'
-      + (sense.example ? clickableEnglish(sense.example) : '联网后可获取开放语料例句。') + '</p>'
+      + (sense.example ? clickableEnglish(sense.example) : escapeHtml(exampleLoading)) + '</p>'
       + (sense.exampleChinese ? '<p class="lookup-example-translation">' + escapeHtml(sense.exampleChinese) + '</p>' : '')
       + (sense.example ? pronunciationButtons(result, sense.example, true) : '') + '</div>'
       + referenceLinks(result.term, true) + '</article>').join('') : '<p>暂无英英释义</p>';
@@ -623,13 +631,13 @@
             + '</span><p>' + clickableEnglish(example) + '</p>'
             + (sourceSense?.exampleChinese ? '<p class="lookup-example-translation">' + escapeHtml(sourceSense.exampleChinese) + '</p>' : '')
             + pronunciationButtons(result, example, true) + '</div>';
-        }).join('') + '</div>' : '<div class="lookup-sense-example"><span>对应例句</span><p>联网后可按词性获取开放语料例句。</p></div>')
+        }).join('') + '</div>' : '<div class="lookup-sense-example lookup-sense-example--loading"><span>对应例句</span><p>' + escapeHtml(posExampleLoading) + '</p></div>')
         + '</article>';
     }).join('') : '<p>暂无中文释义</p>';
     const collocationHtml = result.collocationDetails?.length ? result.collocationDetails.map(item => '<article class="lookup-collocation-card"><header><button type="button" class="lookup-collocation-term" data-lookup-action="lookup-related" data-term="' + escapeHtml(item.phrase) + '"><strong>'
       + escapeHtml(item.phrase) + '</strong></button>' + pronunciationButtons(result, item.phrase, true) + '</header><p class="lookup-collocation-card__meaning">'
       + escapeHtml(item.meaning || '释义将在联网后补充') + '</p><div class="lookup-sense-example"><span>例句' + (item.exampleSource ? ' · ' + escapeHtml(item.exampleSource) : '')
-      + '</span><p>' + (item.example ? clickableEnglish(item.example) : '联网后可获取开放语料例句。') + '</p>'
+      + '</span><p>' + (item.example ? clickableEnglish(item.example) : escapeHtml(exampleLoading)) + '</p>'
       + (item.exampleChinese ? '<p class="lookup-example-translation">' + escapeHtml(item.exampleChinese) + '</p>' : '')
       + (item.example ? pronunciationButtons(result, item.example, true) : '') + '</div></article>').join('')
       : '';
@@ -642,7 +650,6 @@
       + (collocationHtml ? '<section class="lookup-section"><h3>常用词组与固定搭配</h3><div class="lookup-collocation-list">' + collocationHtml + '</div></section>' : '')
       + chipList('常见同义词替换', result.synonyms, 'lookup-chips--syn')
       + chipList('常见反义词替换', result.antonyms, 'lookup-chips--ant')
-      + '<div class="lookup-actions"><button type="button" data-lookup-action="save" ' + (saved ? 'disabled' : '') + '>' + (saved ? '✓ 已在单词本' : '+ 加入单词本') + '</button></div>'
       + referenceLinks(result.term, false)
       + '<p class="lookup-attribution">点击释义或例句中的英文单词可继续查词。中文释义：ECDICT；英英释义：Free Dictionary API；新例句：Tatoeba（CC BY 2.0 FR）；搭配候选：Datamuse/WordNet。Oxford 与 Collins 仅提供官方查阅链接。</p>';
   }
@@ -653,6 +660,8 @@
     const mode = options?.mode === 'translate' || !isSingleWord(text) ? 'translate' : 'lookup';
     const panel = ensureLookupPanel();
     panel.classList.add('is-open');
+    const headerSave = panel.querySelector('.lookup-header-save');
+    if (headerSave) headerSave.hidden = true;
     panel.querySelector('[data-lookup-title]').textContent = mode === 'translate' ? '句子翻译' : normalizeTerm(text);
     const sequence = ++state.lookupSequence;
     panel.querySelector('[data-lookup-body]').innerHTML = mode === 'translate'
