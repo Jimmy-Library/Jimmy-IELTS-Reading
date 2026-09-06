@@ -102,7 +102,7 @@ window.completeExamIndex = [
         id: "p1-low-1011", title: "A Decibel Hell (The Effects of Living in a Noisy World) 分贝地狱（嘈杂世界的影响）", category: "P1", frequency: "low", path: "assets/generated/reading-exams/", filename: "p1-low-1011.js", hasHtml: true, hasPdf: false,
     },
 {
-        id: "p3-high-1012", title: "A focal point of academic inquiry 学术探究的焦点", category: "P1", frequency: "high", path: "assets/generated/reading-exams/", filename: "p1-high-1012.js", hasHtml: true, hasPdf: false,
+        id: "p3-high-1012", title: "A focal point of academic inquiry 学术探究的焦点", category: "P1", frequency: "high", path: "assets/generated/reading-exams/", filename: "p3-high-1012.js", hasHtml: true, hasPdf: false,
     },
 {
         id: "p1-low-1014", title: "A much-travelled vegetable 旅行万里的蔬菜", category: "P1", frequency: "low", path: "assets/generated/reading-exams/", filename: "p1-low-1014.js", hasHtml: true, hasPdf: false,
@@ -111,7 +111,7 @@ window.completeExamIndex = [
         id: "p1-high-1016", title: "A new stage in the study and teaching of history 历史研究与教学的新阶段", category: "P1", frequency: "high", path: "assets/generated/reading-exams/", filename: "p1-high-1016.js", hasHtml: true, hasPdf: false,
     },
 {
-        id: "p3-medium-1018", title: "A Review of Helen Thomson's Book, Unthinkable: An Extraordinary Journey Through the World's Strangest Brains 海伦·汤姆森《不可思议》书评", category: "P1", frequency: "medium", path: "assets/generated/reading-exams/", filename: "p1-medium-1018.js", hasHtml: true, hasPdf: false,
+        id: "p3-medium-1018", title: "A Review of Helen Thomson's Book, Unthinkable: An Extraordinary Journey Through the World's Strangest Brains 海伦·汤姆森《不可思议》书评", category: "P1", frequency: "medium", path: "assets/generated/reading-exams/", filename: "p3-medium-1018.js", hasHtml: true, hasPdf: false,
     },
 
 {

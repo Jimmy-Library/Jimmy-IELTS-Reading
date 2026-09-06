@@ -6,7 +6,7 @@
   const WORDS_BACKUP_KEY = 'jimmy_vocabulary_notebook_backup_v1';
   const CACHE_KEY = 'jimmy_dictionary_cache_v1';
   const CACHE_LIMIT = 120;
-  const state = { entries: null, dictionaryPromise: null, activeLookup: null, mounted: false };
+  const state = { entries: null, dictionaryPromise: null, activeLookup: null, lookupSequence: 0, mounted: false };
 
   function escapeHtml(value) {
     return String(value == null ? '' : value)
@@ -54,7 +54,8 @@
       global.localStorage.setItem(CACHE_KEY, JSON.stringify(cache));
     } catch (_) {}
   }
-  function cachedLookup(key) { const item = readCache()[key]; return item && item.value ? item.value : null; }
+  function cachedLookupEntry(key) { const item = readCache()[key]; return item && item.value ? item : null; }
+  function cachedLookup(key) { return cachedLookupEntry(key)?.value || null; }
   function showMessage(message, type) { if (typeof global.showMessage === 'function') global.showMessage(message, type || 'info'); }
 
   function loadScript(url) {
@@ -87,14 +88,45 @@
     }
     return null;
   }
-  function splitDefinitions(value) { return uniq(String(value || '').split(/;\s*(?=[a-z]+\.?\s|[A-Z])/i), 6); }
+  function normalizePartOfSpeech(value) {
+    const raw = String(value || '').trim().toLowerCase().replace(/\.$/, '');
+    return ({ n: 'n.', v: 'v.', vi: 'vi.', vt: 'vt.', a: 'adj.', s: 'adj.', adj: 'adj.', adv: 'adv.',
+      prep: 'prep.', pron: 'pron.', conj: 'conj.', num: 'num.', art: 'art.', aux: 'aux.' })[raw] || (raw ? raw + '.' : '');
+  }
+  function parsePosSegments(value) {
+    const text = String(value || '').replace(/；/g, ';').trim();
+    if (!text) return [];
+    const marker = /(?:^|[;\n])\s*(n|v|vi|vt|a|s|adj|adv|prep|pron|conj|num|art|aux)\.?\s+/gi;
+    const matches = [];
+    let match;
+    while ((match = marker.exec(text))) matches.push({ index: match.index, contentStart: marker.lastIndex, pos: normalizePartOfSpeech(match[1]) });
+    if (!matches.length) return [{ partOfSpeech: '', text }];
+    return matches.map((item, index) => ({
+      partOfSpeech: item.pos,
+      text: text.slice(item.contentStart, index + 1 < matches.length ? matches[index + 1].index : text.length).replace(/^[;\s]+|[;\s]+$/g, '')
+    })).filter(item => item.text);
+  }
+  function splitDefinitions(value) { return uniq(String(value || '').split(/;\s*(?=[a-z]+\.?\s|[A-Z])/i), 8); }
+  function localSenses(value, chineseByPos) {
+    return splitDefinitions(value).map(item => {
+      const found = item.match(/^([a-z]+)\.?\s+(.+)$/i);
+      const partOfSpeech = normalizePartOfSpeech(found?.[1] || '');
+      const definition = normalizeText(found?.[2] || item);
+      const chinese = chineseByPos.find(row => row.partOfSpeech === partOfSpeech)?.text || '';
+      return { partOfSpeech, definition, chinese, example: '', exampleSource: '' };
+    }).filter(item => item.definition);
+  }
   async function lookupLocal(term) {
     try {
       const dictionary = await ensureDictionary();
       const raw = dictionary && Array.isArray(dictionary.entries) ? findLocalEntry(dictionary.entries, term) : null;
       if (!raw) return null;
-      return { term: raw.w, phonetic: raw.p || '', chinese: raw.t || '', definitions: splitDefinitions(raw.d),
-        examples: [], collocations: [], synonyms: [], antonyms: [], audio: '',
+      const chineseByPos = parsePosSegments(raw.t);
+      return { term: raw.w, phonetic: raw.p || '', chinese: raw.t || '', chineseByPos,
+        definitions: splitDefinitions(raw.d), senses: localSenses(raw.d, chineseByPos),
+        examples: [], collocations: [], collocationDetails: [], synonyms: [], antonyms: [], audio: '',
+        pronunciations: { uk: { phonetic: raw.p || '', audio: '' }, us: { phonetic: '', audio: '' } },
+        tags: Array.isArray(raw.tags) ? raw.tags : [],
         sources: [{ name: 'ECDICT', url: dictionary.source?.url || 'https://github.com/skywind3000/ECDICT', license: 'MIT' }], offline: true };
     } catch (_) { return null; }
   }
@@ -109,22 +141,35 @@
   }
   async function fetchDictionaryApi(term) {
     const payload = await fetchJson('https://api.dictionaryapi.dev/api/v2/entries/en/' + encodeURIComponent(term));
-    const entries = Array.isArray(payload) ? payload : [], definitions = [], examples = [], synonyms = [], antonyms = [];
-    let phonetic = '', audio = '';
+    const entries = Array.isArray(payload) ? payload : [], definitions = [], examples = [], synonyms = [], antonyms = [], senses = [];
+    let phonetic = '', audio = '', ukAudio = '', usAudio = '', ukPhonetic = '', usPhonetic = '';
     entries.forEach(entry => {
       phonetic = phonetic || entry.phonetic || entry.phonetics?.find(item => item.text)?.text || '';
-      const british = (entry.phonetics || []).find(item => item.audio && /(?:_gb_|\/uk\/|british)/i.test(item.audio));
-      audio = audio || british?.audio || '';
+      (entry.phonetics || []).forEach(item => {
+        const source = String(item.audio || '') + ' ' + String(item.sourceUrl || '');
+        if (/(?:_uk_|-uk|\/uk\/|british|en-gb)/i.test(source)) {
+          ukAudio = ukAudio || item.audio || ''; ukPhonetic = ukPhonetic || item.text || '';
+        } else if (/(?:_us_|-us|\/us\/|american|en-us)/i.test(source)) {
+          usAudio = usAudio || item.audio || ''; usPhonetic = usPhonetic || item.text || '';
+        }
+      });
+      audio = audio || ukAudio || '';
       (entry.meanings || []).forEach(meaning => {
         synonyms.push(...(meaning.synonyms || [])); antonyms.push(...(meaning.antonyms || []));
         (meaning.definitions || []).slice(0, 3).forEach(item => {
-          if (item.definition) definitions.push((meaning.partOfSpeech ? meaning.partOfSpeech + '. ' : '') + item.definition);
+          if (item.definition) {
+            const partOfSpeech = normalizePartOfSpeech(meaning.partOfSpeech || '');
+            definitions.push((partOfSpeech ? partOfSpeech + ' ' : '') + item.definition);
+            senses.push({ partOfSpeech, definition: item.definition, chinese: '', example: item.example || '', exampleSource: item.example ? 'Free Dictionary API' : '' });
+          }
           if (item.example) examples.push(item.example);
           synonyms.push(...(item.synonyms || [])); antonyms.push(...(item.antonyms || []));
         });
       });
     });
-    return { phonetic, audio: audio && audio.startsWith('//') ? 'https:' + audio : audio,
+    const secureAudio = value => value && value.startsWith('//') ? 'https:' + value : value || '';
+    return { phonetic: ukPhonetic || phonetic, audio: secureAudio(audio), senses,
+      pronunciations: { uk: { phonetic: ukPhonetic || phonetic, audio: secureAudio(ukAudio || audio) }, us: { phonetic: usPhonetic, audio: secureAudio(usAudio) } },
       definitions: uniq(definitions, 8), examples: uniq(examples, 5), synonyms: uniq(synonyms), antonyms: uniq(antonyms),
       sources: [{ name: 'Free Dictionary API', url: 'https://dictionaryapi.dev/', license: 'GPL-3.0 API project' }] };
   }
@@ -140,6 +185,30 @@
       sources: [{ name: 'Datamuse / WordNet', url: 'https://www.datamuse.com/api/', license: 'Free public API' }] };
   }
 
+  async function fetchTatoebaExamples(query, limit = 8) {
+    const payload = await fetchJson('https://api.tatoeba.org/v1/sentences?lang=eng&q=' + encodeURIComponent(query)
+      + '&word_count=5-22&sort=relevance&limit=' + Math.max(1, Math.min(10, limit)), 6000);
+    return (Array.isArray(payload?.data) ? payload.data : []).filter(item => item && item.text && item.is_unapproved !== true)
+      .map(item => ({ text: normalizeText(item.text), source: 'Tatoeba CC BY 2.0 FR', owner: item.owner || '', id: item.id })).slice(0, limit);
+  }
+
+  async function enrichCollocations(values) {
+    const phrases = uniq(values || [], 5);
+    const rows = await Promise.all(phrases.map(async phrase => {
+      const key = 'collocation::' + phrase.toLowerCase();
+      const cached = cachedLookup(key);
+      if (cached) return cached;
+      const [meaningResult, exampleResult] = await Promise.allSettled([translate(phrase), fetchTatoebaExamples(phrase, 1)]);
+      const row = { phrase,
+        meaning: meaningResult.status === 'fulfilled' ? meaningResult.value.translation || '' : '',
+        example: exampleResult.status === 'fulfilled' ? exampleResult.value[0]?.text || '' : '',
+        exampleSource: exampleResult.status === 'fulfilled' && exampleResult.value[0] ? 'Tatoeba CC BY 2.0 FR' : '' };
+      cacheLookup(key, row);
+      return row;
+    }));
+    return rows;
+  }
+
   async function translate(text) {
     const normalized = normalizeText(text);
     const key = 'translation::' + normalized.toLowerCase();
@@ -153,13 +222,28 @@
     cacheLookup(key, result);
     return result;
   }
+  function mergeSenses(left, right) {
+    const seen = new Set();
+    return [...(left || []), ...(right || [])].filter(item => {
+      const key = normalizeText(item?.partOfSpeech) + '|' + normalizeText(item?.definition).toLowerCase();
+      if (!item?.definition || seen.has(key)) return false;
+      seen.add(key); return true;
+    }).slice(0, 10);
+  }
   function mergeLookup(base, supplement) {
     const left = base || {}, right = supplement || {};
+    const pronunciations = {
+      uk: { ...(left.pronunciations?.uk || {}), ...(right.pronunciations?.uk || {}) },
+      us: { ...(left.pronunciations?.us || {}), ...(right.pronunciations?.us || {}) }
+    };
     return { ...left, ...right, term: left.term || right.term || '', phonetic: right.phonetic || left.phonetic || '',
       chinese: left.chinese || right.chinese || '', audio: right.audio || left.audio || '',
+      chineseByPos: (left.chineseByPos?.length ? left.chineseByPos : right.chineseByPos) || [],
+      senses: mergeSenses(left.senses, right.senses), pronunciations,
       definitions: uniq((left.definitions || []).concat(right.definitions || []), 8), examples: uniq((left.examples || []).concat(right.examples || []), 6),
       collocations: uniq((left.collocations || []).concat(right.collocations || []), 10), synonyms: uniq((left.synonyms || []).concat(right.synonyms || []), 12),
       antonyms: uniq((left.antonyms || []).concat(right.antonyms || []), 12),
+      collocationDetails: (right.collocationDetails?.length ? right.collocationDetails : left.collocationDetails) || [],
       sources: [...(left.sources || []), ...(right.sources || [])].filter((item, index, all) => item && all.findIndex(other => other.name === item.name) === index) };
   }
   async function lookup(text, context) {
@@ -167,16 +251,49 @@
     if (!term || !isSingleWord(term)) throw new Error('请选择一个英文单词；整句内容请使用“翻译”');
     const key = 'word::' + term;
     const local = await lookupLocal(term);
-    let result = mergeLookup(local, cachedLookup(key));
+    const cachedEntry = cachedLookupEntry(key);
+    let result = mergeLookup(local, cachedEntry?.value || null);
     result.term = result.term || term;
     if (context?.sentence) result.examples = uniq([context.sentence].concat(result.examples || []), 6);
+    const cacheIsFresh = cachedEntry && Date.now() - Number(cachedEntry.savedAt || 0) < 7 * 24 * 60 * 60 * 1000
+      && result.senses?.length && result.collocationDetails?.length;
+    if (cacheIsFresh) {
+      result.context = context || {};
+      return result;
+    }
     if (navigator.onLine) {
-      const enrichments = await Promise.allSettled([fetchDictionaryApi(term), fetchDatamuse(term)]);
-      enrichments.forEach(item => { if (item.status === 'fulfilled') result = mergeLookup(result, item.value); });
+      const enrichments = await Promise.allSettled([fetchDictionaryApi(term), fetchDatamuse(term), fetchTatoebaExamples(term, 10)]);
+      enrichments.slice(0, 2).forEach(item => { if (item.status === 'fulfilled') result = mergeLookup(result, item.value); });
+      const openExamples = enrichments[2]?.status === 'fulfilled' ? enrichments[2].value : [];
       if (!result.chinese) { try { result.chinese = (await translate(term)).translation || ''; } catch (_) {} }
+      const examplePool = uniq([context?.sentence].concat(result.examples || []).concat(openExamples.map(item => item.text)), 14);
+      if (!result.senses?.length) {
+        result.senses = (result.definitions || []).map(definition => ({ partOfSpeech: '', definition, chinese: '', example: '', exampleSource: '' }));
+      }
+      result.senses = result.senses.map((sense, index) => {
+        const row = result.chineseByPos?.find(item => item.partOfSpeech === sense.partOfSpeech);
+        const chosenExample = sense.example || examplePool[index % Math.max(1, examplePool.length)] || '';
+        const tatoeba = openExamples.find(item => item.text === chosenExample);
+        return { ...sense, chinese: sense.chinese || row?.text || '',
+          example: chosenExample,
+          exampleSource: sense.exampleSource || (tatoeba ? 'Tatoeba CC BY 2.0 FR' : chosenExample === context?.sentence ? '阅读原文语境' : '') };
+      });
+      result.examples = uniq(result.senses.map(item => item.example).concat(examplePool), 14);
+      try { result.collocationDetails = await enrichCollocations(result.collocations); } catch (_) {}
       cacheLookup(key, result);
     }
     result.context = context || {};
+    return result;
+  }
+
+  async function lookupImmediate(text, context) {
+    const term = normalizeTerm(text);
+    if (!term || !isSingleWord(term)) throw new Error('请选择一个英文单词；整句内容请使用“翻译”');
+    const local = await lookupLocal(term);
+    const result = mergeLookup(local, cachedLookup('word::' + term));
+    result.term = result.term || term;
+    result.context = context || {};
+    if (context?.sentence) result.examples = uniq([context.sentence].concat(result.examples || []), 6);
     return result;
   }
   function hashCode(value) { let hash = 0; for (let i = 0; i < value.length; i += 1) hash = ((hash << 5) - hash + value.charCodeAt(i)) | 0; return hash; }
@@ -184,7 +301,9 @@
     const now = new Date().toISOString(), term = normalizeText(result.term || result.original), key = term.toLowerCase();
     return { id: 'vocab-' + key.replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') + '-' + Math.abs(hashCode(key)),
       term, type: isSingleWord(term) ? 'word' : 'phrase', phonetic: result.phonetic || '', audio: result.audio || '', chinese: result.chinese || result.translation || '',
+      chineseByPos: result.chineseByPos || [], pronunciations: result.pronunciations || {}, senses: result.senses || [],
       definitions: uniq(result.definitions || [], 10), examples: uniq((result.examples || []).concat(context?.sentence || []), 8), collocations: uniq(result.collocations || [], 16),
+      collocationDetails: result.collocationDetails || [],
       synonyms: uniq(result.synonyms || [], 20), antonyms: uniq(result.antonyms || [], 20), note: '', sourceTitle: context?.title || '',
       sourceText: context?.sentence || result.original || '', createdAt: now, updatedAt: now };
   }
@@ -197,15 +316,18 @@
     } else entries.unshift(incoming);
     writeEntries(entries); renderNotebook(); return incoming;
   }
-  function speakBritish(text, audioUrl) {
-    if (audioUrl) { const audio = new Audio(audioUrl); audio.play().catch(() => speakBritish(text, '')); return; }
-    if (!global.speechSynthesis || typeof SpeechSynthesisUtterance !== 'function') { showMessage('当前浏览器没有可用的英式发音', 'warning'); return; }
+  function speakAccent(text, accent, audioUrl) {
+    const language = accent === 'us' ? 'en-US' : 'en-GB';
+    if (audioUrl) { const audio = new Audio(audioUrl); audio.play().catch(() => speakAccent(text, accent, '')); return; }
+    if (!global.speechSynthesis || typeof SpeechSynthesisUtterance !== 'function') { showMessage('当前浏览器没有可用的英语发音', 'warning'); return; }
     global.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text), voices = global.speechSynthesis.getVoices();
-    const preferred = /sonia|ryan|libby|daniel|serena|george|google uk|british/i;
-    utterance.voice = voices.find(voice => /^en[-_]GB$/i.test(voice.lang) && preferred.test(voice.name)) || voices.find(voice => /^en[-_]GB$/i.test(voice.lang)) || null;
-    utterance.lang = 'en-GB'; utterance.rate = 0.92; utterance.pitch = 1; global.speechSynthesis.speak(utterance);
+    const preferred = accent === 'us' ? /aria|jenny|guy|samantha|google us|american/i : /sonia|ryan|libby|daniel|serena|george|google uk|british/i;
+    const matcher = accent === 'us' ? /^en[-_]US$/i : /^en[-_]GB$/i;
+    utterance.voice = voices.find(voice => matcher.test(voice.lang) && preferred.test(voice.name)) || voices.find(voice => matcher.test(voice.lang)) || null;
+    utterance.lang = language; utterance.rate = 0.92; utterance.pitch = 1; global.speechSynthesis.speak(utterance);
   }
+  function speakBritish(text, audioUrl) { speakAccent(text, 'uk', audioUrl); }
 
   function ensureLookupPanel() {
     let panel = document.getElementById('vocabulary-lookup-panel');
@@ -220,7 +342,13 @@
     panel.addEventListener('click', event => {
       const button = event.target.closest('[data-lookup-action]');
       if (!button || !state.activeLookup) return;
-      if (button.dataset.lookupAction === 'speak') speakBritish(state.activeLookup.term || state.activeLookup.original, state.activeLookup.audio);
+      if (button.dataset.lookupAction === 'speak' || button.dataset.lookupAction === 'speak-uk' || button.dataset.lookupAction === 'speak-us') {
+        const accent = button.dataset.lookupAction === 'speak-us' ? 'us' : 'uk';
+        const text = button.dataset.speakText || state.activeLookup.term || state.activeLookup.original;
+        const isHeadword = normalizeText(text).toLowerCase() === normalizeText(state.activeLookup.term).toLowerCase();
+        const audio = isHeadword ? state.activeLookup.pronunciations?.[accent]?.audio || (accent === 'uk' ? state.activeLookup.audio : '') : '';
+        speakAccent(text, accent, audio);
+      }
       if (button.dataset.lookupAction === 'save') {
         saveLookup(state.activeLookup, state.activeLookup.context);
         button.textContent = '✓ 已加入单词本';
@@ -236,26 +364,60 @@
     return '<section class="lookup-section"><h3>' + escapeHtml(title) + '</h3><div class="lookup-chips ' + (className || '') + '">' + values.map(value => '<span>' + escapeHtml(value) + '</span>').join('') + '</div></section>';
   }
 
+  function pronunciationButtons(result, text, compact) {
+    const uk = result.pronunciations?.uk || { phonetic: result.phonetic || '', audio: result.audio || '' };
+    const us = result.pronunciations?.us || {};
+    const safeText = escapeHtml(text || result.term || '');
+    return '<div class="lookup-pronunciations' + (compact ? ' lookup-pronunciations--compact' : '') + '">'
+      + '<button type="button" data-lookup-action="speak-uk" data-speak-text="' + safeText + '"><b>UK</b><span>'
+      + escapeHtml(uk.phonetic ? '/' + uk.phonetic.replace(/^\/|\/$/g, '') + '/' : '英式发音') + '</span> 🔊</button>'
+      + '<button type="button" data-lookup-action="speak-us" data-speak-text="' + safeText + '"><b>US</b><span>'
+      + escapeHtml(us.phonetic ? '/' + us.phonetic.replace(/^\/|\/$/g, '') + '/' : '美式发音') + '</span> 🔊</button></div>';
+  }
+
+  function referenceLinks(term, compact) {
+    const encoded = encodeURIComponent(normalizeTerm(term));
+    return '<div class="lookup-reference-links' + (compact ? ' lookup-reference-links--compact' : '') + '">'
+      + '<a href="https://www.oxfordlearnersdictionaries.com/definition/english/' + encoded + '" target="_blank" rel="noopener noreferrer">Oxford 官方例句 ↗</a>'
+      + '<a href="https://www.collinsdictionary.com/dictionary/english/' + encoded + '" target="_blank" rel="noopener noreferrer">Collins 官方例句 ↗</a></div>';
+  }
+
   function renderLookup(result, mode) {
     const panel = ensureLookupPanel();
     const body = panel.querySelector('[data-lookup-body]');
     panel.querySelector('[data-lookup-title]').textContent = result.term || '句子翻译';
     const saved = readEntries().some(item => item.term.toLowerCase() === String(result.term || result.original).toLowerCase());
     if (mode === 'translate') {
-      body.innerHTML = '<section class="lookup-translation"><span>原文</span><p>' + escapeHtml(result.original) + '</p><span>中文翻译</span><p class="lookup-translation__zh">' + escapeHtml(result.translation || '当前离线且没有缓存译文，请联网后重试。') + '</p></section>'
-        + '<div class="lookup-actions"><button type="button" data-lookup-action="speak">🔊 英式朗读</button><button type="button" data-lookup-action="save" ' + (saved ? 'disabled' : '') + '>' + (saved ? '✓ 已在单词本' : '+ 保存句子') + '</button></div>'
+      body.innerHTML = '<section class="lookup-translation"><div class="lookup-translation__source"><span>原文</span><p>' + escapeHtml(result.original) + '</p></div><div class="lookup-translation__result"><span>中文释义</span><p class="lookup-translation__zh">' + escapeHtml(result.translation || '当前离线且没有缓存译文，请联网后重试。') + '</p></div></section>'
+        + pronunciationButtons(result, result.original, true)
+        + '<div class="lookup-actions"><button type="button" data-lookup-action="save" ' + (saved ? 'disabled' : '') + '>' + (saved ? '✓ 已在单词本' : '+ 保存句子') + '</button></div>'
         + '<p class="lookup-attribution">翻译来源：MyMemory 开放翻译记忆库；已查询内容会保存在本机。</p>';
       return;
     }
-    body.innerHTML = '<div class="lookup-word-head"><div><strong>' + escapeHtml(result.term) + '</strong><span>' + escapeHtml(result.phonetic ? '/' + result.phonetic.replace(/^\/|\/$/g, '') + '/' : '音标暂缺') + '</span></div><button type="button" data-lookup-action="speak">🔊 英式发音</button></div>'
-      + '<section class="lookup-section lookup-section--primary"><h3>中文释义</h3><p>' + escapeHtml(result.chinese || '暂无中文释义') + '</p></section>'
-      + '<section class="lookup-section"><h3>英英释义</h3>' + (result.definitions?.length ? '<ol>' + result.definitions.map(value => '<li>' + escapeHtml(value) + '</li>').join('') + '</ol>' : '<p>暂无英英释义</p>') + '</section>'
-      + '<section class="lookup-section"><h3>例句</h3>' + (result.examples?.length ? result.examples.map(value => '<blockquote>' + escapeHtml(value) + '</blockquote>').join('') : '<p>当前词条暂无例句</p>') + '</section>'
-      + chipList('常用词组与固定搭配', result.collocations)
+    const chineseRows = result.chineseByPos?.length ? result.chineseByPos : parsePosSegments(result.chinese);
+    const senses = result.senses?.length ? result.senses : (result.definitions || []).map(value => ({ definition: value }));
+    const senseHtml = senses.length ? senses.map((sense, index) => '<article class="lookup-sense-card">'
+      + '<div class="lookup-sense-card__title"><span>' + escapeHtml(sense.partOfSpeech || String(index + 1)) + '</span><p>' + escapeHtml(sense.definition) + '</p></div>'
+      + (sense.chinese ? '<p class="lookup-sense-card__zh">' + escapeHtml(sense.chinese) + '</p>' : '')
+      + '<div class="lookup-sense-example"><span>例句' + (sense.exampleSource ? ' · ' + escapeHtml(sense.exampleSource) : '') + '</span><p>'
+      + escapeHtml(sense.example || '联网后可获取开放语料例句。') + '</p>' + (sense.example ? pronunciationButtons(result, sense.example, true) : '') + '</div>'
+      + referenceLinks(result.term, true) + '</article>').join('') : '<p>暂无英英释义</p>';
+    const collocationHtml = result.collocationDetails?.length ? result.collocationDetails.map(item => '<article class="lookup-collocation-card"><header><strong>'
+      + escapeHtml(item.phrase) + '</strong>' + pronunciationButtons(result, item.phrase, true) + '</header><p class="lookup-collocation-card__meaning">'
+      + escapeHtml(item.meaning || '释义将在联网后补充') + '</p><div class="lookup-sense-example"><span>例句' + (item.exampleSource ? ' · ' + escapeHtml(item.exampleSource) : '')
+      + '</span><p>' + escapeHtml(item.example || '联网后可获取开放语料例句。') + '</p>' + (item.example ? pronunciationButtons(result, item.example, true) : '') + '</div></article>').join('')
+      : '<p>暂未找到高频搭配。</p>';
+    body.innerHTML = '<div class="lookup-word-head"><div><strong>' + escapeHtml(result.term) + '</strong>'
+      + (result.tags?.includes('ielts') ? '<span class="lookup-word-tag">IELTS 词表</span>' : '') + '</div>' + pronunciationButtons(result, result.term, false) + '</div>'
+      + '<section class="lookup-section lookup-section--primary"><h3>中文释义</h3><div class="lookup-chinese-list">'
+      + (chineseRows.length ? chineseRows.map(row => '<div class="lookup-chinese-row"><b>' + escapeHtml(row.partOfSpeech || '释义') + '</b><span>' + escapeHtml(row.text) + '</span></div>').join('') : '<p>暂无中文释义</p>') + '</div></section>'
+      + '<section class="lookup-section"><h3>逐义项英英释义与例句</h3><div class="lookup-sense-list">' + senseHtml + '</div></section>'
+      + '<section class="lookup-section"><h3>常用词组与固定搭配</h3><div class="lookup-collocation-list">' + collocationHtml + '</div></section>'
       + chipList('常见同义词替换', result.synonyms, 'lookup-chips--syn')
       + chipList('常见反义词替换', result.antonyms, 'lookup-chips--ant')
       + '<div class="lookup-actions"><button type="button" data-lookup-action="save" ' + (saved ? 'disabled' : '') + '>' + (saved ? '✓ 已在单词本' : '+ 加入单词本') + '</button></div>'
-      + '<p class="lookup-attribution">内置 ECDICT（MIT）；联网补充 Free Dictionary API、Datamuse/WordNet。发音优先使用英式词典音频，否则使用设备 en-GB 语音。</p>';
+      + referenceLinks(result.term, false)
+      + '<p class="lookup-attribution">中文与词表标签：ECDICT / Jimmy-Vocabulary 兼容结构；释义：Free Dictionary API；开放例句：Tatoeba（CC BY 2.0 FR）；搭配：Datamuse/WordNet。Oxford 与 Collins 仅提供官方查阅链接，其受版权保护的正文不会复制或缓存。</p>';
   }
 
   async function openSelection(options) {
@@ -265,14 +427,32 @@
     const panel = ensureLookupPanel();
     panel.classList.add('is-open');
     panel.querySelector('[data-lookup-title]').textContent = mode === 'translate' ? '句子翻译' : normalizeTerm(text);
-    panel.querySelector('[data-lookup-body]').innerHTML = '<div class="lookup-loading"><span></span><p>' + (mode === 'translate' ? '正在翻译所选句子…' : '正在查询中英释义与搭配…') + '</p></div>';
+    const sequence = ++state.lookupSequence;
+    panel.querySelector('[data-lookup-body]').innerHTML = mode === 'translate'
+      ? '<section class="lookup-translation"><div class="lookup-translation__source"><span>原文</span><p>' + escapeHtml(text) + '</p></div><div class="lookup-translation__result"><span>中文释义</span><div class="lookup-loading"><i></i><p>正在翻译…</p></div></div></section>'
+      : '<div class="lookup-loading"><span></span><p>正在读取内置词典…</p></div>';
     try {
       let result;
       if (mode === 'translate') {
         result = await translate(text);
         result.term = text;
         result.context = options?.context || {};
-      } else result = await lookup(text, options?.context || {});
+      } else {
+        const context = options?.context || {};
+        const immediate = await lookupImmediate(text, context);
+        if (sequence !== state.lookupSequence) return immediate;
+        state.activeLookup = immediate;
+        renderLookup(immediate, mode);
+        const body = panel.querySelector('[data-lookup-body]');
+        if (body && navigator.onLine) {
+          const notice = document.createElement('p');
+          notice.className = 'lookup-background-status';
+          notice.textContent = '本地释义已显示，正在后台补充例句、搭配与英美发音…';
+          body.prepend(notice);
+        }
+        result = navigator.onLine ? await lookup(text, context) : immediate;
+      }
+      if (sequence !== state.lookupSequence) return result;
       state.activeLookup = result;
       renderLookup(result, mode);
       if (options?.autoSave) {
@@ -282,6 +462,7 @@
       }
       return result;
     } catch (error) {
+      if (sequence !== state.lookupSequence) return null;
       panel.querySelector('[data-lookup-body]').innerHTML = '<div class="lookup-error"><strong>暂时无法完成</strong><p>' + escapeHtml(error.message || error) + '</p><small>内置词典仍可离线使用；若是整句翻译，请检查网络。</small></div>';
       throw error;
     }
@@ -290,7 +471,7 @@
   function notebookMarkup() {
     return '<div class="wordbook-page"><header class="wordbook-heading"><div><span class="wordbook-eyebrow">VOCABULARY NOTEBOOK</span><h2>📘 我的单词本</h2><p>从阅读原文中收藏词汇、搭配和同反义替换，数据仅保存在当前设备。</p></div><div class="wordbook-heading__stats"><strong data-wordbook-count>0</strong><span>已收藏</span></div></header>'
       + '<div class="wordbook-toolbar"><label class="wordbook-search"><span>⌕</span><input type="search" data-wordbook-search placeholder="搜索单词、中文释义或来源文章" aria-label="搜索单词本"></label><select data-wordbook-sort aria-label="单词本排序"><option value="newest">最近添加</option><option value="az">A–Z</option><option value="updated">最近编辑</option></select><button type="button" class="wordbook-btn wordbook-btn--secondary" data-wordbook-action="lookup">＋ 查词添加</button><button type="button" class="wordbook-btn" data-wordbook-action="export">导出 PDF</button></div>'
-      + '<div class="wordbook-source-note"><span>开放词典</span><p>离线使用 ECDICT 中英词库；联网时补充 Free Dictionary API、Datamuse/WordNet 与 MyMemory 翻译。</p></div>'
+      + '<div class="wordbook-source-note"><span>开放词典</span><p>兼容 Jimmy-Vocabulary / ECDICT 词表结构；联网补充逐义项释义、Tatoeba 开放例句、常用搭配和英美双发音。Oxford 与 Collins 提供官方查阅入口。</p></div>'
       + '<div class="wordbook-grid" data-wordbook-list></div></div>'
       + '<div class="wordbook-editor" data-wordbook-editor hidden><div class="wordbook-editor__backdrop" data-wordbook-action="close-editor"></div><form class="wordbook-editor__dialog" data-wordbook-form><header><div><span>EDIT ENTRY</span><h3>编辑单词卡</h3></div><button type="button" data-wordbook-action="close-editor" aria-label="关闭">×</button></header><input type="hidden" name="id"><div class="wordbook-form-grid"><label>单词 / 词组<input name="term" required></label><label>音标<input name="phonetic" placeholder="例如 /əˈprəʊtʃ/"></label><label class="wordbook-form-wide">中文释义<textarea name="chinese" rows="2" required></textarea></label><label class="wordbook-form-wide">英英释义（每行一条）<textarea name="definitions" rows="4"></textarea></label><label class="wordbook-form-wide">例句（每行一条）<textarea name="examples" rows="3"></textarea></label><label>固定搭配（逗号分隔）<textarea name="collocations" rows="3"></textarea></label><label>同义词替换（逗号分隔）<textarea name="synonyms" rows="3"></textarea></label><label>反义词替换（逗号分隔）<textarea name="antonyms" rows="3"></textarea></label><label>个人笔记<textarea name="note" rows="3"></textarea></label></div><footer><button type="button" class="wordbook-btn wordbook-btn--secondary" data-wordbook-action="close-editor">取消</button><button type="submit" class="wordbook-btn">保存修改</button></footer></form></div>';
   }
@@ -311,12 +492,16 @@
       list.innerHTML = '<div class="wordbook-empty"><span>📖</span><h3>' + (query ? '没有找到匹配词条' : '单词本还是空的') + '</h3><p>' + (query ? '换一个关键词试试。' : '完成练习后划选单词，点击“查词”并加入单词本。') + '</p></div>';
       return;
     }
-    list.innerHTML = entries.map(item => '<article class="wordbook-card" data-entry-id="' + escapeHtml(item.id) + '"><header><div><h3>' + escapeHtml(item.term) + '</h3><span>' + escapeHtml(item.phonetic ? '/' + item.phonetic.replace(/^\/|\/$/g, '') + '/' : '') + '</span></div><button type="button" data-card-action="speak" aria-label="播放英式发音">🔊</button></header><p class="wordbook-card__zh">' + escapeHtml(item.chinese || '暂无中文释义') + '</p>'
+    list.innerHTML = entries.map(item => {
+      const chineseRows = item.chineseByPos?.length ? item.chineseByPos : parsePosSegments(item.chinese);
+      return '<article class="wordbook-card" data-entry-id="' + escapeHtml(item.id) + '"><header><div><h3>' + escapeHtml(item.term) + '</h3><span>' + escapeHtml(item.phonetic ? '/' + item.phonetic.replace(/^\/|\/$/g, '') + '/' : '') + '</span></div><div class="wordbook-card__audio"><button type="button" data-card-action="speak-uk" aria-label="播放英式发音">UK 🔊</button><button type="button" data-card-action="speak-us" aria-label="播放美式发音">US 🔊</button></div></header><div class="wordbook-card__zh">'
+      + (chineseRows.length ? chineseRows.map(row => '<p><b>' + escapeHtml(row.partOfSpeech || '释义') + '</b> ' + escapeHtml(row.text) + '</p>').join('') : '<p>暂无中文释义</p>') + '</div>'
       + (item.definitions?.[0] ? '<p class="wordbook-card__definition">' + escapeHtml(item.definitions[0]) + '</p>' : '')
       + (item.collocations?.length ? '<div class="wordbook-card__chips">' + item.collocations.slice(0, 3).map(value => '<span>' + escapeHtml(value) + '</span>').join('') + '</div>' : '')
       + (item.synonyms?.length ? '<p class="wordbook-card__replace"><b>同义替换</b> ' + escapeHtml(item.synonyms.slice(0, 5).join(' · ')) + '</p>' : '')
       + (item.antonyms?.length ? '<p class="wordbook-card__replace wordbook-card__replace--ant"><b>反义替换</b> ' + escapeHtml(item.antonyms.slice(0, 5).join(' · ')) + '</p>' : '')
-      + '<footer><span>' + escapeHtml(item.sourceTitle || '手动添加') + '</span><div><button type="button" data-card-action="edit">编辑</button><button type="button" data-card-action="delete">删除</button></div></footer></article>').join('');
+      + '<footer><span>' + escapeHtml(item.sourceTitle || '手动添加') + '</span><div><button type="button" data-card-action="edit">编辑</button><button type="button" data-card-action="delete">删除</button></div></footer></article>';
+    }).join('');
   }
 
   function openEditor(entry) {
@@ -356,12 +541,17 @@
     if (!entries.length) { showMessage('单词本为空，暂无内容可导出', 'warning'); return; }
     const popup = global.open('', 'jimmy-vocabulary-pdf');
     if (!popup) { showMessage('浏览器拦截了导出窗口，请允许弹窗后重试', 'warning'); return; }
-    const cards = entries.map((item, index) => '<section><h2>' + (index + 1) + '. ' + escapeHtml(item.term) + ' <small>' + escapeHtml(item.phonetic || '') + '</small></h2><p class="zh">' + escapeHtml(item.chinese || '') + '</p>'
-      + (item.definitions?.length ? '<h3>English definition</h3><ul>' + item.definitions.map(value => '<li>' + escapeHtml(value) + '</li>').join('') + '</ul>' : '')
-      + (item.examples?.length ? '<h3>Examples</h3>' + item.examples.map(value => '<blockquote>' + escapeHtml(value) + '</blockquote>').join('') : '')
-      + (item.collocations?.length ? '<p><b>搭配：</b>' + escapeHtml(item.collocations.join(' · ')) + '</p>' : '')
+    const cards = entries.map((item, index) => {
+      const chineseRows = item.chineseByPos?.length ? item.chineseByPos : parsePosSegments(item.chinese);
+      const senses = item.senses?.length ? item.senses : (item.definitions || []).map((definition, senseIndex) => ({ definition, example: item.examples?.[senseIndex] || '' }));
+      const collocations = item.collocationDetails?.length ? item.collocationDetails : (item.collocations || []).map(phrase => ({ phrase }));
+      return '<section><h2>' + (index + 1) + '. ' + escapeHtml(item.term) + ' <small>' + escapeHtml(item.phonetic || '') + '</small></h2><div class="zh">'
+      + chineseRows.map(row => '<p><b>' + escapeHtml(row.partOfSpeech || '释义') + '</b> ' + escapeHtml(row.text) + '</p>').join('') + '</div>'
+      + (senses.length ? '<h3>English definitions & examples</h3><ol>' + senses.map(value => '<li><b>' + escapeHtml(value.partOfSpeech || '') + '</b> ' + escapeHtml(value.definition) + (value.example ? '<blockquote>' + escapeHtml(value.example) + '</blockquote>' : '') + '</li>').join('') + '</ol>' : '')
+      + (collocations.length ? '<h3>Collocations</h3>' + collocations.map(value => '<p><b>' + escapeHtml(value.phrase) + '</b>' + (value.meaning ? ' — ' + escapeHtml(value.meaning) : '') + (value.example ? '<blockquote>' + escapeHtml(value.example) + '</blockquote>' : '') + '</p>').join('') : '')
       + (item.synonyms?.length ? '<p><b>同义替换：</b>' + escapeHtml(item.synonyms.join(' · ')) + '</p>' : '')
-      + (item.antonyms?.length ? '<p><b>反义替换：</b>' + escapeHtml(item.antonyms.join(' · ')) + '</p>' : '') + '</section>').join('');
+      + (item.antonyms?.length ? '<p><b>反义替换：</b>' + escapeHtml(item.antonyms.join(' · ')) + '</p>' : '') + '</section>';
+    }).join('');
     popup.document.open();
     popup.document.write('<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><title>Jimmy 的 IELTS 阅读单词本</title><style>@page{size:A4;margin:14mm}body{font:14px/1.6 system-ui,"Microsoft YaHei",sans-serif;color:#172033;max-width:800px;margin:auto}header{border-bottom:3px solid #2563eb;margin-bottom:20px}header h1{margin:0}header p{color:#64748b}section{break-inside:avoid;border-bottom:1px solid #dbe3ef;padding:12px 0}h2{margin:0 0 5px;color:#173b68}h2 small{font-weight:400;color:#64748b}.zh{font-size:16px;color:#b45309}h3{font-size:13px;margin:8px 0 2px}ul{margin:2px 0 4px;padding-left:22px}blockquote{margin:5px 0;padding:5px 10px;border-left:3px solid #93c5fd;background:#f8fafc}</style></head><body><header><h1>Jimmy 的 IELTS 阅读单词本</h1><p>共 ' + entries.length + ' 条 · 导出时间 ' + escapeHtml(new Date().toLocaleString('zh-CN')) + '</p></header>' + cards + '</body></html>');
     popup.document.close();
@@ -388,7 +578,8 @@
       if (!cardAction || !card) return;
       const entry = readEntries().find(item => item.id === card.dataset.entryId);
       if (!entry) return;
-      if (cardAction === 'speak') speakBritish(entry.term, entry.audio);
+      if (cardAction === 'speak-uk') speakAccent(entry.term, 'uk', entry.pronunciations?.uk?.audio || entry.audio);
+      if (cardAction === 'speak-us') speakAccent(entry.term, 'us', entry.pronunciations?.us?.audio || '');
       if (cardAction === 'edit') openEditor(entry);
       if (cardAction === 'delete' && global.confirm('从单词本删除 “' + entry.term + '”？')) {
         writeEntries(readEntries().filter(item => item.id !== entry.id)); renderNotebook();
@@ -409,7 +600,7 @@
   }
 
   global.VocabularyNotebook = { lookup, translate, openSelection, saveLookup, readEntries, writeEntries,
-    render: renderNotebook, edit: openEditor, exportPdf, speakBritish, get count() { return readEntries().length; } };
+    render: renderNotebook, edit: openEditor, exportPdf, speakBritish, speakAccent, get count() { return readEntries().length; } };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initialize, { once: true });
   else initialize();
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -1,6 +1,6 @@
 'use strict';
 
-const CACHE_VERSION = 'jimmy-reading-offline-v2';
+const CACHE_VERSION = 'jimmy-reading-offline-v4';
 const CORE_ASSETS = [
   './Jimmy%E9%98%85%E8%AF%BB%E6%9C%BA%E8%80%83.html',
   './js/runtime/offlineReady.js',
@@ -8,6 +8,7 @@ const CORE_ASSETS = [
   './assets/generated/reading-exams/reading-practice-unified.html',
   './assets/generated/reading-exams/manifest.js',
   './css/vocabulary-notebook.css',
+  './css/vocabulary-notebook-v2.css',
   './js/components/vocabularyNotebook.js',
   './assets/wordlists/ecdict_reading.bundle.js'
 ];

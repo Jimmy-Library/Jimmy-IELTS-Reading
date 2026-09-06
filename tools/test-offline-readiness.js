@@ -42,6 +42,16 @@ for (const scriptName of datasetScripts) {
   }
 }
 
+const indexContext = vm.createContext({ console, window: {} });
+vm.runInContext(read('assets/scripts/complete-exam-data.js'), indexContext, { filename: 'complete-exam-data.js' });
+const generatedIndexEntries = (indexContext.window.completeExamIndex || []).filter((exam) =>
+  exam && exam.hasHtml && /assets\/generated\/reading-exams\/?$/i.test(String(exam.path || '')) && /\.js$/i.test(String(exam.filename || ''))
+);
+for (const exam of generatedIndexEntries) {
+  const target = path.join(examDir, exam.filename);
+  if (!fs.existsSync(target)) problems.push(`${exam.id}: indexed dataset is missing (${exam.filename})`);
+}
+
 const mainHtml = read('Jimmy阅读机考.html');
 const unified = read('js/runtime/unifiedReadingPage.js');
 const mainJs = read('js/main.js');
@@ -63,4 +73,4 @@ if (problems.length) {
   process.exit(1);
 }
 
-console.log(`PASS: ${datasetScripts.length} exams have local datasets and answer keys; offline save hooks are present.`);
+console.log(`PASS: ${datasetScripts.length} exams have local datasets and answer keys; ${generatedIndexEntries.length} generated links resolve; offline save hooks are present.`);

@@ -759,7 +759,7 @@
     // --- Exam list view ---
     var DEFAULT_CONTAINER_ID = 'exam-list-container';
     var DEFAULT_LOADING_SELECTOR = '#browse-view .loading';
-    var DEFAULT_BATCH_SIZE = 20;
+    var DEFAULT_BATCH_SIZE = 36;
 
     function LegacyExamListView(options) {
         options = options || {};
@@ -770,10 +770,19 @@
             : DEFAULT_BATCH_SIZE;
         this.domAdapter = options.domAdapter || domAdapter;
         this.supportsGenerate = options.supportsGenerate !== false;
+        this._renderToken = 0;
+        this._batchObserver = null;
+        this._completionStatusIndex = null;
     }
 
     LegacyExamListView.prototype.render = function render(exams, options) {
         options = options || {};
+        this._renderToken += 1;
+        if (this._batchObserver) {
+            this._batchObserver.disconnect();
+            this._batchObserver = null;
+        }
+        this._prepareCompletionStatusIndex();
         var container = this._getContainer();
         if (!container) {
             return;
@@ -791,7 +800,7 @@
 
         var examList = this._createExamList();
         if (normalizedExams.length > this.batchSize) {
-            this._renderBatched(normalizedExams, examList, options);
+            this._renderBatched(normalizedExams, examList, options, this._renderToken);
         } else {
             var fragment = document.createDocumentFragment();
             for (var i = 0; i < normalizedExams.length; i += 1) {
@@ -811,11 +820,17 @@
         return this._createElement('div', { className: 'exam-list' });
     };
 
-    LegacyExamListView.prototype._renderBatched = function _renderBatched(exams, listElement, options) {
+    LegacyExamListView.prototype._renderBatched = function _renderBatched(exams, listElement, options, renderToken) {
         var view = this;
         var index = 0;
+        var sentinel = this._createElement('button', {
+            className: 'exam-list-load-more',
+            type: 'button',
+            ariaLabel: '加载更多题目'
+        }, '继续向下滚动加载更多题目');
 
         function processBatch() {
+            if (renderToken !== view._renderToken) return;
             var endIndex = Math.min(index + view.batchSize, exams.length);
             var fragment = document.createDocumentFragment();
 
@@ -826,15 +841,70 @@
                 }
             }
 
-            listElement.appendChild(fragment);
+            listElement.insertBefore(fragment, sentinel);
             index = endIndex;
 
-            if (index < exams.length) {
-                requestAnimationFrame(processBatch);
+            if (index >= exams.length) {
+                if (view._batchObserver) {
+                    view._batchObserver.disconnect();
+                    view._batchObserver = null;
+                }
+                if (sentinel.parentNode) sentinel.parentNode.removeChild(sentinel);
+            } else {
+                sentinel.textContent = '已显示 ' + index + ' / ' + exams.length + '，继续向下滚动加载';
             }
         }
 
-        requestAnimationFrame(processBatch);
+        listElement.appendChild(sentinel);
+        sentinel.addEventListener('click', processBatch);
+        processBatch();
+        if (index < exams.length && typeof IntersectionObserver === 'function') {
+            this._batchObserver = new IntersectionObserver(function (entries) {
+                if (entries.some(function (entry) { return entry.isIntersecting; })) processBatch();
+            }, { rootMargin: '600px 0px' });
+            this._batchObserver.observe(sentinel);
+        }
+    };
+
+    LegacyExamListView.prototype._recordLookupKeys = function _recordLookupKeys(item, isRecord) {
+        if (!item) return [];
+        var realData = item.realData || {};
+        var id = isRecord ? item.examId : item.id;
+        var title = isRecord ? (item.title || item.examTitle) : item.title;
+        var path = isRecord
+            ? (item.path || item.examPath || item.resourcePath || realData.path || realData.examPath)
+            : (item.path || item.resourcePath || item.basePath);
+        var file = isRecord
+            ? (item.filename || item.examFile || item.examFilename || realData.filename || realData.examFile || realData.pdfFilename)
+            : (item.filename || item.pdfFilename);
+        var normalizedPath = normalizePathValue(path);
+        var keys = [];
+        if (id) keys.push('id:' + String(id));
+        if (title) keys.push('title:' + String(title));
+        if (normalizedPath) {
+            keys.push('path:' + normalizedPath);
+            var tail = getPathTail(normalizedPath);
+            if (tail) keys.push('tail:' + tail);
+        }
+        if (file) keys.push('file:' + String(file).toLowerCase());
+        return keys;
+    };
+
+    LegacyExamListView.prototype._prepareCompletionStatusIndex = function _prepareCompletionStatusIndex() {
+        var source = (typeof global.getPracticeRecordsState === 'function')
+            ? global.getPracticeRecordsState()
+            : global.practiceRecords;
+        var records = ensureArray(source);
+        var index = new Map();
+        var view = this;
+        records.forEach(function (record) {
+            var timestamp = getRecordTimestamp(record);
+            view._recordLookupKeys(record, true).forEach(function (key) {
+                var existing = index.get(key);
+                if (!existing || timestamp >= getRecordTimestamp(existing)) index.set(key, record);
+            });
+        });
+        this._completionStatusIndex = index;
     };
 
     LegacyExamListView.prototype._createExamElement = function _createExamElement(exam, index, options) {
@@ -1272,19 +1342,20 @@
     };
 
     LegacyExamListView.prototype._getCompletionStatus = function _getCompletionStatus(exam) {
-        var source = (typeof global.getPracticeRecordsState === 'function')
-            ? global.getPracticeRecordsState()
-            : global.practiceRecords;
-        var records = ensureArray(source).filter(function (record) {
-            return recordMatchesExam(exam, record);
+        var latest = null;
+        var latestTimestamp = -1;
+        var statusIndex = this._completionStatusIndex;
+        this._recordLookupKeys(exam, false).forEach(function (key) {
+            var record = statusIndex && statusIndex.get(key);
+            var timestamp = getRecordTimestamp(record);
+            if (record && timestamp >= latestTimestamp) {
+                latest = record;
+                latestTimestamp = timestamp;
+            }
         });
-        if (records.length === 0) {
+        if (!latest) {
             return null;
         }
-        records.sort(function (a, b) {
-            return getRecordTimestamp(b) - getRecordTimestamp(a);
-        });
-        var latest = records[0] || {};
 
         // 最近一次用时（秒）
         var duration = Number(

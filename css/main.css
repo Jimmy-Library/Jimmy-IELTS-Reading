@@ -2653,6 +2653,24 @@ body.no-scroll {
     align-content: start;
 }
 
+.exam-list-load-more {
+    grid-column: 1 / -1;
+    width: 100%;
+    min-height: 46px;
+    margin: 4px 0 14px;
+    border: 1px dashed rgba(100, 116, 139, .45);
+    border-radius: 14px;
+    background: rgba(248, 250, 252, .82);
+    color: #64748b;
+    font: inherit;
+    cursor: pointer;
+}
+
+.exam-list-load-more:hover {
+    border-color: #60a5fa;
+    color: #2563eb;
+}
+
 .exam-list-empty {
     display: flex;
     flex-direction: column;

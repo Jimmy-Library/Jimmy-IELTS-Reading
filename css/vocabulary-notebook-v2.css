@@ -1,0 +1,316 @@
+/* Rich dictionary presentation: POS groups, paired senses/examples, collocations and dual accents. */
+.vocabulary-lookup-panel {
+  width: min(570px, calc(100vw - 28px));
+}
+
+.lookup-background-status {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  margin: -4px 0 12px;
+  padding: 8px 11px;
+  border: 1px solid #bfdbfe;
+  border-radius: 10px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-size: .76rem;
+}
+
+.lookup-translation {
+  display: grid;
+  gap: 14px;
+}
+
+.lookup-translation__source,
+.lookup-translation__result {
+  min-height: 0;
+  padding: 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  background: #f8fafc;
+}
+
+.lookup-translation__source {
+  max-height: min(28vh, 220px);
+  overflow: auto;
+}
+
+.lookup-translation__result {
+  border-color: #fed7aa;
+  background: #fffaf4;
+}
+
+.lookup-translation__source > span,
+.lookup-translation__result > span {
+  margin-top: 0;
+}
+
+.lookup-translation__source p,
+.lookup-translation__result p {
+  overflow-wrap: anywhere;
+}
+
+.lookup-translation__result .lookup-loading {
+  min-height: 70px;
+  padding: 8px 2px;
+}
+
+.lookup-translation__result .lookup-loading i {
+  width: 18px;
+  height: 18px;
+  border: 2px solid #fed7aa;
+  border-top-color: #ea580c;
+  border-radius: 50%;
+  animation: vocabulary-spin .75s linear infinite;
+}
+
+.lookup-word-head {
+  align-items: flex-start;
+  padding-bottom: 14px;
+  border-bottom: 1px solid #e8edf5;
+}
+
+.lookup-word-head > strong,
+.lookup-word-head > div > strong {
+  color: #173b68;
+  font-size: 1.8rem;
+  letter-spacing: -.025em;
+}
+
+.lookup-word-head > div {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.lookup-word-tag {
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: #dcfce7;
+  color: #15803d;
+  font-size: .68rem;
+  font-weight: 800;
+  letter-spacing: .04em;
+}
+
+.lookup-pronunciations {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.lookup-pronunciations button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 38px;
+  padding: 7px 10px;
+  border: 1px solid #c7d7ee;
+  border-radius: 11px;
+  background: #f7fbff;
+  color: #234a78;
+  cursor: pointer;
+}
+
+.lookup-pronunciations button:hover {
+  border-color: #60a5fa;
+  background: #eff6ff;
+}
+
+.lookup-pronunciations button b {
+  padding: 2px 5px;
+  border-radius: 5px;
+  background: #dbeafe;
+  color: #1d4ed8;
+  font-size: .7rem;
+}
+
+.lookup-pronunciations button span {
+  font-family: Georgia, serif;
+  font-size: .78rem;
+}
+
+.lookup-pronunciations--compact {
+  justify-content: flex-start;
+  margin-top: 8px;
+}
+
+.lookup-pronunciations--compact button {
+  min-height: 31px;
+  padding: 4px 7px;
+  font-size: .72rem;
+}
+
+.lookup-chinese-list {
+  display: grid;
+  gap: 8px;
+}
+
+.lookup-chinese-row {
+  display: grid;
+  grid-template-columns: 48px 1fr;
+  gap: 9px;
+  padding: 9px 11px;
+  border: 1px solid #fde7c6;
+  border-radius: 11px;
+  background: #fffaf2;
+  line-height: 1.55;
+}
+
+.lookup-chinese-row b {
+  color: #b45309;
+}
+
+.lookup-chinese-row span {
+  color: #594638;
+}
+
+.lookup-sense-list,
+.lookup-collocation-list {
+  display: grid;
+  gap: 11px;
+}
+
+.lookup-sense-card,
+.lookup-collocation-card {
+  padding: 13px;
+  border: 1px solid #dce5f1;
+  border-radius: 14px;
+  background: linear-gradient(145deg, #fff, #f8fbff);
+}
+
+.lookup-sense-card__title {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: start;
+  gap: 9px;
+}
+
+.lookup-sense-card__title > span {
+  min-width: 34px;
+  padding: 3px 7px;
+  border-radius: 7px;
+  background: #e0e7ff;
+  color: #4338ca;
+  text-align: center;
+  font-size: .74rem;
+  font-weight: 800;
+}
+
+.lookup-sense-card__title p,
+.lookup-collocation-card p {
+  margin: 0;
+}
+
+.lookup-sense-card__zh {
+  margin: 7px 0 0 43px !important;
+  color: #b45309 !important;
+  font-size: .84rem;
+}
+
+.lookup-sense-example {
+  margin-top: 10px;
+  padding: 10px 11px;
+  border-left: 3px solid #67a8ed;
+  border-radius: 0 10px 10px 0;
+  background: #f4f8fd;
+}
+
+.lookup-sense-example > span {
+  display: block;
+  margin-bottom: 4px;
+  color: #64748b;
+  font-size: .68rem;
+  font-weight: 800;
+  letter-spacing: .04em;
+}
+
+.lookup-sense-example > p {
+  color: #334155;
+  font-style: italic;
+}
+
+.lookup-reference-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.lookup-reference-links a {
+  padding: 7px 10px;
+  border: 1px solid #dbe3ef;
+  border-radius: 999px;
+  background: #fff;
+  color: #315f91;
+  text-decoration: none;
+  font-size: .76rem;
+  font-weight: 700;
+}
+
+.lookup-reference-links a:hover {
+  border-color: #93c5fd;
+  background: #eff6ff;
+}
+
+.lookup-reference-links--compact {
+  margin: 9px 0 0 43px;
+}
+
+.lookup-collocation-card header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.lookup-collocation-card header > strong {
+  color: #1d4ed8;
+}
+
+.lookup-collocation-card__meaning {
+  margin-top: 7px !important;
+  color: #9a3412 !important;
+  font-weight: 700;
+}
+
+.wordbook-card__audio {
+  display: flex;
+  gap: 5px;
+}
+
+.wordbook-card__audio button {
+  width: auto !important;
+  padding: 7px !important;
+  color: #1d4ed8;
+  font-size: .7rem;
+  font-weight: 800;
+}
+
+.wordbook-card__zh {
+  display: grid;
+  gap: 4px;
+}
+
+.wordbook-card__zh p {
+  margin: 0;
+}
+
+@media (max-width: 620px) {
+  .lookup-word-head,
+  .lookup-collocation-card header {
+    display: grid;
+  }
+
+  .lookup-pronunciations {
+    justify-content: flex-start;
+  }
+
+  .lookup-sense-card__zh,
+  .lookup-reference-links--compact {
+    margin-left: 0 !important;
+  }
+}
