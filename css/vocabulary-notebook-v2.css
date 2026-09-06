@@ -210,6 +210,40 @@
   font-size: .84rem;
 }
 
+.lookup-section--chinese {
+  border-color: #fed7aa;
+  background: #fffaf4;
+}
+
+.lookup-sense-card--chinese {
+  border-color: #fde7c6;
+  background: linear-gradient(145deg, #fff, #fffaf2);
+}
+
+.lookup-sense-card--chinese .lookup-sense-card__title > span {
+  background: #ffedd5;
+  color: #b45309;
+}
+
+.lookup-sense-card--chinese .lookup-sense-card__title > p {
+  color: #7c2d12;
+  font-weight: 700;
+}
+
+.lookup-chinese-examples {
+  display: grid;
+  gap: 8px;
+}
+
+.lookup-sense-card--chinese .lookup-sense-example {
+  border-left-color: #fb923c;
+  background: #fff7ed;
+}
+
+.lookup-section--english {
+  border-color: #cbd5e1;
+}
+
 .lookup-sense-example {
   margin-top: 10px;
   padding: 10px 11px;

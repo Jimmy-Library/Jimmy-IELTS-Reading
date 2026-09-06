@@ -201,12 +201,21 @@
   function normalizePartOfSpeech(value) {
     const raw = String(value || '').trim().toLowerCase().replace(/\.$/, '');
     return ({ n: 'n.', v: 'v.', vi: 'vi.', vt: 'vt.', a: 'adj.', s: 'adj.', adj: 'adj.', adv: 'adv.',
-      prep: 'prep.', pron: 'pron.', conj: 'conj.', num: 'num.', art: 'art.', aux: 'aux.' })[raw] || (raw ? raw + '.' : '');
+      noun: 'n.', verb: 'v.', adjective: 'adj.', adverb: 'adv.', preposition: 'prep.', pronoun: 'pron.', conjunction: 'conj.',
+      numeral: 'num.', article: 'art.', auxiliary: 'aux.', pl: 'n.', prep: 'prep.', pron: 'pron.', conj: 'conj.', num: 'num.', art: 'art.', aux: 'aux.' })[raw] || (raw ? raw + '.' : '');
+  }
+  function partOfSpeechGroup(value) {
+    const normalized = normalizePartOfSpeech(value);
+    if (normalized === 'v.' || normalized === 'vi.' || normalized === 'vt.') return 'verb';
+    if (normalized === 'n.') return 'noun';
+    if (normalized === 'adj.') return 'adjective';
+    if (normalized === 'adv.') return 'adverb';
+    return normalized;
   }
   function parsePosSegments(value) {
     const text = String(value || '').replace(/；/g, ';').trim();
     if (!text) return [];
-    const marker = /(?:^|[;\n])\s*(n|v|vi|vt|a|s|adj|adv|prep|pron|conj|num|art|aux)\.?\s+/gi;
+    const marker = /(?:^|[;\n])\s*(n|v|vi|vt|a|s|adj|adv|pl|prep|pron|conj|num|art|aux)\.?\s+/gi;
     const matches = [];
     let match;
     while ((match = marker.exec(text))) matches.push({ index: match.index, contentStart: marker.lastIndex, pos: normalizePartOfSpeech(match[1]) });
@@ -558,12 +567,31 @@
       return;
     }
     const senses = result.senses?.length ? result.senses : (result.definitions || []).map(value => ({ definition: value }));
-    const senseHtml = senses.length ? senses.map((sense, index) => '<article class="lookup-sense-card">'
+    const englishSenseHtml = senses.length ? senses.map((sense, index) => '<article class="lookup-sense-card" data-pos-group="' + escapeHtml(partOfSpeechGroup(sense.partOfSpeech)) + '">'
       + '<div class="lookup-sense-card__title"><span>' + escapeHtml(sense.partOfSpeech || String(index + 1)) + '</span><p>' + escapeHtml(sense.definition) + '</p></div>'
-      + (sense.chinese ? '<p class="lookup-sense-card__zh">' + escapeHtml(sense.chinese) + '</p>' : '')
       + '<div class="lookup-sense-example"><span>例句' + (sense.exampleSource ? ' · ' + escapeHtml(sense.exampleSource) : '') + '</span><p>'
       + escapeHtml(sense.example || '联网后可获取开放语料例句。') + '</p>' + (sense.example ? pronunciationButtons(result, sense.example, true) : '') + '</div>'
       + referenceLinks(result.term, true) + '</article>').join('') : '<p>暂无英英释义</p>';
+    const rawChineseRows = result.chineseByPos?.length ? result.chineseByPos : parsePosSegments(result.chinese);
+    const chineseRows = Array.from(rawChineseRows.reduce((groups, row) => {
+      const key = row.partOfSpeech || '释义', current = groups.get(key);
+      if (current) current.text = uniq(current.text.split('；').concat(row.text), 20).join('；');
+      else groups.set(key, { ...row });
+      return groups;
+    }, new Map()).values());
+    const chineseSenseHtml = chineseRows.length ? chineseRows.map((row, index) => {
+      let matches = senses.filter(sense => sense.example && partOfSpeechGroup(sense.partOfSpeech) === partOfSpeechGroup(row.partOfSpeech));
+      if (!matches.length && chineseRows.length === 1) matches = senses.filter(sense => sense.example);
+      const examples = uniq(matches.map(sense => sense.example), 4);
+      return '<article class="lookup-sense-card lookup-sense-card--chinese" data-pos-group="' + escapeHtml(partOfSpeechGroup(row.partOfSpeech)) + '"><div class="lookup-sense-card__title"><span>'
+        + escapeHtml(row.partOfSpeech || String(index + 1)) + '</span><p>' + escapeHtml(row.text) + '</p></div>'
+        + (examples.length ? '<div class="lookup-chinese-examples">' + examples.map(example => {
+          const sourceSense = matches.find(sense => sense.example === example);
+          return '<div class="lookup-sense-example"><span>对应例句' + (sourceSense?.exampleSource ? ' · ' + escapeHtml(sourceSense.exampleSource) : '')
+            + '</span><p>' + escapeHtml(example) + '</p>' + pronunciationButtons(result, example, true) + '</div>';
+        }).join('') + '</div>' : '<div class="lookup-sense-example"><span>对应例句</span><p>联网后可按词性获取开放语料例句。</p></div>')
+        + '</article>';
+    }).join('') : '<p>暂无中文释义</p>';
     const collocationHtml = result.collocationDetails?.length ? result.collocationDetails.map(item => '<article class="lookup-collocation-card"><header><strong>'
       + escapeHtml(item.phrase) + '</strong>' + pronunciationButtons(result, item.phrase, true) + '</header><p class="lookup-collocation-card__meaning">'
       + escapeHtml(item.meaning || '释义将在联网后补充') + '</p><div class="lookup-sense-example"><span>例句' + (item.exampleSource ? ' · ' + escapeHtml(item.exampleSource) : '')
@@ -572,7 +600,8 @@
     body.innerHTML = '<div class="lookup-word-head"><div><strong>' + escapeHtml(result.term) + '</strong>'
       + (result.tags?.includes('ielts') ? '<span class="lookup-word-tag">IELTS 词表</span>' : '') + '</div>' + pronunciationButtons(result, result.term, false) + '</div>'
       + (result.queriedTerm && normalizeTerm(result.queriedTerm) !== normalizeTerm(result.term) ? '<p class="lookup-lemma-notice">已识别 <b>' + escapeHtml(result.queriedTerm) + '</b>' + (result.queriedForm ? '（' + escapeHtml(result.queriedForm) + '）' : '') + '，以下显示原形 <b>' + escapeHtml(result.term) + '</b> 的释义。</p>' : '')
-      + '<section class="lookup-section lookup-section--primary"><h3>逐义项中英释义与例句</h3><div class="lookup-sense-list">' + senseHtml + '</div></section>'
+      + '<section class="lookup-section lookup-section--primary lookup-section--chinese"><h3>中文释义与对应例句</h3><div class="lookup-sense-list">' + chineseSenseHtml + '</div></section>'
+      + '<section class="lookup-section lookup-section--english"><h3>英英释义与例句</h3><div class="lookup-sense-list">' + englishSenseHtml + '</div></section>'
       + relationMarkup('词格变化', result.forms, 'forms')
       + relationMarkup('同一词族 Word family', result.wordFamily, 'family')
       + (collocationHtml ? '<section class="lookup-section"><h3>常用词组与固定搭配</h3><div class="lookup-collocation-list">' + collocationHtml + '</div></section>' : '')
