@@ -38,19 +38,22 @@ const server = http.createServer((req, res) => {
     });
     await context.route('https://api.datamuse.com/**', route => {
       const url = route.request().url();
-      const words = url.includes('rel_ant') ? ['temporary'] : url.includes('rel_syn') ? ['durable'] : ['development'];
+      const words = url.includes('rel_ant') ? ['temporary'] : url.includes('rel_syn') ? ['durable']
+        : url.includes('europe') ? ['was'] : ['development'];
       route.fulfill({ contentType: 'application/json', body: JSON.stringify(words.map(word => ({ word }))) });
     });
     await context.route('https://api.mymemory.translated.net/**', route => route.fulfill({
       contentType: 'application/json', body: JSON.stringify({ responseData: { translatedText: '可持续的' } })
     }));
-    await context.route('https://api.tatoeba.org/**', route => route.fulfill({
-      contentType: 'application/json',
+    await context.route('https://api.tatoeba.org/**', route => {
+      const query = new URL(route.request().url()).searchParams.get('q').replace(/^"|"$/g, '');
+      return route.fulfill({ contentType: 'application/json',
       body: JSON.stringify({ data: Array.from({ length: 10 }, (_, index) => ({
-        id: 1000 + index, text: 'This is a useful open example sentence number ' + (index + 1) + '.', lang: 'eng',
+        id: 1000 + index, text: 'Researchers use ' + query + ' in a new example sentence number ' + (index + 1) + '.', lang: 'eng',
         license: 'CC BY 2.0 FR', owner: 'tester', is_unapproved: false
       })) })
-    }));
+    });
+    });
     const page = await context.newPage();
     page.on('pageerror', error => errors.push(error.message));
     await page.addInitScript(() => {
@@ -68,14 +71,14 @@ const server = http.createServer((req, res) => {
 
     const result = await page.evaluate(() => window.VocabularyNotebook.openSelection({
       text: 'sustainable', mode: 'lookup', autoSave: true,
-      context: { title: 'Vocabulary test', sentence: 'We need a sustainable approach.' }
+      context: { title: 'Vocabulary test', sentence: 'ORIGINAL PASSAGE SENTENCE SHOULD NOT BECOME AN EXAMPLE.' }
     }).then(value => ({ term: value.term, chinese: value.chinese, synonyms: value.synonyms, collocations: value.collocations })));
     assert.equal(result.term.toLowerCase(), 'sustainable');
     assert.ok(result.chinese);
     assert.ok(result.synonyms.includes('durable') || result.synonyms.includes('viable'));
     assert.ok(result.collocations.length);
     const rich = await page.evaluate(() => window.VocabularyNotebook.openSelection({
-      text: 'image', mode: 'lookup', context: { title: 'Rich dictionary test' }
+      text: 'image', mode: 'lookup', context: { title: 'Rich dictionary test', sentence: 'ORIGINAL RICH PASSAGE SENTENCE.' }
     }).then(value => ({
       chineseRows: value.chineseByPos.length,
       senseCount: value.senses.length,
@@ -90,11 +93,17 @@ const server = http.createServer((req, res) => {
     assert.equal(rich.collocationsComplete, true);
     assert.ok(rich.ukAudio);
     assert.ok(rich.usAudio);
-    assert.ok(await page.locator('.lookup-chinese-row').count() >= 2);
+    assert.ok(await page.locator('.lookup-sense-card__zh').count() >= 2);
     assert.equal(await page.locator('.lookup-sense-card').count(), rich.senseCount);
+    assert.equal(await page.locator('.lookup-section h3').filter({ hasText: '中文释义' }).count(), 0);
+    assert.equal((await page.locator('.lookup-sense-list').innerText()).includes('ORIGINAL RICH PASSAGE SENTENCE'), false);
     assert.ok(await page.locator('[data-lookup-action="speak-uk"]').count() > 1);
     assert.ok(await page.locator('[data-lookup-action="speak-us"]').count() > 1);
     assert.equal(await page.locator('.lookup-reference-links a').count() >= 2, true);
+    const rejected = await page.evaluate(() => window.VocabularyNotebook.openSelection({ text: 'europe', mode: 'lookup' })
+      .then(value => value.collocations));
+    assert.equal(rejected.some(value => /europe was|was europe/i.test(value)), false);
+    assert.equal(await page.locator('.lookup-section h3').filter({ hasText: '常用词组与固定搭配' }).count(), 0);
     assert.equal(await page.locator('.wordbook-card').count(), 1);
     assert.match(await page.locator('.wordbook-card').innerText(), /sustainable/i);
 

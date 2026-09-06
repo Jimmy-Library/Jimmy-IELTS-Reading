@@ -44,12 +44,16 @@ for (const scriptName of datasetScripts) {
 
 const indexContext = vm.createContext({ console, window: {} });
 vm.runInContext(read('assets/scripts/complete-exam-data.js'), indexContext, { filename: 'complete-exam-data.js' });
+const manifestContext = vm.createContext({ console, window: {} });
+vm.runInContext(read('assets/generated/reading-exams/manifest.js'), manifestContext, { filename: 'manifest.js' });
+const manifest = manifestContext.window.__READING_EXAM_MANIFEST__ || {};
 const generatedIndexEntries = (indexContext.window.completeExamIndex || []).filter((exam) =>
   exam && exam.hasHtml && /assets\/generated\/reading-exams\/?$/i.test(String(exam.path || '')) && /\.js$/i.test(String(exam.filename || ''))
 );
 for (const exam of generatedIndexEntries) {
   const target = path.join(examDir, exam.filename);
   if (!fs.existsSync(target)) problems.push(`${exam.id}: indexed dataset is missing (${exam.filename})`);
+  if (!manifest[exam.id]) problems.push(`${exam.id}: generated dataset is missing from manifest`);
 }
 
 const mainHtml = read('Jimmy阅读机考.html');

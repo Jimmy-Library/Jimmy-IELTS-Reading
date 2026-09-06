@@ -66,7 +66,7 @@
     {
       id: 'vocabulary-entry', target: '.main-nav [data-view="vocab"]', position: 'bottom', activateView: 'practice', waitForElement: true,
       title: '8　单词本入口与划词学习',
-      content: '<strong>入口：</strong>顶部导航“单词本”位于练习记录后面。<br><strong>划词：</strong>提交或回顾时划选单词，可查看按词性分行的中文释义、逐义项英英释义与例句、常用搭配，以及 UK/US 双发音；划选句子可翻译。<br><strong>参考：</strong>每个义项可跳转 Oxford 或 Collins 官方词条核对例句。点击“加入单词本”即可保存到当前设备。',
+      content: '<strong>入口：</strong>顶部导航“单词本”位于练习记录后面。<br><strong>划词：</strong>提交或回顾时划选单词，可查看逐义项中英释义、新例句、经过例句验证的常用搭配，以及 UK/US 双发音；划选句子可翻译。<br><strong>参考：</strong>每个义项可跳转 Oxford 或 Collins 官方词条核对例句。点击“加入单词本”即可保存到当前设备。',
       showSkip: true, showPrev: true, nextText: '查看单词本功能', lockScroll: true, lockPointer: true, disableHighlightPointer: true
     },
     {

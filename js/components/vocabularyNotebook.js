@@ -4,7 +4,7 @@
   const rootUrl = new URL('../../', scriptNode && scriptNode.src ? scriptNode.src : document.baseURI);
   const WORDS_KEY = 'jimmy_vocabulary_notebook_v1';
   const WORDS_BACKUP_KEY = 'jimmy_vocabulary_notebook_backup_v1';
-  const CACHE_KEY = 'jimmy_dictionary_cache_v1';
+  const CACHE_KEY = 'jimmy_dictionary_cache_v2';
   const CACHE_LIMIT = 120;
   const state = { entries: null, dictionaryPromise: null, activeLookup: null, lookupSequence: 0, mounted: false };
 
@@ -22,6 +22,24 @@
   function normalizeTerm(value) { return normalizeText(value).replace(/^[^A-Za-z]+|[^A-Za-z'-]+$/g, '').toLowerCase(); }
   function isSingleWord(value) { return /^[A-Za-z]+(?:['-][A-Za-z]+)*$/.test(normalizeText(value)); }
   function safeParse(raw, fallback) { try { return JSON.parse(raw); } catch (_) { return fallback; } }
+  const COLLOCATION_STOPWORDS = new Set(('a an the and or but as at by for from in into of on onto to with without is am are was were be been being '
+    + 'do does did done have has had will would shall should can could may might must this that these those there here then than').split(/\s+/));
+
+  function isPlausibleCollocation(term, phrase) {
+    const headword = normalizeTerm(term);
+    const normalized = normalizeText(phrase).toLowerCase();
+    const tokens = normalized.split(/\s+/).filter(Boolean);
+    if (!headword || tokens.length < 2 || tokens.length > 4 || !tokens.includes(headword)) return false;
+    if (tokens.some(token => !/^[a-z]+(?:['-][a-z]+)*$/.test(token))) return false;
+    const neighbours = tokens.filter(token => token !== headword);
+    return neighbours.length > 0 && neighbours.every(token => token.length > 2 && !COLLOCATION_STOPWORDS.has(token));
+  }
+
+  function containsExactPhrase(sentence, phrase) {
+    const haystack = ' ' + normalizeText(sentence).toLowerCase().replace(/[^a-z0-9'-]+/g, ' ') + ' ';
+    const needle = ' ' + normalizeText(phrase).toLowerCase().replace(/[^a-z0-9'-]+/g, ' ') + ' ';
+    return haystack.includes(needle);
+  }
 
   function readEntries() {
     if (state.entries) return state.entries.slice();
@@ -180,8 +198,12 @@
       fetchJson(endpoint + 'rel_bga=' + encodeURIComponent(term)), fetchJson(endpoint + 'rel_bgb=' + encodeURIComponent(term))
     ]);
     const words = value => (Array.isArray(value) ? value.map(item => item.word) : []);
-    return { synonyms: uniq(words(syn)), antonyms: uniq(words(ant)),
-      collocations: uniq(words(after).map(word => term + ' ' + word).concat(words(before).map(word => word + ' ' + term)), 10),
+    const candidates = (Array.isArray(after) ? after.map(item => ({ phrase: term + ' ' + item.word, score: Number(item.score) || 0 })) : [])
+      .concat(Array.isArray(before) ? before.map(item => ({ phrase: item.word + ' ' + term, score: Number(item.score) || 0 })) : [])
+      .filter(item => isPlausibleCollocation(term, item.phrase)).sort((a, b) => b.score - a.score);
+    const bestScore = candidates[0]?.score || 0;
+    const collocations = uniq(candidates.filter(item => !bestScore || item.score >= Math.max(20, bestScore * .12)).map(item => item.phrase), 8);
+    return { synonyms: uniq(words(syn)), antonyms: uniq(words(ant)), collocations,
       sources: [{ name: 'Datamuse / WordNet', url: 'https://www.datamuse.com/api/', license: 'Free public API' }] };
   }
 
@@ -193,20 +215,23 @@
   }
 
   async function enrichCollocations(values) {
-    const phrases = uniq(values || [], 5);
+    const phrases = uniq(values || [], 6).filter(phrase => isPlausibleCollocation(normalizeTerm(phrase.split(/\s+/).find(Boolean) || ''), phrase));
     const rows = await Promise.all(phrases.map(async phrase => {
       const key = 'collocation::' + phrase.toLowerCase();
       const cached = cachedLookup(key);
       if (cached) return cached;
-      const [meaningResult, exampleResult] = await Promise.allSettled([translate(phrase), fetchTatoebaExamples(phrase, 1)]);
+      const [meaningResult, exampleResult] = await Promise.allSettled([translate(phrase), fetchTatoebaExamples('"' + phrase + '"', 3)]);
+      const matchingExample = exampleResult.status === 'fulfilled'
+        ? exampleResult.value.find(item => containsExactPhrase(item.text, phrase))
+        : null;
       const row = { phrase,
         meaning: meaningResult.status === 'fulfilled' ? meaningResult.value.translation || '' : '',
-        example: exampleResult.status === 'fulfilled' ? exampleResult.value[0]?.text || '' : '',
-        exampleSource: exampleResult.status === 'fulfilled' && exampleResult.value[0] ? 'Tatoeba CC BY 2.0 FR' : '' };
+        example: matchingExample?.text || '',
+        exampleSource: matchingExample ? 'Tatoeba CC BY 2.0 FR' : '' };
       cacheLookup(key, row);
-      return row;
+      return /[\u3400-\u9fff]/.test(row.meaning) && row.example ? row : null;
     }));
-    return rows;
+    return rows.filter(Boolean);
   }
 
   async function translate(text) {
@@ -254,7 +279,6 @@
     const cachedEntry = cachedLookupEntry(key);
     let result = mergeLookup(local, cachedEntry?.value || null);
     result.term = result.term || term;
-    if (context?.sentence) result.examples = uniq([context.sentence].concat(result.examples || []), 6);
     const cacheIsFresh = cachedEntry && Date.now() - Number(cachedEntry.savedAt || 0) < 7 * 24 * 60 * 60 * 1000
       && result.senses?.length && result.collocationDetails?.length;
     if (cacheIsFresh) {
@@ -266,7 +290,7 @@
       enrichments.slice(0, 2).forEach(item => { if (item.status === 'fulfilled') result = mergeLookup(result, item.value); });
       const openExamples = enrichments[2]?.status === 'fulfilled' ? enrichments[2].value : [];
       if (!result.chinese) { try { result.chinese = (await translate(term)).translation || ''; } catch (_) {} }
-      const examplePool = uniq([context?.sentence].concat(result.examples || []).concat(openExamples.map(item => item.text)), 14);
+      const examplePool = uniq((result.examples || []).concat(openExamples.map(item => item.text)), 14);
       if (!result.senses?.length) {
         result.senses = (result.definitions || []).map(definition => ({ partOfSpeech: '', definition, chinese: '', example: '', exampleSource: '' }));
       }
@@ -276,10 +300,11 @@
         const tatoeba = openExamples.find(item => item.text === chosenExample);
         return { ...sense, chinese: sense.chinese || row?.text || '',
           example: chosenExample,
-          exampleSource: sense.exampleSource || (tatoeba ? 'Tatoeba CC BY 2.0 FR' : chosenExample === context?.sentence ? '阅读原文语境' : '') };
+          exampleSource: sense.exampleSource || (tatoeba ? 'Tatoeba CC BY 2.0 FR' : '') };
       });
       result.examples = uniq(result.senses.map(item => item.example).concat(examplePool), 14);
       try { result.collocationDetails = await enrichCollocations(result.collocations); } catch (_) {}
+      result.collocations = (result.collocationDetails || []).map(item => item.phrase);
       cacheLookup(key, result);
     }
     result.context = context || {};
@@ -293,7 +318,6 @@
     const result = mergeLookup(local, cachedLookup('word::' + term));
     result.term = result.term || term;
     result.context = context || {};
-    if (context?.sentence) result.examples = uniq([context.sentence].concat(result.examples || []), 6);
     return result;
   }
   function hashCode(value) { let hash = 0; for (let i = 0; i < value.length; i += 1) hash = ((hash << 5) - hash + value.charCodeAt(i)) | 0; return hash; }
@@ -302,7 +326,7 @@
     return { id: 'vocab-' + key.replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') + '-' + Math.abs(hashCode(key)),
       term, type: isSingleWord(term) ? 'word' : 'phrase', phonetic: result.phonetic || '', audio: result.audio || '', chinese: result.chinese || result.translation || '',
       chineseByPos: result.chineseByPos || [], pronunciations: result.pronunciations || {}, senses: result.senses || [],
-      definitions: uniq(result.definitions || [], 10), examples: uniq((result.examples || []).concat(context?.sentence || []), 8), collocations: uniq(result.collocations || [], 16),
+      definitions: uniq(result.definitions || [], 10), examples: uniq(result.examples || [], 8), collocations: uniq(result.collocations || [], 16),
       collocationDetails: result.collocationDetails || [],
       synonyms: uniq(result.synonyms || [], 20), antonyms: uniq(result.antonyms || [], 20), note: '', sourceTitle: context?.title || '',
       sourceText: context?.sentence || result.original || '', createdAt: now, updatedAt: now };
@@ -394,7 +418,6 @@
         + '<p class="lookup-attribution">翻译来源：MyMemory 开放翻译记忆库；已查询内容会保存在本机。</p>';
       return;
     }
-    const chineseRows = result.chineseByPos?.length ? result.chineseByPos : parsePosSegments(result.chinese);
     const senses = result.senses?.length ? result.senses : (result.definitions || []).map(value => ({ definition: value }));
     const senseHtml = senses.length ? senses.map((sense, index) => '<article class="lookup-sense-card">'
       + '<div class="lookup-sense-card__title"><span>' + escapeHtml(sense.partOfSpeech || String(index + 1)) + '</span><p>' + escapeHtml(sense.definition) + '</p></div>'
@@ -406,18 +429,16 @@
       + escapeHtml(item.phrase) + '</strong>' + pronunciationButtons(result, item.phrase, true) + '</header><p class="lookup-collocation-card__meaning">'
       + escapeHtml(item.meaning || '释义将在联网后补充') + '</p><div class="lookup-sense-example"><span>例句' + (item.exampleSource ? ' · ' + escapeHtml(item.exampleSource) : '')
       + '</span><p>' + escapeHtml(item.example || '联网后可获取开放语料例句。') + '</p>' + (item.example ? pronunciationButtons(result, item.example, true) : '') + '</div></article>').join('')
-      : '<p>暂未找到高频搭配。</p>';
+      : '';
     body.innerHTML = '<div class="lookup-word-head"><div><strong>' + escapeHtml(result.term) + '</strong>'
       + (result.tags?.includes('ielts') ? '<span class="lookup-word-tag">IELTS 词表</span>' : '') + '</div>' + pronunciationButtons(result, result.term, false) + '</div>'
-      + '<section class="lookup-section lookup-section--primary"><h3>中文释义</h3><div class="lookup-chinese-list">'
-      + (chineseRows.length ? chineseRows.map(row => '<div class="lookup-chinese-row"><b>' + escapeHtml(row.partOfSpeech || '释义') + '</b><span>' + escapeHtml(row.text) + '</span></div>').join('') : '<p>暂无中文释义</p>') + '</div></section>'
-      + '<section class="lookup-section"><h3>逐义项英英释义与例句</h3><div class="lookup-sense-list">' + senseHtml + '</div></section>'
-      + '<section class="lookup-section"><h3>常用词组与固定搭配</h3><div class="lookup-collocation-list">' + collocationHtml + '</div></section>'
+      + '<section class="lookup-section lookup-section--primary"><h3>逐义项中英释义与例句</h3><div class="lookup-sense-list">' + senseHtml + '</div></section>'
+      + (collocationHtml ? '<section class="lookup-section"><h3>常用词组与固定搭配</h3><div class="lookup-collocation-list">' + collocationHtml + '</div></section>' : '')
       + chipList('常见同义词替换', result.synonyms, 'lookup-chips--syn')
       + chipList('常见反义词替换', result.antonyms, 'lookup-chips--ant')
       + '<div class="lookup-actions"><button type="button" data-lookup-action="save" ' + (saved ? 'disabled' : '') + '>' + (saved ? '✓ 已在单词本' : '+ 加入单词本') + '</button></div>'
       + referenceLinks(result.term, false)
-      + '<p class="lookup-attribution">中文与词表标签：ECDICT / Jimmy-Vocabulary 兼容结构；释义：Free Dictionary API；开放例句：Tatoeba（CC BY 2.0 FR）；搭配：Datamuse/WordNet。Oxford 与 Collins 仅提供官方查阅链接，其受版权保护的正文不会复制或缓存。</p>';
+      + '<p class="lookup-attribution">中文释义：ECDICT；英英释义：Free Dictionary API；新例句：Tatoeba（CC BY 2.0 FR）；搭配候选：Datamuse/WordNet，并仅保留有自然例句和中文释义的结果。Oxford 与 Collins 仅提供官方查阅链接。</p>';
   }
 
   async function openSelection(options) {
@@ -471,7 +492,7 @@
   function notebookMarkup() {
     return '<div class="wordbook-page"><header class="wordbook-heading"><div><span class="wordbook-eyebrow">VOCABULARY NOTEBOOK</span><h2>📘 我的单词本</h2><p>从阅读原文中收藏词汇、搭配和同反义替换，数据仅保存在当前设备。</p></div><div class="wordbook-heading__stats"><strong data-wordbook-count>0</strong><span>已收藏</span></div></header>'
       + '<div class="wordbook-toolbar"><label class="wordbook-search"><span>⌕</span><input type="search" data-wordbook-search placeholder="搜索单词、中文释义或来源文章" aria-label="搜索单词本"></label><select data-wordbook-sort aria-label="单词本排序"><option value="newest">最近添加</option><option value="az">A–Z</option><option value="updated">最近编辑</option></select><button type="button" class="wordbook-btn wordbook-btn--secondary" data-wordbook-action="lookup">＋ 查词添加</button><button type="button" class="wordbook-btn" data-wordbook-action="export">导出 PDF</button></div>'
-      + '<div class="wordbook-source-note"><span>开放词典</span><p>兼容 Jimmy-Vocabulary / ECDICT 词表结构；联网补充逐义项释义、Tatoeba 开放例句、常用搭配和英美双发音。Oxford 与 Collins 提供官方查阅入口。</p></div>'
+      + '<div class="wordbook-source-note"><span>开放词典</span><p>联网补充逐义项中英释义、Tatoeba 新例句、经过例句验证的常用搭配和英美双发音。Oxford 与 Collins 提供官方查阅入口。</p></div>'
       + '<div class="wordbook-grid" data-wordbook-list></div></div>'
       + '<div class="wordbook-editor" data-wordbook-editor hidden><div class="wordbook-editor__backdrop" data-wordbook-action="close-editor"></div><form class="wordbook-editor__dialog" data-wordbook-form><header><div><span>EDIT ENTRY</span><h3>编辑单词卡</h3></div><button type="button" data-wordbook-action="close-editor" aria-label="关闭">×</button></header><input type="hidden" name="id"><div class="wordbook-form-grid"><label>单词 / 词组<input name="term" required></label><label>音标<input name="phonetic" placeholder="例如 /əˈprəʊtʃ/"></label><label class="wordbook-form-wide">中文释义<textarea name="chinese" rows="2" required></textarea></label><label class="wordbook-form-wide">英英释义（每行一条）<textarea name="definitions" rows="4"></textarea></label><label class="wordbook-form-wide">例句（每行一条）<textarea name="examples" rows="3"></textarea></label><label>固定搭配（逗号分隔）<textarea name="collocations" rows="3"></textarea></label><label>同义词替换（逗号分隔）<textarea name="synonyms" rows="3"></textarea></label><label>反义词替换（逗号分隔）<textarea name="antonyms" rows="3"></textarea></label><label>个人笔记<textarea name="note" rows="3"></textarea></label></div><footer><button type="button" class="wordbook-btn wordbook-btn--secondary" data-wordbook-action="close-editor">取消</button><button type="submit" class="wordbook-btn">保存修改</button></footer></form></div>';
   }

@@ -1,6 +1,20 @@
 (function registerReadingExamManifest(global) {
   'use strict';
   global.__READING_EXAM_MANIFEST__ = {
+  "p2-medium-243": {
+    "examId": "p2-medium-243",
+    "dataKey": "p2-medium-243",
+    "script": "./p2-medium-243.js",
+    "title": "The internal body clock 生物钟",
+    "category": "P2"
+  },
+  "p3-medium-244": {
+    "examId": "p3-medium-244",
+    "dataKey": "p3-medium-244",
+    "script": "./p3-medium-244.js",
+    "title": "Look who was talking 语言的起源",
+    "category": "P3"
+  },
   "p3-medium-169": {
     "examId": "p3-medium-169",
     "dataKey": "p3-medium-169",

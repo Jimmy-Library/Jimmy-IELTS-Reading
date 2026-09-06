@@ -9,7 +9,6 @@ Jimmy IELTS Reading 的内置单词本采用本地优先设计：断网时读取
 | [Datamuse](https://www.datamuse.com/api/) / WordNet | 常见同义词、反义词和词语搭配补充 | 免费公开 API；界面内标注来源 |
 | [Tatoeba](https://tatoeba.org/) | 为各义项和固定搭配补充开放语料例句 | 例句逐条保留来源；默认 CC BY 2.0 FR |
 | [MyMemory](https://mymemory.translated.net/doc/) | 用户主动划选整句时的中文翻译 | 免费翻译记忆库；查询结果缓存在当前设备 |
-| [Jimmy-Vocabulary](https://github.com/Jimmy-Library/Jimmy-Vocabulary) | 兼容雅思词表优先级和 ECDICT 词性分行结构 | 仓库程序为 MIT；不复制其注明属于第三方的墨墨词表正文 |
 
 发音会优先播放词典提供的英式音频。没有可用音频或处于离线状态时，系统调用浏览器 / 操作系统的 en-GB 英式语音，并优先选择自然度较高的英式语音。
 
