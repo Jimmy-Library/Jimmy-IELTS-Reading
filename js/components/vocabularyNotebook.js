@@ -45,7 +45,12 @@
     if (state.entries) return state.entries.slice();
     let parsed = safeParse(global.localStorage && global.localStorage.getItem(WORDS_KEY), null);
     if (!Array.isArray(parsed)) parsed = safeParse(global.localStorage && global.localStorage.getItem(WORDS_BACKUP_KEY), []);
-    state.entries = Array.isArray(parsed) ? parsed.filter(item => item && item.id && item.term) : [];
+    state.entries = Array.isArray(parsed) ? parsed.filter(item => item && item.id && item.term).map(item => {
+      const collocationDetails = (item.collocationDetails || []).filter(row => row && row.meaning && row.example && isPlausibleCollocation(item.term, row.phrase));
+      const allowed = new Set(collocationDetails.map(row => normalizeText(row.phrase).toLowerCase()));
+      return { ...item, collocationDetails,
+        collocations: (item.collocations || []).filter(phrase => allowed.has(normalizeText(phrase).toLowerCase())) };
+    }) : [];
     return state.entries.slice();
   }
   function writeEntries(entries) {
@@ -214,8 +219,8 @@
       .map(item => ({ text: normalizeText(item.text), source: 'Tatoeba CC BY 2.0 FR', owner: item.owner || '', id: item.id })).slice(0, limit);
   }
 
-  async function enrichCollocations(values) {
-    const phrases = uniq(values || [], 6).filter(phrase => isPlausibleCollocation(normalizeTerm(phrase.split(/\s+/).find(Boolean) || ''), phrase));
+  async function enrichCollocations(values, term) {
+    const phrases = uniq(values || [], 6).filter(phrase => isPlausibleCollocation(term, phrase));
     const rows = await Promise.all(phrases.map(async phrase => {
       const key = 'collocation::' + phrase.toLowerCase();
       const cached = cachedLookup(key);
@@ -303,7 +308,7 @@
           exampleSource: sense.exampleSource || (tatoeba ? 'Tatoeba CC BY 2.0 FR' : '') };
       });
       result.examples = uniq(result.senses.map(item => item.example).concat(examplePool), 14);
-      try { result.collocationDetails = await enrichCollocations(result.collocations); } catch (_) {}
+      try { result.collocationDetails = await enrichCollocations(result.collocations, term); } catch (_) {}
       result.collocations = (result.collocationDetails || []).map(item => item.phrase);
       cacheLookup(key, result);
     }
