@@ -108,6 +108,11 @@
                             console.error('[App] 激活练习视图失败:', error);
                         });
                     break;
+                case 'vocab':
+                    if (window.VocabularyNotebook && typeof window.VocabularyNotebook.render === 'function') {
+                        window.VocabularyNotebook.render();
+                    }
+                    break;
             }
         },
 

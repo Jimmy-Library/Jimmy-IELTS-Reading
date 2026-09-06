@@ -3660,6 +3660,7 @@
         }
         const results = buildResults();
         state.lastResults = results;
+        document.body.classList.add('practice-completed-mode');
 
         // 套题：无论当前在哪一篇，交卷即结算整套并呈现三篇合并结果。
         // 必须赶在下方 clearSimulationDraftMirror 之前算，否则其余篇的作答已被清除。
@@ -3766,6 +3767,7 @@
             return;
         }
         state.reviewMode = false;
+        document.body.classList.remove('practice-completed-mode', 'single-submitted-mode');
         resetToAnsweringPresentation();
         setReadOnlyMode(false);
         document.querySelectorAll('input[type="radio"], input[type="checkbox"]').forEach((input) => {

@@ -36,7 +36,7 @@
     {
       id: 'suite-start', target: '#suite-list .suite-card__start', position: 'left', activateView: 'suite', waitForElement: true,
       title: '3　开始套题与计时方式',
-      content: '<strong>操作：</strong>点击套题卡片的“开始”，再选择自由模式或 60 分钟模考模式。<br><strong>保存：</strong>P1、P2 可先提交当前篇，退出后仍能继续下一篇。<br><strong>完成：</strong>三篇结束后统一查看成绩、回顾并导出 PDF。',
+      content: '<strong>操作：</strong>点击套题卡片的“开始”，再选择自由模式或 60 分钟模考模式。<br><strong>保存：</strong>P1、P2 点击“下一题”时自动保存，不需要单独提交；刷新或退出后可从断点继续。<br><strong>完成：</strong>P3 点击 Submit 后统一结算三篇成绩、回顾并导出 PDF。',
       showSkip: true, showPrev: true, nextText: '了解单篇练习', lockScroll: true, lockPointer: true, disableHighlightPointer: true
     },
     {
@@ -61,48 +61,60 @@
       id: 'practice-pdf', target: '#export-practice-pdf-btn', position: 'bottom', activateView: 'practice', waitForElement: true,
       title: '7　导出练习记录 PDF',
       content: '<strong>操作：</strong>在练习记录页点击“导出 PDF”，勾选要导出的记录后确认。<br><strong>内容：</strong>PDF 包含成绩、答案、回顾信息和已保存标记。<br><strong>另一入口：</strong>单篇做题页底部也可直接导出当前练习。',
+      showSkip: true, showPrev: true, nextText: '认识单词本', lockScroll: true, lockPointer: true, disableHighlightPointer: true
+    },
+    {
+      id: 'vocabulary-entry', target: '.main-nav [data-view="vocab"]', position: 'bottom', activateView: 'practice', waitForElement: true,
+      title: '8　单词本入口与划词学习',
+      content: '<strong>入口：</strong>顶部导航“单词本”位于练习记录后面。<br><strong>划词：</strong>单篇或套题提交后，以及练习回顾中，划选一个单词可查中英释义、音标、英式发音、例句、搭配与同反义词；划选句子可翻译。<br><strong>收藏：</strong>点击“加入单词本”即可保存到当前设备。',
+      showSkip: true, showPrev: true, nextText: '查看单词本功能', lockScroll: true, lockPointer: true, disableHighlightPointer: true
+    },
+    {
+      id: 'vocabulary-workbench', target: '#vocab-view .wordbook-toolbar', position: 'bottom', activateView: 'vocab', waitForElement: true,
+      title: '9　查找、编辑和导出单词本',
+      content: '<strong>查找：</strong>可搜索单词、中文释义或来源文章，并按最近添加、最近编辑或 A–Z 排序。<br><strong>编辑：</strong>每张词卡都能补充例句、固定搭配、同义替换、反义替换和个人笔记。<br><strong>导出：</strong>点击“导出 PDF”，在浏览器打印窗口选择“另存为 PDF”。单词本会持续保存在本机。',
       showSkip: true, showPrev: true, nextText: '了解数据备份', lockScroll: true, lockPointer: true, disableHighlightPointer: true
     },
     {
       id: 'data-backup', target: '.data-management-panel', position: 'top', activateView: 'settings', waitForElement: true,
-      title: '8　备份、迁移和恢复记录',
+      title: '10　备份、迁移和恢复记录',
       content: '<strong>入口：</strong>设置页“数据管理”。<br><strong>区别：</strong>“创建备份”保存本机快照；“导出数据”下载完整记录文件；“导入数据”用于换电脑或升级后恢复。<br><strong>建议：</strong>定期导出一份文件。',
       showSkip: true, showPrev: true, nextText: '设置页面皮肤', lockScroll: true, lockPointer: true, disableHighlightPointer: true
     },
     {
       id: 'skin-handle', target: '#image-skin-panel .skin-handle', position: 'right', activateView: 'overview', waitForElement: true,
-      title: '9　打开皮肤工作台',
+      title: '11　打开皮肤工作台',
       content: '<strong>现在操作：</strong>点击左下角调色板按钮，打开皮肤工作台后向导会自动进入下一步。<br><strong>说明：</strong>皮肤只改变首页和题库浏览外观，阅读题目内部始终保持标准机考样式。',
       showSkip: true, showPrev: true, hideNext: true, waitForClick: true, lockScroll: true
     },
     {
       id: 'skin-gallery', target: '#image-skin-panel .skin-grid', position: 'right', activateView: 'overview', waitForElement: true, action: 'openSkinPanel',
-      title: '10　实时切换图片皮肤',
+      title: '12　实时切换图片皮肤',
       content: '<strong>操作：</strong>点击任意皮肤卡片即可实时切换。<br><strong>变化：</strong>背景、抬头、首页按钮和题库卡片配色会同步更新。<br><strong>性能：</strong>雨滴、飘雪等氛围动画可独立关闭。',
       showSkip: true, showPrev: true, nextText: '了解自定义皮肤', lockScroll: true, lockPointer: true, disableHighlightPointer: true
     },
     {
       id: 'custom-skin', target: '#image-skin-panel .custom-skin-editor', position: 'right', activateView: 'overview', waitForElement: true, action: 'openCustomSkinEditor',
-      title: '11　自定义图片、颜色、字体与形状',
+      title: '13　自定义图片、颜色、字体与形状',
       content: '<strong>操作：</strong>展开“自定义”，上传背景后调整缩放、横向/纵向位置和透明度。<br><strong>设计：</strong>可采用推荐色系，也可自行选择颜色、字体和 UI 形状。<br><strong>保存：</strong>可另存为新名称，或更新已保存皮肤；设置保存在本机。',
       showSkip: true, showPrev: true, nextText: '设置鼠标图标', lockScroll: true, lockPointer: true, disableHighlightPointer: true
     },
     {
       id: 'pointer-style', target: '#image-skin-panel .skin-pointer-workbench', position: 'right', activateView: 'overview', waitForElement: true, action: 'openSkinPanel',
-      title: '12　鼠标图标与自定义图片',
-      content: '<strong>操作：</strong>先打开“鼠标图标”，再选择柔光、星屑、泡泡、霓虹或猫咪。<br><strong>自定义：</strong>可上传自己的透明图片，并用大小滑块实时调整。<br><strong>说明：</strong>鼠标图标与轨迹动画可分开使用。',
+      title: '14　鼠标图标（跟随光标）',
+      content: '<strong>第一步：</strong>使用本区域上方的“鼠标图标”总开关，只控制跟随光标移动的图标。<br><strong>第二步：</strong>从下方图标卡片选择柔光、星屑、泡泡、霓虹或猫咪，并用“大小”滑块实时调整；也可上传透明图片。<br><strong>注意：</strong>此开关不会自动开启轨迹动画。',
       showSkip: true, showPrev: true, nextText: '了解轨迹动画', lockScroll: true, lockPointer: true, disableHighlightPointer: true
     },
     {
       id: 'pointer-trail', target: '#image-skin-panel [data-pointer-trail-toggle]', position: 'right', activateView: 'overview', waitForElement: true, action: 'openSkinPanel',
-      title: '13　轨迹动画与性能提示',
-      content: '<strong>操作：</strong>单独打开“轨迹动画”，选择喜欢的轨迹样式。<br><strong>提示：</strong>首次开启会确认可能造成卡顿；低性能设备、多标签页或省电模式下建议保持关闭。<br><strong>关闭后：</strong>动画画布会立即停止并释放资源。',
+      title: '15　轨迹动画（独立开关）',
+      content: '<strong>第一步：</strong>找到单独的“轨迹动画”开关；它与鼠标图标互不影响。<br><strong>第二步：</strong>开启后选择光点、星屑等轨迹样式，首次开启会提示确认可能造成卡顿。<br><strong>性能：</strong>所有轨迹默认关闭；如果设备变慢，请关闭轨迹，动画画布会立即停止并释放资源。',
       showSkip: true, showPrev: true, nextText: '完成向导', lockScroll: true, lockPointer: true, disableHighlightPointer: true
     },
     {
       id: 'completion', target: null, position: 'center', activateView: 'overview', action: 'closeSkinPanel',
       title: '🎉 使用向导完成',
-      content: '完整流程已经介绍完毕：自选组题 → 固定套题 → 单篇练习 → 练习回顾与 PDF → 数据备份 → 皮肤与鼠标设置。点击“开始练习”返回首页；以后可随时点击网页抬头下方的“使用向导”再次查看。',
+      content: '完整流程已经介绍完毕：自选组题 → 固定套题 → 单篇练习 → 练习回顾与 PDF → 划词查义与单词本 → 数据备份 → 皮肤与鼠标设置。点击“开始练习”返回首页；以后可随时点击网页抬头下方的“使用向导”再次查看。',
       showSkip: false, showPrev: true, nextText: '开始练习'
     }
   ];
@@ -640,6 +652,7 @@
         'browse': '[data-view="browse"]',
         'suite': '[data-view="suite"]',
         'practice': '[data-view="practice"]',
+        'vocab': '[data-view="vocab"]',
         'settings': '[data-view="settings"]'
       };
 
@@ -658,6 +671,7 @@
         'browse': '#browse-view',
         'suite': '#suite-view',
         'practice': '#practice-view',
+        'vocab': '#vocab-view',
         'settings': '#settings-view'
       };
 

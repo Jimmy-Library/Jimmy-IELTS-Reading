@@ -773,7 +773,71 @@
         }
 
         function isPostSubmitHighlightMode() {
-            return isReviewReadonly() || document.body.classList.contains('single-submitted-mode');
+            return isReviewReadonly()
+                || document.body.classList.contains('single-submitted-mode')
+                || document.body.classList.contains('practice-completed-mode');
+        }
+
+        function extractVocabularySelection() {
+            const liveSelection = window.getSelection();
+            const range = liveSelection && liveSelection.rangeCount && !liveSelection.isCollapsed
+                ? liveSelection.getRangeAt(0)
+                : lastRange;
+            const text = String(
+                currentHlNode instanceof HTMLElement
+                    ? currentHlNode.textContent
+                    : range
+                        ? range.cloneContents().textContent
+                        : ''
+            ).replace(/\s+/g, ' ').trim();
+            if (!text) return null;
+
+            let anchor = currentHlNode instanceof HTMLElement
+                ? currentHlNode
+                : range && range.commonAncestorContainer;
+            if (anchor && anchor.nodeType === Node.TEXT_NODE) anchor = anchor.parentElement;
+            const block = anchor instanceof HTMLElement
+                ? anchor.closest('p, li, td, th, blockquote, .question-item, .passage, [data-passage-index]')
+                : null;
+            const blockText = String(block?.textContent || text).replace(/\s+/g, ' ').trim();
+            const lowerBlock = blockText.toLowerCase();
+            const at = lowerBlock.indexOf(text.toLowerCase());
+            let sentence = blockText;
+            if (at >= 0 && text.split(/\s+/).length <= 8) {
+                const before = blockText.slice(0, at);
+                const after = blockText.slice(at + text.length);
+                const leftBreak = Math.max(before.lastIndexOf('.'), before.lastIndexOf('!'), before.lastIndexOf('?'), before.lastIndexOf(';'));
+                const candidates = [after.indexOf('.'), after.indexOf('!'), after.indexOf('?'), after.indexOf(';')].filter(index => index >= 0);
+                const rightBreak = candidates.length ? Math.min(...candidates) + 1 : after.length;
+                sentence = (before.slice(leftBreak + 1) + text + after.slice(0, rightBreak)).trim();
+            }
+            return {
+                text,
+                context: {
+                    title: document.getElementById('exam-title')?.textContent?.trim()
+                        || document.title
+                        || 'IELTS 阅读练习',
+                    sentence: sentence.slice(0, 600)
+                }
+            };
+        }
+
+        function openVocabularyTool(mode, autoSave) {
+            if (!isPostSubmitHighlightMode()) return;
+            const payload = extractVocabularySelection();
+            if (!payload) return;
+            const api = window.VocabularyNotebook;
+            if (!api || typeof api.openSelection !== 'function') {
+                window.alert('单词本组件尚未加载，请刷新页面后重试。');
+                return;
+            }
+            api.openSelection(Object.assign(payload, { mode, autoSave: Boolean(autoSave) })).catch(error => {
+                console.error('[PracticePageUI] 划词工具打开失败:', error);
+            });
+            window.getSelection()?.removeAllRanges();
+            currentHlNode = null;
+            lastRange = null;
+            if (selbar) selbar.style.display = 'none';
         }
 
         function doHighlight() {
@@ -1081,9 +1145,15 @@
         const btnHighlight = document.getElementById('btnHL');
         const btnUnhighlight = document.getElementById('btnUH');
         const btnNote = document.getElementById('btnNote');
+        const btnDictionary = document.getElementById('btnDictionary');
+        const btnTranslate = document.getElementById('btnTranslate');
+        const btnAddVocabulary = document.getElementById('btnAddVocabulary');
 
         if (btnHighlight) btnHighlight.addEventListener('click', doHighlight);
         if (btnUnhighlight) btnUnhighlight.addEventListener('click', removeHighlight);
+        if (btnDictionary) btnDictionary.addEventListener('click', () => openVocabularyTool('lookup', false));
+        if (btnTranslate) btnTranslate.addEventListener('click', () => openVocabularyTool('translate', false));
+        if (btnAddVocabulary) btnAddVocabulary.addEventListener('click', () => openVocabularyTool('lookup', true));
         if (btnNote && notesPanel) {
             btnNote.addEventListener('click', function () {
                 // 回顾只读模式：不新增笔记标注
