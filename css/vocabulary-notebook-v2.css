@@ -84,16 +84,6 @@
   gap: 8px;
 }
 
-.lookup-word-tag {
-  padding: 4px 8px;
-  border-radius: 999px;
-  background: #dcfce7;
-  color: #15803d;
-  font-size: .68rem;
-  font-weight: 800;
-  letter-spacing: .04em;
-}
-
 .lookup-pronunciations {
   display: flex;
   flex-wrap: wrap;
@@ -301,8 +291,16 @@
   gap: 8px;
 }
 
-.lookup-collocation-card header > strong {
+.lookup-collocation-term {
+  padding: 0;
+  border: 0;
+  background: transparent;
   color: #1d4ed8;
+  cursor: pointer;
+}
+
+.lookup-collocation-term:hover {
+  text-decoration: underline;
 }
 
 .lookup-collocation-card__meaning {
@@ -406,36 +404,46 @@
   cursor: pointer;
 }
 
-.lookup-again {
-  margin-top: 18px;
-  padding: 14px;
-  border: 1px solid #dbe3ef;
-  border-radius: 15px;
-  background: #f8fafc;
-}
-
-.lookup-again label { display: block; margin-bottom: 7px; color: #334155; font-weight: 800; }
-.lookup-again > div { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 7px; }
-.lookup-again input {
-  min-width: 0;
-  padding: 10px 12px;
-  border: 1px solid #cbd5e1;
-  border-radius: 10px;
-  background: #fff;
-  color: #172033;
-  font: inherit;
-}
-.lookup-again button {
-  padding: 9px 12px;
+.lookup-inline-word {
+  display: inline;
+  padding: 0 1px;
   border: 0;
-  border-radius: 10px;
-  background: #2563eb;
-  color: #fff;
-  font-weight: 750;
+  border-bottom: 1px dotted transparent;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-style: inherit;
+  line-height: inherit;
   cursor: pointer;
 }
-.lookup-again button:last-child { background: #7c3aed; }
-.lookup-again small { display: block; margin-top: 6px; color: #64748b; }
+
+.lookup-inline-word:hover,
+.lookup-inline-word:focus-visible {
+  border-bottom-color: #2563eb;
+  color: #1d4ed8;
+  outline: none;
+}
+
+.lookup-example-translation {
+  margin-top: 6px !important;
+  padding-top: 6px;
+  border-top: 1px dashed #dbe3ef;
+  color: #9a3412 !important;
+  font-style: normal !important;
+  line-height: 1.6;
+}
+
+.lookup-chips button {
+  padding: 4px 8px;
+  border: 0;
+  border-radius: 999px;
+  background: #eef2ff;
+  color: #4338ca;
+  font-size: .76rem;
+  cursor: pointer;
+}
+
+.lookup-chips button:hover { background: #dbeafe; }
 
 .wordbook-card footer > div {
   display: flex;
@@ -463,6 +471,4 @@
   .lookup-relation-row { align-items: flex-start; }
   .lookup-relation-word { grid-template-columns: 1fr; }
   .lookup-relation-word small { grid-column: 1; }
-  .lookup-again > div { grid-template-columns: 1fr 1fr; }
-  .lookup-again input { grid-column: 1 / -1; }
 }

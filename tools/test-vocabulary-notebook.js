@@ -83,6 +83,7 @@ const server = http.createServer((req, res) => {
       chineseRows: value.chineseByPos.length,
       senseCount: value.senses.length,
       examplesComplete: value.senses.every(sense => Boolean(sense.example)),
+      examplesTranslated: value.senses.every(sense => Boolean(sense.exampleChinese)),
       collocationsComplete: value.collocationDetails.every(item => Boolean(item.meaning) && Boolean(item.example)),
       ukAudio: value.pronunciations.uk.audio,
       usAudio: value.pronunciations.us.audio
@@ -90,6 +91,7 @@ const server = http.createServer((req, res) => {
     assert.ok(rich.chineseRows >= 2);
     assert.ok(rich.senseCount >= 2);
     assert.equal(rich.examplesComplete, true);
+    assert.equal(rich.examplesTranslated, true);
     assert.equal(rich.collocationsComplete, true);
     assert.ok(rich.ukAudio);
     assert.ok(rich.usAudio);
@@ -106,6 +108,9 @@ const server = http.createServer((req, res) => {
     assert.equal((await page.locator('.lookup-section--english').innerText()).includes('ORIGINAL RICH PASSAGE SENTENCE'), false);
     assert.ok(await page.locator('[data-lookup-action="speak-uk"]').count() > 1);
     assert.ok(await page.locator('[data-lookup-action="speak-us"]').count() > 1);
+    assert.ok(await page.locator('.lookup-example-translation').count() >= rich.senseCount);
+    assert.equal(await page.locator('.lookup-word-tag').count(), 0);
+    assert.equal(await page.locator('.lookup-again').count(), 0);
     assert.equal(await page.locator('.lookup-reference-links a').count() >= 2, true);
     const inflected = await page.evaluate(() => window.VocabularyNotebook.openSelection({ text: 'abandoned', mode: 'lookup' }).then(value => ({
       term: value.term, queriedTerm: value.queriedTerm, queriedForm: value.queriedForm,
@@ -130,19 +135,23 @@ const server = http.createServer((req, res) => {
     assert.match(morphology.find(item => item.query === 'written').form, /过去分词/);
     assert.match(morphology.find(item => item.query === 'better').form, /比较级/);
     assert.match(morphology.find(item => item.query === 'best').form, /最高级/);
+    const extendedFamily = await page.evaluate(() => window.VocabularyNotebook.lookup('act', {}).then(value => value.wordFamily.map(item => item.term)));
+    assert.ok(extendedFamily.includes('action'));
+    assert.ok(extendedFamily.includes('reaction'));
+    assert.ok(extendedFamily.includes('interact'));
     assert.match(await page.locator('.lookup-lemma-notice').innerText(), /abandoned.*abandon/);
     assert.ok(await page.locator('.lookup-relations--forms .lookup-relation-row').count() >= 3);
     assert.ok(await page.locator('.lookup-relations--family [data-term="abandonment"]').count() === 1);
     await page.locator('.lookup-relations--family [data-term="abandonment"]').click();
     await page.waitForFunction(() => document.querySelector('[data-lookup-title]')?.textContent.trim() === 'abandonment');
-    await page.locator('[data-lookup-again-input]').fill('image');
-    await page.locator('[data-lookup-action="lookup-again"]').click();
-    await page.waitForFunction(() => document.querySelector('[data-lookup-title]')?.textContent.trim() === 'image');
-    await page.locator('[data-lookup-again-input]').fill('This is a new sentence.');
-    await page.locator('[data-lookup-action="translate-again"]').click();
+    await page.locator('.lookup-inline-word').filter({ hasText: /^continue$/i }).first().click();
+    await page.waitForFunction(() => document.querySelector('[data-lookup-title]')?.textContent.trim() === 'continue');
+    await page.evaluate(() => window.VocabularyNotebook.openSelection({ text: 'This is a new sentence.', mode: 'translate' }));
     await page.waitForFunction(() => document.querySelector('[data-lookup-title]')?.textContent.trim() === 'This is a new sentence.');
     assert.equal(await page.locator('.lookup-translation__source').count(), 1);
     assert.equal(await page.locator('.lookup-translation__result').count(), 1);
+    await page.locator('.lookup-translation__source .lookup-inline-word').filter({ hasText: /^sentence$/i }).click();
+    await page.waitForFunction(() => document.querySelector('[data-lookup-title]')?.textContent.trim() === 'sentence');
     const rejected = await page.evaluate(() => window.VocabularyNotebook.openSelection({ text: 'europe', mode: 'lookup' })
       .then(value => value.collocations));
     assert.equal(rejected.some(value => /europe was|was europe/i.test(value)), false);
