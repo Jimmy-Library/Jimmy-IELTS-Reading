@@ -100,12 +100,50 @@ const server = http.createServer((req, res) => {
     assert.ok(await page.locator('[data-lookup-action="speak-uk"]').count() > 1);
     assert.ok(await page.locator('[data-lookup-action="speak-us"]').count() > 1);
     assert.equal(await page.locator('.lookup-reference-links a').count() >= 2, true);
+    const inflected = await page.evaluate(() => window.VocabularyNotebook.openSelection({ text: 'abandoned', mode: 'lookup' }).then(value => ({
+      term: value.term, queriedTerm: value.queriedTerm, queriedForm: value.queriedForm,
+      forms: value.forms.map(item => item.term), family: value.wordFamily.map(item => item.term)
+    })));
+    assert.equal(inflected.term, 'abandon');
+    assert.equal(inflected.queriedTerm, 'abandoned');
+    assert.match(inflected.queriedForm, /过去/);
+    assert.ok(inflected.forms.includes('abandoning'));
+    assert.ok(inflected.forms.includes('abandons'));
+    assert.ok(inflected.family.includes('abandonment'));
+    const morphology = await page.evaluate(async () => {
+      const pairs = [['abilities', 'ability'], ['went', 'go'], ['written', 'write'], ['better', 'good'], ['best', 'good']];
+      return Promise.all(pairs.map(async ([query, expected]) => {
+        const value = await window.VocabularyNotebook.lookup(query, {});
+        return { query, expected, term: value.term, form: value.queriedForm };
+      }));
+    });
+    assert.deepEqual(morphology.map(item => item.term), morphology.map(item => item.expected));
+    assert.match(morphology.find(item => item.query === 'abilities').form, /复数/);
+    assert.match(morphology.find(item => item.query === 'went').form, /过去式/);
+    assert.match(morphology.find(item => item.query === 'written').form, /过去分词/);
+    assert.match(morphology.find(item => item.query === 'better').form, /比较级/);
+    assert.match(morphology.find(item => item.query === 'best').form, /最高级/);
+    assert.match(await page.locator('.lookup-lemma-notice').innerText(), /abandoned.*abandon/);
+    assert.ok(await page.locator('.lookup-relations--forms .lookup-relation-row').count() >= 3);
+    assert.ok(await page.locator('.lookup-relations--family [data-term="abandonment"]').count() === 1);
+    await page.locator('.lookup-relations--family [data-term="abandonment"]').click();
+    await page.waitForFunction(() => document.querySelector('[data-lookup-title]')?.textContent.trim() === 'abandonment');
+    await page.locator('[data-lookup-again-input]').fill('image');
+    await page.locator('[data-lookup-action="lookup-again"]').click();
+    await page.waitForFunction(() => document.querySelector('[data-lookup-title]')?.textContent.trim() === 'image');
+    await page.locator('[data-lookup-again-input]').fill('This is a new sentence.');
+    await page.locator('[data-lookup-action="translate-again"]').click();
+    await page.waitForFunction(() => document.querySelector('[data-lookup-title]')?.textContent.trim() === 'This is a new sentence.');
+    assert.equal(await page.locator('.lookup-translation__source').count(), 1);
+    assert.equal(await page.locator('.lookup-translation__result').count(), 1);
     const rejected = await page.evaluate(() => window.VocabularyNotebook.openSelection({ text: 'europe', mode: 'lookup' })
       .then(value => value.collocations));
     assert.equal(rejected.some(value => /europe was|was europe/i.test(value)), false);
     assert.equal(await page.locator('.lookup-section h3').filter({ hasText: '常用词组与固定搭配' }).count(), 0);
     assert.equal(await page.locator('.wordbook-card').count(), 1);
     assert.match(await page.locator('.wordbook-card').innerText(), /sustainable/i);
+    const footerGap = await page.locator('.wordbook-card footer > div').evaluate(node => parseFloat(getComputedStyle(node).gap));
+    assert.ok(footerGap >= 12);
 
     const dailyLater = page.locator('[data-daily-action="later"]');
     await page.waitForTimeout(1200);

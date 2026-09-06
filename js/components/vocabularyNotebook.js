@@ -4,9 +4,11 @@
   const rootUrl = new URL('../../', scriptNode && scriptNode.src ? scriptNode.src : document.baseURI);
   const WORDS_KEY = 'jimmy_vocabulary_notebook_v1';
   const WORDS_BACKUP_KEY = 'jimmy_vocabulary_notebook_backup_v1';
-  const CACHE_KEY = 'jimmy_dictionary_cache_v2';
+  const CACHE_KEY = 'jimmy_dictionary_cache_v3';
   const CACHE_LIMIT = 120;
-  const state = { entries: null, dictionaryPromise: null, activeLookup: null, lookupSequence: 0, mounted: false };
+  const state = { entries: null, dictionaryPromise: null, activeLookup: null, lookupSequence: 0, mounted: false, familyCache: new Map() };
+  const INFLECTION_LABELS = { s: '复数', p: '过去式', d: '过去分词', i: '现在分词', '3': '第三人称单数', r: '比较级', t: '最高级' };
+  const DERIVATIONAL_SUFFIXES = ['ability', 'ibility', 'ational', 'tional', 'fulness', 'ousness', 'iveness', 'ization', 'isation', 'ation', 'ition', 'sion', 'tion', 'ment', 'ness', 'ance', 'ence', 'ative', 'itive', 'ive', 'ity', 'able', 'ible', 'ally', 'ical', 'ous', 'ful', 'less', 'ize', 'ise', 'ify', 'ism', 'ist', 'ant', 'ent', 'ary', 'ory', 'al', 'ic', 'ly', 'er', 'or'];
 
   function escapeHtml(value) {
     return String(value == null ? '' : value)
@@ -111,6 +113,91 @@
     }
     return null;
   }
+  function lowerBoundEntry(entries, term) {
+    let low = 0, high = entries.length;
+    while (low < high) {
+      const mid = (low + high) >> 1;
+      if (String(entries[mid]?.w || '').toLowerCase() < term) low = mid + 1; else high = mid;
+    }
+    return low;
+  }
+  function parseExchange(value) {
+    return String(value || '').split('/').map(item => {
+      const colon = item.indexOf(':');
+      return colon > 0 ? { code: item.slice(0, colon), term: normalizeTerm(item.slice(colon + 1)) } : null;
+    }).filter(item => item && item.term);
+  }
+  function formCategory(value) {
+    const metadata = parseExchange(value).find(item => item.code === '1')?.term || '';
+    const labels = uniq(Array.from(metadata).map(code => INFLECTION_LABELS[code]).filter(Boolean), 6);
+    return labels.join(' / ');
+  }
+  function inferLemmaEntry(entries, term) {
+    const candidates = new Set();
+    const add = value => { const normalized = normalizeTerm(value); if (normalized && normalized !== term) candidates.add(normalized); };
+    if (term.endsWith('ies')) add(term.slice(0, -3) + 'y');
+    if (term.endsWith('ves')) { add(term.slice(0, -3) + 'f'); add(term.slice(0, -3) + 'fe'); }
+    if (term.endsWith('ied')) add(term.slice(0, -3) + 'y');
+    if (term.endsWith('ing')) { const stem = term.slice(0, -3); add(stem); add(stem + 'e'); if (stem.at(-1) === stem.at(-2)) add(stem.slice(0, -1)); }
+    if (term.endsWith('ed')) { const stem = term.slice(0, -2); add(stem); add(term.slice(0, -1)); if (stem.at(-1) === stem.at(-2)) add(stem.slice(0, -1)); }
+    if (term.endsWith('est')) { const stem = term.slice(0, -3); add(stem); add(stem + 'e'); if (stem.endsWith('i')) add(stem.slice(0, -1) + 'y'); }
+    if (term.endsWith('er')) { const stem = term.slice(0, -2); add(stem); add(stem + 'e'); if (stem.endsWith('i')) add(stem.slice(0, -1) + 'y'); }
+    if (term.endsWith('es')) { add(term.slice(0, -2)); add(term.slice(0, -1)); }
+    if (term.endsWith('s')) add(term.slice(0, -1));
+    for (const candidate of candidates) {
+      const lemmaRaw = findLocalEntry(entries, candidate);
+      const matched = lemmaRaw && parseExchange(lemmaRaw.x).find(item => item.term === term && INFLECTION_LABELS[item.code]);
+      if (matched) return { raw: { w: term, p: '', x: '0:' + candidate + '/1:' + matched.code }, lemmaRaw };
+    }
+    return null;
+  }
+  function derivationStems(value) {
+    const word = normalizeTerm(value);
+    const stems = new Set(word ? [word] : []);
+    if (word.length > 5 && word.endsWith('e')) stems.add(word.slice(0, -1));
+    DERIVATIONAL_SUFFIXES.forEach(suffix => {
+      if (word.length - suffix.length < 3 || !word.endsWith(suffix)) return;
+      const stem = word.slice(0, -suffix.length);
+      stems.add(stem);
+      stems.add(stem + 'e');
+      if (stem.endsWith('i')) stems.add(stem.slice(0, -1) + 'y');
+    });
+    return stems;
+  }
+  function sharesWordFamily(left, right) {
+    const a = derivationStems(left), b = derivationStems(right);
+    return Array.from(a).some(stem => stem.length >= 3 && b.has(stem));
+  }
+  function formRows(entries, lemmaRaw) {
+    const grouped = new Map();
+    const add = (term, label) => {
+      const normalized = normalizeTerm(term);
+      if (!normalized) return;
+      const raw = findLocalEntry(entries, normalized);
+      const current = grouped.get(normalized) || { term: raw?.w || normalized, phonetic: raw?.p || '', labels: [] };
+      if (label && !current.labels.includes(label)) current.labels.push(label);
+      grouped.set(normalized, current);
+    };
+    add(lemmaRaw.w, '原形');
+    parseExchange(lemmaRaw.x).forEach(item => { if (INFLECTION_LABELS[item.code]) add(item.term, INFLECTION_LABELS[item.code]); });
+    return Array.from(grouped.values()).map(item => ({ ...item, label: item.labels.join(' / ') }));
+  }
+  function familyRows(entries, lemmaRaw) {
+    const lemma = normalizeTerm(lemmaRaw.w);
+    if (state.familyCache.has(lemma)) return state.familyCache.get(lemma);
+    const prefix = lemma.slice(0, 3), start = lowerBoundEntry(entries, prefix), rows = [];
+    for (let index = start; index < entries.length; index += 1) {
+      const raw = entries[index], word = normalizeTerm(raw?.w);
+      if (!word.startsWith(prefix)) break;
+      if (!word || word === lemma || parseExchange(raw.x).some(item => item.code === '0') || !sharesWordFamily(lemma, word)) continue;
+      const pos = uniq(parsePosSegments(raw.t).map(item => item.partOfSpeech).filter(Boolean), 3).join(' / ');
+      rows.push({ term: raw.w, phonetic: raw.p || '', partOfSpeech: pos });
+    }
+    rows.sort((a, b) => (Number(findLocalEntry(entries, a.term)?.b || 999999) - Number(findLocalEntry(entries, b.term)?.b || 999999)) || a.term.localeCompare(b.term));
+    const result = rows;
+    state.familyCache.set(lemma, result);
+    return result;
+  }
   function normalizePartOfSpeech(value) {
     const raw = String(value || '').trim().toLowerCase().replace(/\.$/, '');
     return ({ n: 'n.', v: 'v.', vi: 'vi.', vt: 'vt.', a: 'adj.', s: 'adj.', adj: 'adj.', adv: 'adv.',
@@ -142,14 +229,21 @@
   async function lookupLocal(term) {
     try {
       const dictionary = await ensureDictionary();
-      const raw = dictionary && Array.isArray(dictionary.entries) ? findLocalEntry(dictionary.entries, term) : null;
+      const entries = dictionary && Array.isArray(dictionary.entries) ? dictionary.entries : [];
+      const exactRaw = findLocalEntry(entries, term), inferred = exactRaw ? null : inferLemmaEntry(entries, term);
+      const raw = exactRaw || inferred?.raw;
       if (!raw) return null;
-      const chineseByPos = parsePosSegments(raw.t);
-      return { term: raw.w, phonetic: raw.p || '', chinese: raw.t || '', chineseByPos,
-        definitions: splitDefinitions(raw.d), senses: localSenses(raw.d, chineseByPos),
+      const lemmaTerm = parseExchange(raw.x).find(item => item.code === '0')?.term || normalizeTerm(raw.w);
+      const lemmaRaw = inferred?.lemmaRaw || findLocalEntry(entries, lemmaTerm) || { ...raw, w: lemmaTerm };
+      const chineseByPos = parsePosSegments(lemmaRaw.t);
+      return { term: lemmaRaw.w, lemma: lemmaRaw.w, queriedTerm: raw.w,
+        queriedForm: normalizeTerm(raw.w) === normalizeTerm(lemmaRaw.w) ? '' : formCategory(raw.x),
+        phonetic: lemmaRaw.p || '', chinese: lemmaRaw.t || '', chineseByPos,
+        definitions: splitDefinitions(lemmaRaw.d), senses: localSenses(lemmaRaw.d, chineseByPos),
+        forms: formRows(entries, lemmaRaw), wordFamily: familyRows(entries, lemmaRaw),
         examples: [], collocations: [], collocationDetails: [], synonyms: [], antonyms: [], audio: '',
-        pronunciations: { uk: { phonetic: raw.p || '', audio: '' }, us: { phonetic: '', audio: '' } },
-        tags: Array.isArray(raw.tags) ? raw.tags : [],
+        pronunciations: { uk: { phonetic: lemmaRaw.p || '', audio: '' }, us: { phonetic: '', audio: '' } },
+        tags: Array.isArray(lemmaRaw.tags) ? lemmaRaw.tags : [],
         sources: [{ name: 'ECDICT', url: dictionary.source?.url || 'https://github.com/skywind3000/ECDICT', license: 'MIT' }], offline: true };
     } catch (_) { return null; }
   }
@@ -267,6 +361,9 @@
       us: { ...(left.pronunciations?.us || {}), ...(right.pronunciations?.us || {}) }
     };
     return { ...left, ...right, term: left.term || right.term || '', phonetic: right.phonetic || left.phonetic || '',
+      lemma: left.lemma || right.lemma || left.term || right.term || '', queriedTerm: left.queriedTerm || right.queriedTerm || '',
+      queriedForm: left.queriedForm || right.queriedForm || '', forms: left.forms?.length ? left.forms : (right.forms || []),
+      wordFamily: left.wordFamily?.length ? left.wordFamily : (right.wordFamily || []),
       chinese: left.chinese || right.chinese || '', audio: right.audio || left.audio || '',
       chineseByPos: (left.chineseByPos?.length ? left.chineseByPos : right.chineseByPos) || [],
       senses: mergeSenses(left.senses, right.senses), pronunciations,
@@ -291,10 +388,11 @@
       return result;
     }
     if (navigator.onLine) {
-      const enrichments = await Promise.allSettled([fetchDictionaryApi(term), fetchDatamuse(term), fetchTatoebaExamples(term, 10)]);
+      const headword = normalizeTerm(result.term) || term;
+      const enrichments = await Promise.allSettled([fetchDictionaryApi(headword), fetchDatamuse(headword), fetchTatoebaExamples(headword, 10)]);
       enrichments.slice(0, 2).forEach(item => { if (item.status === 'fulfilled') result = mergeLookup(result, item.value); });
       const openExamples = enrichments[2]?.status === 'fulfilled' ? enrichments[2].value : [];
-      if (!result.chinese) { try { result.chinese = (await translate(term)).translation || ''; } catch (_) {} }
+      if (!result.chinese) { try { result.chinese = (await translate(headword)).translation || ''; } catch (_) {} }
       const examplePool = uniq((result.examples || []).concat(openExamples.map(item => item.text)), 14);
       if (!result.senses?.length) {
         result.senses = (result.definitions || []).map(definition => ({ partOfSpeech: '', definition, chinese: '', example: '', exampleSource: '' }));
@@ -308,7 +406,7 @@
           exampleSource: sense.exampleSource || (tatoeba ? 'Tatoeba CC BY 2.0 FR' : '') };
       });
       result.examples = uniq(result.senses.map(item => item.example).concat(examplePool), 14);
-      try { result.collocationDetails = await enrichCollocations(result.collocations, term); } catch (_) {}
+      try { result.collocationDetails = await enrichCollocations(result.collocations, headword); } catch (_) {}
       result.collocations = (result.collocationDetails || []).map(item => item.phrase);
       cacheLookup(key, result);
     }
@@ -331,6 +429,8 @@
     return { id: 'vocab-' + key.replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') + '-' + Math.abs(hashCode(key)),
       term, type: isSingleWord(term) ? 'word' : 'phrase', phonetic: result.phonetic || '', audio: result.audio || '', chinese: result.chinese || result.translation || '',
       chineseByPos: result.chineseByPos || [], pronunciations: result.pronunciations || {}, senses: result.senses || [],
+      lemma: result.lemma || term, queriedTerm: result.queriedTerm || term, queriedForm: result.queriedForm || '',
+      forms: result.forms || [], wordFamily: result.wordFamily || [],
       definitions: uniq(result.definitions || [], 10), examples: uniq(result.examples || [], 8), collocations: uniq(result.collocations || [], 16),
       collocationDetails: result.collocationDetails || [],
       synonyms: uniq(result.synonyms || [], 20), antonyms: uniq(result.antonyms || [], 20), note: '', sourceTitle: context?.title || '',
@@ -371,6 +471,17 @@
     panel.addEventListener('click', event => {
       const button = event.target.closest('[data-lookup-action]');
       if (!button || !state.activeLookup) return;
+      if (button.dataset.lookupAction === 'lookup-related') {
+        openSelection({ text: button.dataset.term, mode: 'lookup', context: state.activeLookup.context || {} }).catch(() => {});
+        return;
+      }
+      if (button.dataset.lookupAction === 'lookup-again' || button.dataset.lookupAction === 'translate-again') {
+        const input = panel.querySelector('[data-lookup-again-input]');
+        const text = normalizeText(input?.value);
+        if (!text) { input?.focus(); return; }
+        openSelection({ text, mode: button.dataset.lookupAction === 'translate-again' ? 'translate' : 'lookup', context: state.activeLookup.context || {} }).catch(() => {});
+        return;
+      }
       if (button.dataset.lookupAction === 'speak' || button.dataset.lookupAction === 'speak-uk' || button.dataset.lookupAction === 'speak-us') {
         const accent = button.dataset.lookupAction === 'speak-us' ? 'us' : 'uk';
         const text = button.dataset.speakText || state.activeLookup.term || state.activeLookup.original;
@@ -384,6 +495,13 @@
         button.disabled = true;
         showMessage('已保存到单词本', 'success');
       }
+    });
+    panel.addEventListener('submit', event => {
+      const form = event.target.closest('[data-lookup-again]');
+      if (!form) return;
+      event.preventDefault();
+      const text = normalizeText(form.querySelector('[data-lookup-again-input]')?.value);
+      if (text) openSelection({ text, mode: isSingleWord(text) ? 'lookup' : 'translate', context: state.activeLookup?.context || {} }).catch(() => {});
     });
     return panel;
   }
@@ -411,6 +529,22 @@
       + '<a href="https://www.collinsdictionary.com/dictionary/english/' + encoded + '" target="_blank" rel="noopener noreferrer">Collins 官方例句 ↗</a></div>';
   }
 
+  function lookupAgainMarkup() {
+    return '<form class="lookup-again" data-lookup-again><label for="jimmy-lookup-again">继续查词或翻译</label><div><input id="jimmy-lookup-again" data-lookup-again-input autocomplete="off" placeholder="输入英文单词或句子"><button type="button" data-lookup-action="lookup-again">查词</button><button type="button" data-lookup-action="translate-again">翻译</button></div><small>按 Enter 时，单词自动查词，句子自动翻译。</small></form>';
+  }
+
+  function relationMarkup(title, rows, kind) {
+    if (!rows?.length) return '';
+    return '<section class="lookup-section lookup-relations lookup-relations--' + kind + '"><h3>' + escapeHtml(title) + '</h3><div class="lookup-relation-list">'
+      + rows.map(row => {
+        const phonetic = row.phonetic ? '/' + String(row.phonetic).replace(/^\/|\/$/g, '') + '/' : '';
+        return '<article class="lookup-relation-row"><button type="button" class="lookup-relation-word" data-lookup-action="lookup-related" data-term="' + escapeHtml(row.term) + '"><strong>'
+          + escapeHtml(row.term) + '</strong><span>' + escapeHtml(row.label || row.partOfSpeech || '') + '</span><small>' + escapeHtml(phonetic) + '</small></button>'
+          + '<div class="lookup-relation-audio"><button type="button" data-lookup-action="speak-uk" data-speak-text="' + escapeHtml(row.term) + '" aria-label="播放 ' + escapeHtml(row.term) + ' 的英式发音">UK 🔊</button>'
+          + '<button type="button" data-lookup-action="speak-us" data-speak-text="' + escapeHtml(row.term) + '" aria-label="播放 ' + escapeHtml(row.term) + ' 的美式发音">US 🔊</button></div></article>';
+      }).join('') + '</div></section>';
+  }
+
   function renderLookup(result, mode) {
     const panel = ensureLookupPanel();
     const body = panel.querySelector('[data-lookup-body]');
@@ -420,7 +554,7 @@
       body.innerHTML = '<section class="lookup-translation"><div class="lookup-translation__source"><span>原文</span><p>' + escapeHtml(result.original) + '</p></div><div class="lookup-translation__result"><span>中文释义</span><p class="lookup-translation__zh">' + escapeHtml(result.translation || '当前离线且没有缓存译文，请联网后重试。') + '</p></div></section>'
         + pronunciationButtons(result, result.original, true)
         + '<div class="lookup-actions"><button type="button" data-lookup-action="save" ' + (saved ? 'disabled' : '') + '>' + (saved ? '✓ 已在单词本' : '+ 保存句子') + '</button></div>'
-        + '<p class="lookup-attribution">翻译来源：MyMemory 开放翻译记忆库；已查询内容会保存在本机。</p>';
+        + lookupAgainMarkup() + '<p class="lookup-attribution">翻译来源：MyMemory 开放翻译记忆库；已查询内容会保存在本机。</p>';
       return;
     }
     const senses = result.senses?.length ? result.senses : (result.definitions || []).map(value => ({ definition: value }));
@@ -437,13 +571,16 @@
       : '';
     body.innerHTML = '<div class="lookup-word-head"><div><strong>' + escapeHtml(result.term) + '</strong>'
       + (result.tags?.includes('ielts') ? '<span class="lookup-word-tag">IELTS 词表</span>' : '') + '</div>' + pronunciationButtons(result, result.term, false) + '</div>'
+      + (result.queriedTerm && normalizeTerm(result.queriedTerm) !== normalizeTerm(result.term) ? '<p class="lookup-lemma-notice">已识别 <b>' + escapeHtml(result.queriedTerm) + '</b>' + (result.queriedForm ? '（' + escapeHtml(result.queriedForm) + '）' : '') + '，以下显示原形 <b>' + escapeHtml(result.term) + '</b> 的释义。</p>' : '')
       + '<section class="lookup-section lookup-section--primary"><h3>逐义项中英释义与例句</h3><div class="lookup-sense-list">' + senseHtml + '</div></section>'
+      + relationMarkup('词格变化', result.forms, 'forms')
+      + relationMarkup('同一词族 Word family', result.wordFamily, 'family')
       + (collocationHtml ? '<section class="lookup-section"><h3>常用词组与固定搭配</h3><div class="lookup-collocation-list">' + collocationHtml + '</div></section>' : '')
       + chipList('常见同义词替换', result.synonyms, 'lookup-chips--syn')
       + chipList('常见反义词替换', result.antonyms, 'lookup-chips--ant')
       + '<div class="lookup-actions"><button type="button" data-lookup-action="save" ' + (saved ? 'disabled' : '') + '>' + (saved ? '✓ 已在单词本' : '+ 加入单词本') + '</button></div>'
       + referenceLinks(result.term, false)
-      + '<p class="lookup-attribution">中文释义：ECDICT；英英释义：Free Dictionary API；新例句：Tatoeba（CC BY 2.0 FR）；搭配候选：Datamuse/WordNet，并仅保留有自然例句和中文释义的结果。Oxford 与 Collins 仅提供官方查阅链接。</p>';
+      + lookupAgainMarkup() + '<p class="lookup-attribution">中文释义：ECDICT；英英释义：Free Dictionary API；新例句：Tatoeba（CC BY 2.0 FR）；搭配候选：Datamuse/WordNet，并仅保留有自然例句和中文释义的结果。Oxford 与 Collins 仅提供官方查阅链接。</p>';
   }
 
   async function openSelection(options) {
@@ -522,6 +659,8 @@
       const chineseRows = item.chineseByPos?.length ? item.chineseByPos : parsePosSegments(item.chinese);
       return '<article class="wordbook-card" data-entry-id="' + escapeHtml(item.id) + '"><header><div><h3>' + escapeHtml(item.term) + '</h3><span>' + escapeHtml(item.phonetic ? '/' + item.phonetic.replace(/^\/|\/$/g, '') + '/' : '') + '</span></div><div class="wordbook-card__audio"><button type="button" data-card-action="speak-uk" aria-label="播放英式发音">UK 🔊</button><button type="button" data-card-action="speak-us" aria-label="播放美式发音">US 🔊</button></div></header><div class="wordbook-card__zh">'
       + (chineseRows.length ? chineseRows.map(row => '<p><b>' + escapeHtml(row.partOfSpeech || '释义') + '</b> ' + escapeHtml(row.text) + '</p>').join('') : '<p>暂无中文释义</p>') + '</div>'
+      + (item.forms?.length ? '<div class="wordbook-card__relations"><b>词格变化</b><div>' + item.forms.map(row => '<button type="button" data-card-action="lookup-related" data-term="' + escapeHtml(row.term) + '">' + escapeHtml(row.term) + '<small>' + escapeHtml(row.label || '') + '</small></button>').join('') + '</div></div>' : '')
+      + (item.wordFamily?.length ? '<div class="wordbook-card__relations"><b>Word family</b><div>' + item.wordFamily.map(row => '<button type="button" data-card-action="lookup-related" data-term="' + escapeHtml(row.term) + '">' + escapeHtml(row.term) + '<small>' + escapeHtml(row.partOfSpeech || '') + '</small></button>').join('') + '</div></div>' : '')
       + (item.definitions?.[0] ? '<p class="wordbook-card__definition">' + escapeHtml(item.definitions[0]) + '</p>' : '')
       + (item.collocations?.length ? '<div class="wordbook-card__chips">' + item.collocations.slice(0, 3).map(value => '<span>' + escapeHtml(value) + '</span>').join('') + '</div>' : '')
       + (item.synonyms?.length ? '<p class="wordbook-card__replace"><b>同义替换</b> ' + escapeHtml(item.synonyms.slice(0, 5).join(' · ')) + '</p>' : '')
@@ -606,6 +745,7 @@
       if (!entry) return;
       if (cardAction === 'speak-uk') speakAccent(entry.term, 'uk', entry.pronunciations?.uk?.audio || entry.audio);
       if (cardAction === 'speak-us') speakAccent(entry.term, 'us', entry.pronunciations?.us?.audio || '');
+      if (cardAction === 'lookup-related') openSelection({ text: event.target.closest('[data-term]')?.dataset.term, mode: 'lookup', context: { title: entry.sourceTitle || '单词本' } }).catch(() => {});
       if (cardAction === 'edit') openEditor(entry);
       if (cardAction === 'delete' && global.confirm('从单词本删除 “' + entry.term + '”？')) {
         writeEntries(readEntries().filter(item => item.id !== entry.id)); renderNotebook();
