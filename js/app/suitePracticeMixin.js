@@ -303,6 +303,9 @@
                         answers: section.answers || {},
                         answerComparison: section.answerComparison || {},
                         scoreInfo: section.scoreInfo || {},
+                        markedQuestions: section.markedQuestions || [],
+                        highlights: section.highlights || [],
+                        notes: section.notes || [],
                         duration: Number.isFinite(Number(session.elapsedByExam && session.elapsedByExam[section.examId]))
                             ? Number(session.elapsedByExam[section.examId])
                             : 0
@@ -328,6 +331,7 @@
             session.draftsByExam[examId] = {
                 answers: data.answers || {},
                 highlights: data.highlights || [],
+                notes: data.notes || data.metadata?.notes || [],
                 markedQuestions: data.markedQuestions || data.metadata?.markedQuestions || [],
                 scrollY: data.scrollY || 0
             };
@@ -487,7 +491,14 @@
                     ? result.rawData.highlights.slice()
                     : (Array.isArray(result.rawData?.metadata?.highlights)
                         ? result.rawData.metadata.highlights.slice()
-                        : [])
+                        : []),
+                notes: Array.isArray(result.notes)
+                    ? result.notes.map((note) => Object.assign({}, note))
+                    : (Array.isArray(result.rawData?.notes)
+                        ? result.rawData.notes.map((note) => Object.assign({}, note))
+                        : (Array.isArray(result.rawData?.metadata?.notes)
+                            ? result.rawData.metadata.notes.map((note) => Object.assign({}, note))
+                            : []))
             };
         },
 
@@ -794,7 +805,11 @@
                     results: (session.results || []).map(r => ({
                         examId: r.examId, title: r.title, category: r.category,
                         duration: r.duration, scoreInfo: r.scoreInfo,
-                        answers: r.answers, answerComparison: r.answerComparison
+                        answers: r.answers, answerComparison: r.answerComparison,
+                        markedQuestions: r.markedQuestions || [],
+                        highlights: r.highlights || [],
+                        notes: r.notes || [],
+                        rawData: r.rawData || {}
                     })),
                     startTime: session.startTime,
                     activeExamId: session.activeExamId,
@@ -1779,6 +1794,7 @@
                 answerComparison: entry.answerComparison,
                 markedQuestions: Array.isArray(entry.markedQuestions) ? entry.markedQuestions.slice() : [],
                 highlights: Array.isArray(entry.highlights) ? entry.highlights.slice() : [],
+                notes: Array.isArray(entry.notes) ? entry.notes.map((note) => Object.assign({}, note)) : [],
                 rawData: entry.rawData || {}
             }));
 
@@ -2437,6 +2453,11 @@
                 highlights: Array.isArray(rawData?.highlights)
                     ? rawData.highlights.slice()
                     : (Array.isArray(rawData?.metadata?.highlights) ? rawData.metadata.highlights.slice() : []),
+                notes: Array.isArray(rawData?.notes)
+                    ? rawData.notes.map((note) => Object.assign({}, note))
+                    : (Array.isArray(rawData?.metadata?.notes)
+                        ? rawData.metadata.notes.map((note) => Object.assign({}, note))
+                        : []),
                 rawData: rawData || {}
             };
         },
@@ -3185,8 +3206,6 @@
     global.ExamSystemAppMixins = global.ExamSystemAppMixins || {};
     global.ExamSystemAppMixins.suitePractice = mixin;
 })(typeof window !== 'undefined' ? window : globalThis);
-
-
 
 
 

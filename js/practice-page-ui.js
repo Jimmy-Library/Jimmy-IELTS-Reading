@@ -189,6 +189,12 @@
             return snapshot;
         }
 
+        function emitPracticeAnnotationChange(reason = 'annotation_change') {
+            window.dispatchEvent(new CustomEvent('practiceAnnotationsChanged', {
+                detail: { reason, timestamp: Date.now() }
+            }));
+        }
+
         window[PRACTICE_TIMER_BRIDGE_KEY] = {
             eventName: PRACTICE_TIMER_EVENT,
             getSnapshot: getPracticeTimerSnapshot,
@@ -218,6 +224,8 @@
             if (!timerEl) return;
             timerEl.style.opacity = timerRunning ? '1' : '0.5';
             timerEl.classList.toggle('paused', !timerRunning);
+            timerEl.title = timerRunning ? '点击暂停计时' : '点击继续计时';
+            timerEl.setAttribute('aria-label', timerRunning ? '计时器，点击暂停' : '计时已暂停，点击继续');
         }
 
         function renderTimerDisplay() {
@@ -347,9 +355,14 @@
         // ===== 多笔记系统 =====
 
         // 笔记在文章中的标注元素；标注被取消后会取不到，此时该笔记失去位置信息
+        function getNoteAnchorEls(note) {
+            if (!note || !note.id) return [];
+            return Array.from(document.querySelectorAll('.hl[data-note-id="' + note.id + '"]'));
+        }
+
         function getNoteAnchorEl(note) {
             if (!note || !note.id) return null;
-            return document.querySelector('.hl[data-note-id="' + note.id + '"]');
+            return getNoteAnchorEls(note)[0] || null;
         }
 
         function getNoteForAnchorEl(anchorEl) {
@@ -377,10 +390,11 @@
             openNotesPanel(note.id);
             requestAnimationFrame(() => {
                 const item = document.querySelector('.note-item[data-note-id="' + note.id + '"]');
-                const anchor = getNoteAnchorEl(note);
+                const anchors = getNoteAnchorEls(note);
+                const anchor = anchors[0] || null;
                 document.querySelectorAll('.hl[data-hl-type="note"].note-anchor-active')
                     .forEach((el) => el.classList.remove('note-anchor-active'));
-                anchor?.classList.add('note-anchor-active');
+                anchors.forEach((el) => el.classList.add('note-anchor-active'));
                 item?.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 if (options.revealAnchor && anchor) {
                     window.scrollToElement?.(anchor);
@@ -476,6 +490,7 @@
                 textarea.value = note.comment || '';
                 textarea.addEventListener('input', (e) => {
                     note.comment = e.target.value;
+                    emitPracticeAnnotationChange('note_comment');
                 });
                 // 阻止点击 textarea 时关闭面板
                 textarea.addEventListener('click', (e) => {
@@ -496,29 +511,30 @@
                 comment: ''
             };
             // 与文章中的标注建立关联，排序据此确定笔记在文中的位置
-            if (anchorEl instanceof HTMLElement) {
-                anchorEl.dataset.noteId = note.id;
-            }
+            const anchors = Array.isArray(anchorEl) ? anchorEl : [anchorEl];
+            anchors.forEach((anchor) => {
+                if (anchor instanceof HTMLElement) anchor.dataset.noteId = note.id;
+            });
             notesList.push(note);
             activeNoteId = note.id;
             renderNotesList();
+            emitPracticeAnnotationChange('note_added');
             return note;
         }
 
         function deleteNote(noteId) {
             const note = notesList.find((entry) => entry.id === noteId);
-            const anchor = getNoteAnchorEl(note);
-            if (anchor && anchor.parentNode) {
+            getNoteAnchorEls(note).forEach((anchor) => {
+                if (!anchor.parentNode) return;
                 const parent = anchor.parentNode;
-                while (anchor.firstChild) {
-                    parent.insertBefore(anchor.firstChild, anchor);
-                }
+                while (anchor.firstChild) parent.insertBefore(anchor.firstChild, anchor);
                 parent.removeChild(anchor);
                 parent.normalize();
-            }
+            });
             notesList = notesList.filter(n => n.id !== noteId);
             if (activeNoteId === noteId) activeNoteId = null;
             renderNotesList();
+            emitPracticeAnnotationChange('note_deleted');
         }
 
         window.getPracticeNotes = () => notesList.map(note => ({ ...note }));
@@ -552,6 +568,7 @@
                 }
             });
             renderNotesList();
+            emitPracticeAnnotationChange('notes_deleted_all');
         }
 
         function ensurePracticeConfig() {
@@ -663,6 +680,52 @@
                 span.dataset.hlType = 'note';
             }
             return span;
+        }
+
+        // Safari 对跨标签选区调用 Range.surroundContents 会抛异常。
+        // 将选区拆成单个文本节点后逐段包裹，既兼容 Safari，也不会改变原有块级排版。
+        function wrapRangeWithHighlight(range, type = 'default') {
+            if (!range || range.collapsed) return [];
+            const root = range.commonAncestorContainer.nodeType === Node.TEXT_NODE
+                ? range.commonAncestorContainer.parentNode
+                : range.commonAncestorContainer;
+            if (!root) return [];
+            const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+                acceptNode(node) {
+                    if (!node.textContent) return NodeFilter.FILTER_REJECT;
+                    try {
+                        return range.intersectsNode(node) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
+                    } catch (_) {
+                        return NodeFilter.FILTER_REJECT;
+                    }
+                }
+            });
+            const segments = [];
+            let node = walker.nextNode();
+            while (node) {
+                const segment = range.cloneRange();
+                const nodeRange = document.createRange();
+                nodeRange.selectNodeContents(node);
+                try {
+                    if (range.compareBoundaryPoints(Range.START_TO_START, nodeRange) <= 0) segment.setStart(node, 0);
+                    if (range.compareBoundaryPoints(Range.END_TO_END, nodeRange) >= 0) segment.setEnd(node, node.textContent.length);
+                    if (segment.startContainer === node && segment.endContainer === node && !segment.collapsed) {
+                        segments.push(segment);
+                    }
+                } catch (_) { /* ignore boundary-only nodes */ }
+                node = walker.nextNode();
+            }
+            const groupId = 'hl-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 7);
+            const spans = [];
+            segments.reverse().forEach((segment) => {
+                try {
+                    const span = createHighlightSpan(type);
+                    span.dataset.highlightGroupId = groupId;
+                    segment.surroundContents(span);
+                    spans.unshift(span);
+                } catch (_) { /* a single malformed segment must not discard the rest */ }
+            });
+            return spans;
         }
 
         function markHighlightAsNote(node) {
@@ -873,6 +936,7 @@
                 if (!handled && existingKind !== 'pink') {
                     currentHlNode.dataset.hlType = 'pink';
                 }
+                emitPracticeAnnotationChange('highlight_changed');
                 currentHlNode = null;
                 sel?.removeAllRanges();
                 selbar.style.display = 'none';
@@ -880,12 +944,8 @@
             }
 
             if (!lastRange || lastRange.collapsed) return;
-            try {
-                const span = createHighlightSpan();
-                lastRange.surroundContents(span);
-            } catch (error) {
-                console.error('[PracticePageUI] Highlighting failed:', error);
-            }
+            const spans = wrapRangeWithHighlight(lastRange);
+            if (spans.length) emitPracticeAnnotationChange('highlight_added');
             sel?.removeAllRanges();
             selbar.style.display = 'none';
         }
@@ -915,6 +975,7 @@
                     parent.removeChild(targetNode);
                     parent.normalize();
                 }
+                emitPracticeAnnotationChange('highlight_removed');
             }
             currentHlNode = null;
             sel?.removeAllRanges();
@@ -1183,13 +1244,7 @@
                     // Mark the selected text with blue note highlight
                     let anchorEl = null;
                     if (!currentHlNode && lastRange && !lastRange.collapsed) {
-                        try {
-                            const span = createHighlightSpan('note');
-                            lastRange.surroundContents(span);
-                            anchorEl = span;
-                        } catch (e) {
-                            console.error('[PracticePageUI] Note highlight failed:', e);
-                        }
+                        anchorEl = wrapRangeWithHighlight(lastRange, 'note');
                     } else if (currentHlNode) {
                         markHighlightAsNote(currentHlNode);
                         anchorEl = currentHlNode;

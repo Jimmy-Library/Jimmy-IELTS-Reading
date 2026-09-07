@@ -563,6 +563,13 @@
                 scoreInfo: entry.scoreInfo ? clonePlainObject(entry.scoreInfo) : null,
                 answers: answerMap,
                 answerComparison: clonePlainObject(answerComparisonSource) || null,
+                markedQuestions: Array.isArray(entry.markedQuestions) ? entry.markedQuestions.slice() : [],
+                highlights: Array.isArray(entry.highlights)
+                    ? entry.highlights.map((item) => clonePlainObject(item)).filter(Boolean)
+                    : [],
+                notes: Array.isArray(entry.notes)
+                    ? entry.notes.map((item) => clonePlainObject(item)).filter(Boolean)
+                    : [],
                 metadata: entry.metadata ? Object.assign({}, entry.metadata) : {},
                 rawData: entry.rawData ? clonePlainObject(entry.rawData) : null
             };
@@ -693,6 +700,9 @@
             suiteMode: Boolean(recordData.suiteMode || ((recordData.frequency || metadata.frequency || '').toLowerCase() === 'suite')),
             suiteSessionId: recordData.suiteSessionId || (metadata && metadata.suiteSessionId) || null,
             suiteEntries: normalizedSuiteEntries,
+            markedQuestions: Array.isArray(recordData.markedQuestions) ? recordData.markedQuestions.slice() : [],
+            highlights: Array.isArray(recordData.highlights) ? recordData.highlights.map(clonePlainObject).filter(Boolean) : [],
+            notes: Array.isArray(recordData.notes) ? recordData.notes.map(clonePlainObject).filter(Boolean) : [],
             scoreInfo: recordData.scoreInfo
                 ? Object.assign({}, recordData.scoreInfo, {
                     details: recordData.scoreInfo.details || detailSource || null

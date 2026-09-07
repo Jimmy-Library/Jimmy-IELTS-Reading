@@ -943,6 +943,13 @@ class ScoreStorage {
             suiteMode: Boolean(recordData.suiteMode || (frequency && frequency.toLowerCase() === 'suite')),
             suiteSessionId,
             suiteEntries: normalizedSuiteEntries,
+            markedQuestions: Array.isArray(recordData.markedQuestions) ? recordData.markedQuestions.slice() : [],
+            highlights: Array.isArray(recordData.highlights)
+                ? recordData.highlights.map((item) => this.clonePlainObject(item)).filter(Boolean)
+                : [],
+            notes: Array.isArray(recordData.notes)
+                ? recordData.notes.map((item) => this.clonePlainObject(item)).filter(Boolean)
+                : [],
             scoreInfo: recordData.scoreInfo
                 ? Object.assign({}, recordData.scoreInfo, {
                     details: recordData.scoreInfo.details || detailSource || null
@@ -1080,6 +1087,13 @@ class ScoreStorage {
                 scoreInfo: normalizedScoreInfo,
                 answers: answerMap,
                 answerComparison: this.clonePlainObject(answerComparisonSource) || null,
+                markedQuestions: Array.isArray(entry.markedQuestions) ? entry.markedQuestions.slice() : [],
+                highlights: Array.isArray(entry.highlights)
+                    ? entry.highlights.map((item) => this.clonePlainObject(item)).filter(Boolean)
+                    : [],
+                notes: Array.isArray(entry.notes)
+                    ? entry.notes.map((item) => this.clonePlainObject(item)).filter(Boolean)
+                    : [],
                 metadata: entry.metadata ? Object.assign({}, entry.metadata) : {},
                 rawData: entry.rawData ? this.clonePlainObject(entry.rawData) : null
             };

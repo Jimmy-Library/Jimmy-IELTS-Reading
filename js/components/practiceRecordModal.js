@@ -476,6 +476,49 @@ class PracticeRecordModal {
         return record.suiteEntries.filter(Boolean);
     }
 
+    resolveAnnotations(record) {
+        const metadata = record?.metadata || {};
+        const rawData = record?.rawData || {};
+        const realData = record?.realData || {};
+        const firstArray = (candidates) => candidates.find((value) => Array.isArray(value) && value.length) || [];
+        const highlights = firstArray([
+            record?.highlights, metadata.highlights, rawData.highlights,
+            rawData.metadata?.highlights, realData.highlights, realData.metadata?.highlights
+        ]);
+        const notes = firstArray([
+            record?.notes, metadata.notes, rawData.notes,
+            rawData.metadata?.notes, realData.notes, realData.metadata?.notes
+        ]);
+        return { highlights, notes };
+    }
+
+    renderAnnotationSummary(record) {
+        const annotations = this.resolveAnnotations(record);
+        if (!annotations.highlights.length && !annotations.notes.length) return '';
+        const noteIds = new Set(annotations.notes.map((note) => String(note?.id || '')).filter(Boolean));
+        const grouped = new Map();
+        annotations.highlights.forEach((item, index) => {
+            if (!item || item.kind === 'note' || (item.noteId && noteIds.has(String(item.noteId)))) return;
+            const key = item.groupId || ('item-' + index);
+            const list = grouped.get(key) || [];
+            const text = String(item.text || '').trim();
+            if (text) list.push(text);
+            grouped.set(key, list);
+        });
+        const highlightItems = Array.from(grouped.values())
+            .map((parts) => parts.join(' ').replace(/\s+/g, ' ').trim())
+            .filter(Boolean)
+            .map((text) => `<li><mark>${this.escapeHtml(text)}</mark></li>`)
+            .join('');
+        const noteItems = annotations.notes.map((note) => `
+            <li><strong>${this.escapeHtml(note.text || '未命名笔记')}</strong>${note.comment ? `<div>${this.escapeHtml(note.comment)}</div>` : ''}</li>
+        `).join('');
+        return `<div class="record-annotations">
+            ${highlightItems ? `<h6>高亮记录</h6><ul>${highlightItems}</ul>` : ''}
+            ${noteItems ? `<h6>Notes</h6><ul>${noteItems}</ul>` : ''}
+        </div>`;
+    }
+
     formatSuiteEntryTitle(entry, index) {
         if (!entry) {
             return `\u5957\u9898\u7b2c${index + 1}\u7bc7`;
@@ -551,6 +594,7 @@ class PracticeRecordModal {
                             <h5>${this.escapeHtml(title)}</h5>
                             ${scoreInfo}
                             ${content}
+                            ${this.renderAnnotationSummary(entryRecord)}
                         </section>
                     `;
                 })
@@ -566,10 +610,10 @@ class PracticeRecordModal {
 
         const normalizedEntries = this.getNormalizedEntries(preparedRecord);
         if (this.hasNormalizedEntries(normalizedEntries)) {
-            return this.renderAnswersSection(normalizedEntries, { wrap: true });
+            return this.renderAnswersSection(normalizedEntries, { wrap: true }) + this.renderAnnotationSummary(preparedRecord);
         }
 
-        return this.generateLegacyAnswerTableForSingle(preparedRecord);
+        return this.generateLegacyAnswerTableForSingle(preparedRecord) + this.renderAnnotationSummary(preparedRecord);
     }
 
     getNormalizedEntries(record) {

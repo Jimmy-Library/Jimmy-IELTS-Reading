@@ -1116,6 +1116,9 @@ class PracticeRecorder {
             scoreInfo,
             questionTypePerformance: results?.questionTypePerformance || {},
             metadata,
+            markedQuestions: Array.isArray(recordData.markedQuestions) ? recordData.markedQuestions.slice() : [],
+            highlights: Array.isArray(recordData.highlights) ? recordData.highlights.slice() : [],
+            notes: Array.isArray(recordData.notes) ? recordData.notes.map(note => Object.assign({}, note)) : [],
             suiteSessionId,
             createdAt: resolvedEndTime,
             realData: Object.assign({}, results?.realData || {}, {

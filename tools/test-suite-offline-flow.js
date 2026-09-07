@@ -98,6 +98,22 @@ const server = http.createServer((req, res) => {
         practice.on('console', msg => { if (msg.type() === 'error') console.log('PRACTICE:', msg.text()); });
         try { await practice.waitForFunction(() => window.__UNIFIED_SUITE_LOCAL_READY__ === true); }
         catch (error) { console.log('PRACTICE URL:', practice.url(), 'BODY:', (await practice.locator('body').innerText()).slice(0, 1500)); throw error; }
+        await practice.evaluate(() => {
+            const root = document.querySelector('#left p');
+            const textNode = root && Array.from(root.childNodes).find(node => node.nodeType === Node.TEXT_NODE && (node.textContent || '').trim().length > 12);
+            if (!textNode) throw new Error('missing annotation test text');
+            const range = document.createRange();
+            range.setStart(textNode, 1);
+            range.setEnd(textNode, Math.min(11, textNode.textContent.length));
+            const span = document.createElement('span');
+            span.className = 'hl';
+            span.dataset.hlType = 'note';
+            span.dataset.noteId = 'note-test';
+            span.dataset.highlightGroupId = 'test-group';
+            range.surroundContents(span);
+            window.setPracticeNotes([{ id: 'note-test', text: span.textContent, part: 'Part 1', comment: '套题导出 Note' }]);
+            window.dispatchEvent(new CustomEvent('practiceAnnotationsChanged', { detail: { reason: 'test' } }));
+        });
         await practice.locator('#question-groups input[type=radio]').first().check();
         await practice.locator('#submit-btn').click();
         await practice.waitForFunction(id => new URL(location.href).searchParams.get('examId') === id, ids[1]);
@@ -105,6 +121,43 @@ const server = http.createServer((req, res) => {
         await practice.waitForFunction(id => new URL(location.href).searchParams.get('examId') === id, ids[2]);
         await practice.locator('#submit-btn').click();
         await home.waitForFunction(async () => (await window.storage.get('practice_records', [])).some(record => record.practiceMode === 'suite' || record.suiteSessionId || record.metadata?.practiceMode === 'suite'), { timeout: 20000 });
+        const annotationResult = await home.evaluate(async () => {
+            const records = await window.storage.get('practice_records', []);
+            const record = records.find(item => item && (item.suiteMode || item.suiteSessionId || item.metadata?.practiceMode === 'suite'));
+            const first = record && record.suiteEntries && record.suiteEntries[0];
+            const exporter = window.pdfExporter || (typeof window.PdfExporter === 'function' ? new window.PdfExporter() : null);
+            const html = exporter && record ? exporter.buildRecordHtml(record) : '';
+            return {
+                sections: record && record.suiteEntries ? record.suiteEntries.length : 0,
+                highlights: first && Array.isArray(first.highlights) ? first.highlights.length : 0,
+                note: first && Array.isArray(first.notes) ? first.notes[0] : null,
+                pdfHasNote: html.includes('套题导出 Note')
+            };
+        });
+        assert.equal(annotationResult.sections, 3);
+        assert.ok(annotationResult.highlights >= 1);
+        assert.equal(annotationResult.note && annotationResult.note.comment, '套题导出 Note');
+        assert.equal(annotationResult.pdfHasNote, true);
+        await practice.evaluate(() => {
+            const root = document.querySelector('#left p');
+            const node = root && Array.from(root.childNodes).find(item => item.nodeType === Node.TEXT_NODE && (item.textContent || '').trim().length > 8);
+            if (!node) throw new Error('missing post-submit highlight text');
+            const range = document.createRange();
+            range.setStart(node, 0);
+            range.setEnd(node, Math.min(7, node.textContent.length));
+            const span = document.createElement('span');
+            span.className = 'hl';
+            span.dataset.reviewHighlight = 'true';
+            span.dataset.highlightGroupId = 'post-submit-group';
+            range.surroundContents(span);
+            window.dispatchEvent(new CustomEvent('practiceAnnotationsChanged', { detail: { reason: 'post-submit-test' } }));
+        });
+        await home.waitForFunction(async (examId) => {
+            const records = await window.PracticeCore.store.listPracticeRecords();
+            const record = records.find(item => item && Array.isArray(item.suiteEntries));
+            const entry = record && record.suiteEntries.find(item => String(item.examId) === String(examId));
+            return !!(entry && Array.isArray(entry.highlights) && entry.highlights.some(item => item.groupId === 'post-submit-group'));
+        }, ids[2]);
         console.log('PASS: real homepage later button dismisses; suite launches and submits through the host with all three sections saved.');
         await hostContext.close();
     } finally { await browser.close(); }

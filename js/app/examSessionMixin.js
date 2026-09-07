@@ -1491,6 +1491,7 @@
                     'REVIEW_NAVIGATE',
                     'SUITE_CONFIG_UPDATE',
                     'SIMULATION_DRAFT_SYNC',
+                    'PRACTICE_ANNOTATIONS_UPDATE',
                     'SIMULATION_NAVIGATE',
                     'SIMULATION_SUBMIT'
                 ]);
@@ -1731,7 +1732,7 @@
                 }
 
                 const localSuiteMessage = sourceMatched && payloadSuiteSessionId === activeSuiteSessionId
-                    && isExamInActiveSuite && ['SIMULATION_DRAFT_SYNC', 'SIMULATION_NAVIGATE', 'SIMULATION_SUBMIT'].includes(type)
+                    && isExamInActiveSuite && ['SIMULATION_DRAFT_SYNC', 'SIMULATION_NAVIGATE', 'SIMULATION_SUBMIT', 'PRACTICE_ANNOTATIONS_UPDATE'].includes(type)
                     && this.currentSuiteSession.sequence.some(item => item && String(item.examId) === payloadExamId);
                 const suiteRoutedExamId = localSuiteMessage ? payloadExamId : examId;
                 if (payloadExamId && payloadExamId !== expectedExamId && !localSuiteMessage) {
@@ -1858,6 +1859,9 @@
                                 this._mirrorSessionToStorage(this.currentSuiteSession);
                             }
                         }
+                        break;
+                    case 'PRACTICE_ANNOTATIONS_UPDATE':
+                        await this._persistPracticeAnnotations(suiteRoutedExamId, data);
                         break;
                     case 'SIMULATION_NAVIGATE':
                         if (typeof this._handleSimulationNavigate === 'function') {
@@ -2270,6 +2274,65 @@
             return [];
         },
 
+        _resolveReplayNotes(entry, entryMetadata, record, recordMetadata) {
+            const candidates = [
+                entry && entry.notes,
+                entry && entry.realData && entry.realData.notes,
+                entry && entry.rawData && entry.rawData.notes,
+                entryMetadata && entryMetadata.notes,
+                record && record.notes,
+                record && record.realData && record.realData.notes,
+                record && record.realData && record.realData.metadata && record.realData.metadata.notes,
+                recordMetadata && recordMetadata.notes
+            ];
+            for (let index = 0; index < candidates.length; index += 1) {
+                if (Array.isArray(candidates[index]) && candidates[index].length) {
+                    return candidates[index].map((note) => Object.assign({}, note));
+                }
+            }
+            return [];
+        },
+
+        async _persistPracticeAnnotations(examId, data = {}) {
+            const store = window.PracticeCore && window.PracticeCore.store;
+            if (!store || typeof store.listPracticeRecords !== 'function' || typeof store.savePracticeRecord !== 'function') {
+                return false;
+            }
+            const highlights = Array.isArray(data.highlights) ? data.highlights.map((item) => this._cloneReviewData(item)) : [];
+            const notes = Array.isArray(data.notes) ? data.notes.map((item) => this._cloneReviewData(item)) : [];
+            const wantedRecordId = String(data.recordId || '').trim();
+            const wantedSessionId = String(data.suiteSessionId || data.sessionId || '').trim();
+            for (let attempt = 0; attempt < 4; attempt += 1) {
+                const records = await store.listPracticeRecords();
+                const record = (records || []).find((item) => {
+                    if (!item) return false;
+                    if (wantedRecordId && String(item.id) === wantedRecordId) return true;
+                    if (wantedSessionId && [item.id, item.sessionId, item.suiteSessionId, item.metadata?.suiteSessionId]
+                        .some((value) => String(value || '') === wantedSessionId)) return true;
+                    return !wantedRecordId && !wantedSessionId && String(item.examId || '') === String(examId || '');
+                });
+                if (record) {
+                    const targetEntry = Array.isArray(record.suiteEntries)
+                        ? record.suiteEntries.find((entry) => entry && String(entry.examId) === String(examId))
+                        : null;
+                    const target = targetEntry || record;
+                    target.highlights = highlights;
+                    target.notes = notes;
+                    target.metadata = Object.assign({}, target.metadata || {}, { highlights, notes });
+                    target.rawData = Object.assign({}, target.rawData || {}, { highlights, notes });
+                    if (targetEntry) {
+                        record.metadata = Object.assign({}, record.metadata || {}, { suiteEntries: record.suiteEntries });
+                        record.realData = Object.assign({}, record.realData || {}, { suiteEntries: record.suiteEntries });
+                    }
+                    await store.savePracticeRecord(record);
+                    if (typeof window.syncPracticeRecords === 'function') window.syncPracticeRecords();
+                    return true;
+                }
+                await new Promise((resolve) => window.setTimeout(resolve, 120 * (attempt + 1)));
+            }
+            return false;
+        },
+
         _resolveReplayMarkedQuestions(entry, entryMetadata, record, recordMetadata) {
             const candidates = [
                 entry && entry.markedQuestions,
@@ -2592,6 +2655,7 @@
                     examId: entryExamId
                 });
                 const built = {
+                    recordId: record.id || '',
                     examId: String(entryExamId),
                     title: entry.title
                         || mergedMetadata.examTitle
@@ -2609,6 +2673,7 @@
                     duration: Number(entry.duration ?? record.duration) || 0,
                     markedQuestions: this._resolveReplayMarkedQuestions(entry, entryMetadata, record, recordMetadata),
                     highlights: this._resolveReplayHighlights(entry, entryMetadata, record, recordMetadata),
+                    notes: this._resolveReplayNotes(entry, entryMetadata, record, recordMetadata),
                     metadata: mergedMetadata
                 };
                 built.allQuestionIds = this._collectReplayQuestionIds(built);
@@ -2687,6 +2752,7 @@
             // 套题回顾：额外附带全部小节，供题目页一次性呈现三篇结果
             if (session.entries.length > 1) {
                 replayPayload.suiteReviewEntries = session.entries.map((item, index) => ({
+                    recordId: item.recordId || '',
                     examId: item.examId || '',
                     title: item.title || (item.metadata && item.metadata.examTitle) || item.examId || '',
                     category: item.category || (item.metadata && item.metadata.category) || '',
@@ -2695,7 +2761,10 @@
                     answers: this._cloneReviewData(item.answers || {}),
                     answerComparison: this._cloneReviewData(item.answerComparison || {}),
                     correctAnswers: this._cloneReviewData(item.correctAnswers || {}),
-                    scoreInfo: this._cloneReviewData(item.scoreInfo || {})
+                    scoreInfo: this._cloneReviewData(item.scoreInfo || {}),
+                    markedQuestions: this._cloneReviewData(item.markedQuestions || []),
+                    highlights: this._cloneReviewData(item.highlights || []),
+                    notes: this._cloneReviewData(item.notes || [])
                 }));
             }
             const contextPayload = this._buildReviewContextPayload(session, safeIndex);

@@ -737,6 +737,14 @@ function setupMessageListener() {
                     }
                 }
             } catch (_) { }
+        } else if (type === 'PRACTICE_ANNOTATIONS_UPDATE') {
+            const payload = data.data && typeof data.data === 'object' ? data.data : {};
+            const appInstance = window.app || app;
+            if (appInstance && typeof appInstance._persistPracticeAnnotations === 'function') {
+                appInstance._persistPracticeAnnotations(payload.examId || '', payload).catch((error) => {
+                    console.warn('[Annotations] 标注回写失败:', error);
+                });
+            }
         } else if (type === 'PRACTICE_COMPLETE' || type === 'practice_completed') {
             const payload = extractCompletionPayload(data) || {};
             const sessionId = extractCompletionSessionId(data);
@@ -811,7 +819,8 @@ async function recoverOfflinePracticeCompletions() {
                     answerComparison: comparison,
                     scoreInfo: sectionScore,
                     markedQuestions: section.markedQuestions || [],
-                    highlights: section.highlights || []
+                    highlights: section.highlights || [],
+                    notes: section.notes || []
                 };
             });
             data.answers = answers;

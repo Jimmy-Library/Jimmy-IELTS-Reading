@@ -840,6 +840,39 @@ class PdfExporter {
         return 0;
     }
 
+    resolveAnnotations(record) {
+        const metadata = record?.metadata || {};
+        const realData = record?.realData || {};
+        const rawData = record?.rawData || {};
+        const firstArray = (values) => values.find((value) => Array.isArray(value) && value.length) || [];
+        return {
+            highlights: firstArray([record?.highlights, metadata.highlights, realData.highlights, realData.metadata?.highlights, rawData.highlights, rawData.metadata?.highlights]),
+            notes: firstArray([record?.notes, metadata.notes, realData.notes, realData.metadata?.notes, rawData.notes, rawData.metadata?.notes])
+        };
+    }
+
+    buildAnnotationsHtml(record) {
+        const { highlights, notes } = this.resolveAnnotations(record);
+        if (!highlights.length && !notes.length) return '';
+        const noteIds = new Set(notes.map((note) => String(note?.id || '')).filter(Boolean));
+        const groups = new Map();
+        highlights.forEach((item, index) => {
+            if (!item || item.kind === 'note' || (item.noteId && noteIds.has(String(item.noteId)))) return;
+            const key = item.groupId || ('item-' + index);
+            const parts = groups.get(key) || [];
+            const text = String(item.text || '').trim();
+            if (text) parts.push(text);
+            groups.set(key, parts);
+        });
+        const highlightItems = Array.from(groups.values()).map((parts) => parts.join(' ').replace(/\s+/g, ' ').trim()).filter(Boolean)
+            .map((text) => `<li><mark>${this.escapeHtml(text)}</mark></li>`).join('');
+        const noteItems = notes.map((note) => `<li><strong>${this.escapeHtml(note.text || '未命名笔记')}</strong>${note.comment ? `<div>${this.escapeHtml(note.comment)}</div>` : ''}</li>`).join('');
+        return `<section class="annotations">
+            ${highlightItems ? `<h5>高亮记录</h5><ul>${highlightItems}</ul>` : ''}
+            ${noteItems ? `<h5>Notes</h5><ul>${noteItems}</ul>` : ''}
+        </section>`;
+    }
+
     buildRecordHtml(record) {
         const metadata = record.metadata || {};
         const title = this.markdown.normalizeTitle(
@@ -892,6 +925,7 @@ class PdfExporter {
                 ${suiteMetaHtml}
             </div>
             ${bodyHtml}
+            ${suiteEntries.length ? '' : this.buildAnnotationsHtml(record)}
         </article>`;
     }
 
@@ -926,6 +960,7 @@ class PdfExporter {
                     <span class="suite-section-score">${correct}/${total} · ${percentage}% · ${this.escapeHtml(duration)}</span>
                 </div>
                 ${detail}
+                ${this.buildAnnotationsHtml(entryRecord)}
             </section>`;
         }).join('');
     }

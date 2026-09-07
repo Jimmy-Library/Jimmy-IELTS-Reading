@@ -44,6 +44,7 @@
         sessionId: null,
         suiteSessionId: null,
         reviewSessionId: null,
+        reviewRecordId: null,
         reviewEntryIndex: 0,
         reviewMode: false,
         reviewViewMode: null,
@@ -384,6 +385,9 @@
             const highlights = Array.isArray(passageDraft.highlights)
                 ? passageDraft.highlights.slice()
                 : [];
+            const notes = Array.isArray(passageDraft.notes)
+                ? passageDraft.notes.map((note) => Object.assign({}, note))
+                : [];
             answersByExam[passage.examId] = answers;
 
             let correct = 0;
@@ -412,6 +416,7 @@
                 rows,
                 markedQuestions,
                 highlights,
+                notes,
                 correct,
                 total,
                 percentage: total > 0 ? Math.round((correct / total) * 100) : 0
@@ -518,6 +523,9 @@
                 title: entry.title || (passage && passage.title) || '',
                 isCurrent: entry.isCurrent === true,
                 rows,
+                markedQuestions: Array.isArray(entry.markedQuestions) ? entry.markedQuestions.slice() : [],
+                highlights: Array.isArray(entry.highlights) ? entry.highlights.slice() : [],
+                notes: Array.isArray(entry.notes) ? entry.notes.map((note) => Object.assign({}, note)) : [],
                 correct: finalCorrect,
                 total: finalTotal,
                 percentage: finalTotal > 0 ? Math.round((finalCorrect / finalTotal) * 100) : 0
@@ -2517,6 +2525,8 @@
             state.reviewEntryIndex = data.reviewEntryIndex;
         }
         const replayHighlights = resolveReplayArray(data, entry, 'highlights');
+        const replayNotes = resolveReplayArray(data, entry, 'notes');
+        state.reviewRecordId = data.recordId || entry.recordId || null;
         state.reviewMode = true;
         state.reviewViewMode = 'review';
         applyReplayAnswersToDom(replayResults.answers || {});
@@ -2549,6 +2559,13 @@
                     applyHighlights(replayHighlights);
                 } catch (_) {
                     // ignore highlight restore failures
+                }
+            }
+            if (typeof global.setPracticeNotes === 'function') {
+                try {
+                    global.setPracticeNotes(replayNotes);
+                } catch (_) {
+                    // ignore note restore failures
                 }
             }
             if (typeof global.setPracticeMarkedQuestions === 'function') {
@@ -3040,18 +3057,22 @@
 
         const flush = () => saveSingleDraft('flush');
 
-        global.addEventListener('visibilitychange', () => {
+        document.addEventListener('visibilitychange', () => {
             if (document.hidden) {
                 flush();
             }
         });
-        global.addEventListener('pagehide', flush);
-        global.addEventListener('beforeunload', flush);
+        global.addEventListener('pagehide', flush, { capture: true });
+        global.addEventListener('beforeunload', flush, { capture: true });
+        document.addEventListener('freeze', flush, { capture: true });
 
         // 作答 / 高亮变化时 debounce 保存
         document.addEventListener('change', scheduleSingleDraftSave, true);
         document.addEventListener('input', scheduleSingleDraftSave, true);
         document.addEventListener('mouseup', scheduleSingleDraftSave, true);
+        global.addEventListener('practiceAnnotationsChanged', () => {
+            saveSingleDraft('annotation');
+        });
     }
 
     // 续做弹窗：检测到已保存草稿时询问「继续 / 重做」
@@ -3254,10 +3275,12 @@
         document.addEventListener('visibilitychange', () => {
             if (document.hidden) flush();
         });
-        global.addEventListener('pagehide', flush);
-        global.addEventListener('beforeunload', flush);
+        global.addEventListener('pagehide', flush, { capture: true });
+        global.addEventListener('beforeunload', flush, { capture: true });
+        document.addEventListener('freeze', flush, { capture: true });
         document.addEventListener('change', flush, true);
         document.addEventListener('input', flush, true);
+        global.addEventListener('practiceAnnotationsChanged', flush);
     }
 
     function refreshSimulationDraftSyncLifecycle() {
@@ -3485,6 +3508,9 @@
                     scope,
                     text,
                     kind: resolveHighlightKind(node),
+                    noteId: node.dataset.noteId || '',
+                    groupId: node.dataset.highlightGroupId || '',
+                    reviewHighlight: node.dataset.reviewHighlight === 'true',
                     occurrence: seen,
                     startOffset: hit,
                     endOffset: hit + text.length,
@@ -3560,14 +3586,7 @@
             if (offsetLooksValid) {
                 const offsetRange = resolveRangeFromOffsets(root, startOffset, endOffset);
                 if (offsetRange && !offsetRange.collapsed) {
-                    const offsetSpan = document.createElement('span');
-                    applyHighlightKind(offsetSpan, highlightKind);
-                    try {
-                        offsetRange.surroundContents(offsetSpan);
-                        return;
-                    } catch (_) {
-                        // fallback to text-based restore
-                    }
+                    if (wrapRestoredHighlightRange(offsetRange, highlightKind, record).length) return;
                 }
             }
         }
@@ -3594,13 +3613,48 @@
         if (!range || range.collapsed) {
             return;
         }
-        const span = document.createElement('span');
-        applyHighlightKind(span, highlightKind);
-        try {
-            range.surroundContents(span);
-        } catch (_) {
-            // ignore malformed ranges
+        wrapRestoredHighlightRange(range, highlightKind, record);
+    }
+
+    function wrapRestoredHighlightRange(range, kind, record = {}) {
+        if (!range || range.collapsed) return [];
+        const root = range.commonAncestorContainer.nodeType === Node.TEXT_NODE
+            ? range.commonAncestorContainer.parentNode
+            : range.commonAncestorContainer;
+        if (!root) return [];
+        const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+            acceptNode(node) {
+                if (!node.textContent) return NodeFilter.FILTER_REJECT;
+                try { return range.intersectsNode(node) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT; }
+                catch (_) { return NodeFilter.FILTER_REJECT; }
+            }
+        });
+        const segments = [];
+        let node = walker.nextNode();
+        while (node) {
+            const segment = range.cloneRange();
+            const nodeRange = document.createRange();
+            nodeRange.selectNodeContents(node);
+            try {
+                if (range.compareBoundaryPoints(Range.START_TO_START, nodeRange) <= 0) segment.setStart(node, 0);
+                if (range.compareBoundaryPoints(Range.END_TO_END, nodeRange) >= 0) segment.setEnd(node, node.textContent.length);
+                if (segment.startContainer === node && segment.endContainer === node && !segment.collapsed) segments.push(segment);
+            } catch (_) { /* ignore */ }
+            node = walker.nextNode();
         }
+        const spans = [];
+        segments.reverse().forEach((segment) => {
+            try {
+                const span = document.createElement('span');
+                applyHighlightKind(span, kind);
+                if (record.noteId) span.dataset.noteId = record.noteId;
+                if (record.groupId) span.dataset.highlightGroupId = record.groupId;
+                if (record.reviewHighlight) span.dataset.reviewHighlight = 'true';
+                segment.surroundContents(span);
+                spans.unshift(span);
+            } catch (_) { /* keep remaining segments */ }
+        });
+        return spans;
     }
 
     function applyHighlights(records = []) {
@@ -3709,7 +3763,8 @@
                         percentage: section.percentage
                     },
                     markedQuestions: section.markedQuestions || [],
-                    highlights: section.highlights || []
+                    highlights: section.highlights || [],
+                    notes: section.notes || []
                 }))
             }
             : null;
@@ -3733,7 +3788,8 @@
                     ? global.getPracticeMarkedQuestions()
                     : [],
                 // 保存高亮，供练习记录回看时还原
-                highlights: collectHighlights()
+                highlights: collectHighlights(),
+                notes: typeof global.getPracticeNotes === 'function' ? global.getPracticeNotes() : []
             }
         }, results));
         if (state.simulationMode && state.simulationCtx && state.simulationCtx.isLast) {
@@ -3854,6 +3910,23 @@
                 .map((group) => createGroupMarkup(group))
                 .join('\n');
 
+            const annotationGroups = new Map();
+            (section?.highlights || []).forEach((item, index) => {
+                if (!item || item.kind === 'note') return;
+                const key = item.groupId || ('item-' + index);
+                const parts = annotationGroups.get(key) || [];
+                const text = String(item.text || '').trim();
+                if (text) parts.push(text);
+                annotationGroups.set(key, parts);
+            });
+            const highlightDetails = Array.from(annotationGroups.values())
+                .map((parts) => parts.join(' ').replace(/\s+/g, ' ').trim())
+                .filter(Boolean)
+                .map((text) => `<li><mark>${escapeHtml(text)}</mark></li>`)
+                .join('');
+            const noteDetails = (section?.notes || []).map((note) => `
+                <li><strong>${escapeHtml(note.text || '未命名笔记')}</strong>${note.comment ? ` — ${escapeHtml(note.comment)}` : ''}</li>
+            `).join('');
             const block = document.createElement('section');
             block.className = 'suite-print__passage';
             block.innerHTML = `
@@ -3869,6 +3942,7 @@
                     <h3 class="suite-print__ak-title">参考答案 Answer Key</h3>
                     ${section.markedQuestions?.length ? `<p>★ 标记题：${section.markedQuestions.join(', ')}</p>` : ''}
                     ${section.highlights?.length ? `<p>高亮标注：${section.highlights.length} 处</p>` : ''}
+                    ${(highlightDetails || noteDetails) ? `<div class="suite-print__annotations">${highlightDetails ? `<h4>高亮记录</h4><ul>${highlightDetails}</ul>` : ''}${noteDetails ? `<h4>Notes</h4><ul>${noteDetails}</ul>` : ''}</div>` : ''}
                     <table class="results-table suite-print__answers">
                         <thead><tr><th>题号</th><th>你的答案</th><th>正确答案</th><th>结果</th></tr></thead>
                         <tbody>${suiteResultRowsHtml(section.rows, section.markedQuestions)}</tbody>
@@ -4205,6 +4279,20 @@
         });
     }
 
+    function attachAnnotationPersistenceBridge() {
+        global.addEventListener('practiceAnnotationsChanged', () => {
+            if (!(state.submitted || state.readOnly || document.body.classList.contains('practice-completed-mode'))) {
+                return;
+            }
+            postMessage('PRACTICE_ANNOTATIONS_UPDATE', {
+                recordId: state.reviewRecordId || null,
+                reviewSessionId: state.reviewSessionId || null,
+                highlights: collectHighlights(),
+                notes: typeof global.getPracticeNotes === 'function' ? global.getPracticeNotes() : []
+            });
+        });
+    }
+
     // 倒计时结束：仅执行一次，提示后按「交卷」流程自动结算整套
     function handleCountdownExpiry() {
         if (state.countdownExpiryHandled || state.readOnly || state.submitted) {
@@ -4263,6 +4351,7 @@
         attachActionListeners();
         attachMessageBridge();
         attachPracticeTimerBridge();
+        attachAnnotationPersistenceBridge();
         syncSuiteModeState();
         updateNavStatuses();
         // 套题模拟模式：加载后立即据 URL 下发的 examId 序列构建三篇导航蓝图，
