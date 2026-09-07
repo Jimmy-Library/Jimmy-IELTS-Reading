@@ -73,6 +73,9 @@ const server = http.createServer((req, res) => {
         await page.locator('#submit-btn').click();
         await page.locator('.suite-result-total').waitFor();
         assert.match(await page.locator('.suite-result-total').innerText(), /40/);
+        const stoppedTimer = await page.locator('#timer').innerText();
+        await page.waitForTimeout(1200);
+        assert.equal(await page.locator('#timer').innerText(), stoppedTimer);
         await page.waitForFunction(() => JSON.parse(localStorage.getItem('ielts_offline_completion_queue_v1') || '[]').length > 0);
         assert.equal(await page.evaluate(() => localStorage.getItem('test-history-sentinel')), 'preserved');
         assert.deepEqual(errors, []);
@@ -90,9 +93,8 @@ const server = http.createServer((req, res) => {
         await home.locator('[data-daily-action=later]').last().click();
         assert.equal(await home.locator('#daily-suite-recommendation-modal').count(), 0);
         await home.evaluate(() => window.app.navigateToView('suite'));
-        await home.locator('button[data-suite-id="suite-001"]').click();
         const popupPromise = home.waitForEvent('popup');
-        await home.locator('[data-mode=free]').click();
+        await home.locator('button[data-suite-id="suite-001"]').click();
         const practice = await popupPromise;
         practice.on('pageerror', error => console.log('PRACTICE ERROR:', error.message));
         practice.on('console', msg => { if (msg.type() === 'error') console.log('PRACTICE:', msg.text()); });
@@ -120,6 +122,15 @@ const server = http.createServer((req, res) => {
         await practice.locator('#submit-btn').click();
         await practice.waitForFunction(id => new URL(location.href).searchParams.get('examId') === id, ids[2]);
         await practice.locator('#submit-btn').click();
+        await practice.locator('.suite-result-total').waitFor();
+        const mockTimerAtSubmit = await practice.locator('#timer').innerText();
+        await practice.waitForTimeout(1200);
+        assert.equal(await practice.locator('#timer').innerText(), mockTimerAtSubmit);
+        const pdfPopupPromise = practice.waitForEvent('popup');
+        await practice.locator('#export-pdf-btn').click();
+        const pdfPage = await pdfPopupPromise;
+        await pdfPage.locator('#suite-print-root').waitFor({ state: 'attached' });
+        assert.match(await pdfPage.locator('#suite-print-root').textContent(), /总用时\s+\d+\s+分\s+\d{2}\s+秒/);
         await home.waitForFunction(async () => (await window.storage.get('practice_records', [])).some(record => record.practiceMode === 'suite' || record.suiteSessionId || record.metadata?.practiceMode === 'suite'), { timeout: 20000 });
         const annotationResult = await home.evaluate(async () => {
             const records = await window.storage.get('practice_records', []);
@@ -158,7 +169,7 @@ const server = http.createServer((req, res) => {
             const entry = record && record.suiteEntries.find(item => String(item.examId) === String(examId));
             return !!(entry && Array.isArray(entry.highlights) && entry.highlights.some(item => item.groupId === 'post-submit-group'));
         }, ids[2]);
-        console.log('PASS: real homepage later button dismisses; suite launches and submits through the host with all three sections saved.');
+        console.log('PASS: mock-only catalog launch, stopped submit timer, suite PDF total duration and all three saved sections.');
         await hostContext.close();
     } finally { await browser.close(); }
 })().catch(error => { console.error(error); process.exitCode = 1; }).finally(() => server.close());

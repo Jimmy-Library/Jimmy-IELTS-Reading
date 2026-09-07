@@ -150,6 +150,15 @@
         }
     }
 
+    function escapeHtml(value) {
+        return String(value == null ? '' : value)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
     function parseQuery() {
         const params = new URLSearchParams(global.location.search);
         state.examId = decodeParam(params.get('examId')) || null;
@@ -3712,6 +3721,10 @@
         if (state.simulationMode) {
             syncSimulationDraftSnapshot('submit');
         }
+        // 在任何异步结算工作开始前固定真实作答时长，并立即停止计时。
+        const timing = resolvePracticeTiming(1);
+        freezeReviewTimer(timing.duration);
+        state.submitted = true;
         const results = buildResults();
         state.lastResults = results;
         document.body.classList.add('practice-completed-mode');
@@ -3722,6 +3735,7 @@
         if (state.simulationMode) {
             try {
                 suiteSummary = buildSuiteResultSections();
+                if (suiteSummary) suiteSummary.duration = timing.duration;
             } catch (suiteError) {
                 console.error('[UnifiedReadingPage] 构建套题结果失败:', suiteError);
             }
@@ -3736,7 +3750,6 @@
         await renderExplanations();
         updateNavStatuses(results);
         const messageType = state.simulationMode ? 'SIMULATION_SUBMIT' : 'PRACTICE_COMPLETE';
-        const timing = resolvePracticeTiming(1);
         // 套题：随交卷一并上报三篇成绩，主页面据此直接结算整套。
         // 只有本页持有各篇 answerKey，未访问过的篇章也只能由这里算出成绩。
         const suitePayload = suiteSummary
@@ -3884,9 +3897,11 @@
             : null;
         const head = document.createElement('div');
         head.className = 'suite-print__head';
+        const durationSeconds = Math.max(0, Math.round(Number(summary.duration) || 0));
+        const durationLabel = `${Math.floor(durationSeconds / 60)} 分 ${String(durationSeconds % 60).padStart(2, '0')} 秒`;
         head.innerHTML = `
             <h1>IELTS 阅读套题 · 三篇合并</h1>
-            <p>总分 ${summary.correct} / ${summary.total} · ${summary.percentage}%${bandInfo && bandInfo.bandLabel ? ' · 雅思 ' + bandInfo.bandLabel : ''}</p>
+            <p>总分 ${summary.correct} / ${summary.total} · ${summary.percentage}%${bandInfo && bandInfo.bandLabel ? ' · 雅思 ' + bandInfo.bandLabel : ''} · 总用时 ${durationLabel}</p>
         `;
         container.appendChild(head);
 
@@ -3955,9 +3970,13 @@
     }
 
     async function waitForPrintReady(root = document) {
+        const targetDocument = root && root.nodeType === Node.DOCUMENT_NODE
+            ? root
+            : ((root && root.ownerDocument) || document);
+        const targetWindow = targetDocument.defaultView || global;
         try {
-            if (document.fonts && document.fonts.ready) {
-                await document.fonts.ready;
+            if (targetDocument.fonts && targetDocument.fonts.ready) {
+                await targetDocument.fonts.ready;
             }
         } catch (_) {
             // ignore font readiness failures
@@ -3971,7 +3990,7 @@
                 global.setTimeout(resolve, 1500);
             });
         }));
-        await new Promise((resolve) => global.requestAnimationFrame(() => global.requestAnimationFrame(resolve)));
+        await new Promise((resolve) => targetWindow.requestAnimationFrame(() => targetWindow.requestAnimationFrame(resolve)));
     }
 
     async function printWhenReady(root = document) {
@@ -3999,6 +4018,13 @@
         const local = state.suiteLocalReview;
         const exportBtn = document.getElementById('export-pdf-btn');
         if (exportBtn && exportBtn.disabled) return;
+        // 同步打开打印页，保留 Safari/Chrome 的用户点击授权；随后再异步拼装三篇内容。
+        const printWindow = local ? global.open('', '_blank') : null;
+        if (printWindow) {
+            printWindow.document.open();
+            printWindow.document.write('<!doctype html><html><head><meta charset="UTF-8"><title>正在准备套题 PDF</title></head><body style="font-family:Arial,sans-serif;padding:32px">正在准备套题 PDF…</body></html>');
+            printWindow.document.close();
+        }
         let container = null;
         const originalLabel = exportBtn ? exportBtn.textContent : '';
         if (exportBtn) {
@@ -4013,7 +4039,20 @@
             }
             container = await buildSuitePrintContainer(local);
             if (!container) {
+                if (printWindow && !printWindow.closed) printWindow.close();
                 await printWhenReady(document);
+                return;
+            }
+            if (printWindow && !printWindow.closed) {
+                const styleMarkup = Array.from(document.head.querySelectorAll('link[rel~="stylesheet"], style'))
+                    .map((node) => node.outerHTML)
+                    .join('\n');
+                printWindow.document.open();
+                printWindow.document.write(`<!doctype html><html><head><meta charset="UTF-8"><base href="${escapeHtml(global.location.href)}"><title>IELTS 阅读套题 PDF</title>${styleMarkup}<style>body{height:auto!important;overflow:visible!important;background:#fff!important;padding:0 18px}#suite-print-root{display:block!important}</style></head><body class="suite-printing">${container.outerHTML}</body></html>`);
+                printWindow.document.close();
+                await waitForPrintReady(printWindow.document);
+                printWindow.focus();
+                printWindow.print();
                 return;
             }
             document.body.appendChild(container);

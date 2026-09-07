@@ -63,9 +63,9 @@
         /**
          * 启动套题目录中的固定套题（套题模式）
          * @param {string} suiteId 套题目录 ID
-         * @param {string} examMode 'free' 自由模式（正计时不限时）| 'mock' 模考模式（倒计时 60 分钟）
+         * 固定套题统一使用倒计时 60 分钟的模考模式。
          */
-        async startCatalogSuite(suiteId, examMode = 'free') {
+        async startCatalogSuite(suiteId) {
             const suiteWindowName = 'ielts-suite-mode-tab';
             const MOCK_LIMIT_SECONDS = 60 * 60;
 
@@ -109,19 +109,18 @@
                     });
                 }
 
-                const isMock = String(examMode).toLowerCase() === 'mock';
                 const started = await this._launchSuiteSessionFromSequence(sequence, {
                     // 模拟模式：三篇共用一个会话与计时，题号导航跨篇可自由切换，
                     // 最后一篇提交后汇总三篇结果（与真实机考一致）
                     flowMode: 'simulation',
                     frequencyScope: 'all',
                     suiteWindowName,
-                    launchLabel: suite.name + '·' + (isMock ? '模考模式' : '自由模式'),
-                    suiteTimerMode: isMock ? 'countdown' : 'elapsed',
-                    suiteTimerLimitSeconds: isMock ? MOCK_LIMIT_SECONDS : null,
+                    launchLabel: suite.name + '·模考模式',
+                    suiteTimerMode: 'countdown',
+                    suiteTimerLimitSeconds: MOCK_LIMIT_SECONDS,
                     catalogSuiteId: suite.id,
                     catalogSuiteName: suite.name,
-                    suiteExamMode: isMock ? 'mock' : 'free'
+                    suiteExamMode: 'mock'
                 });
 
                 if (!started && this.currentSuiteSession) {
@@ -295,6 +294,9 @@
             // 套题交卷：题目页已算出全部三篇成绩并随提交上报，
             // 此处一次性录入并直接结算，不再要求停在最后一篇、也不需要二次点击
             if (data && data.finalizeSuite === true && Array.isArray(data.suiteSections)) {
+                if (Number.isFinite(Number(data.duration))) {
+                    session.totalDurationSeconds = Math.max(0, Math.round(Number(data.duration)));
+                }
                 data.suiteSections.forEach((section) => {
                     if (!section || !section.examId) return;
                     const entry = session.sequence.find(item => item && item.examId === section.examId);
@@ -1033,14 +1035,17 @@
             if (snapshot.catalogSuiteId) {
                 session.catalogSuiteId = snapshot.catalogSuiteId;
                 session.catalogSuiteName = snapshot.catalogSuiteName || '';
-                session.suiteExamMode = snapshot.suiteExamMode || '';
+                session.suiteExamMode = 'mock';
+                session.suiteTimerMode = 'countdown';
+                session.suiteTimerLimitSeconds = 60 * 60;
+                session.suiteTimerAnchorMs = resumedAnchorMs;
             }
-            if (snapshot.suiteTimerMode) {
+            if (snapshot.suiteTimerMode && !snapshot.catalogSuiteId) {
                 session.suiteTimerMode = snapshot.suiteTimerMode;
                 // 续做沿用已前移的全局锚点，保证模考倒计时不把关页时段计入
                 session.suiteTimerAnchorMs = resumedAnchorMs;
             }
-            if (snapshot.suiteTimerLimitSeconds != null) {
+            if (snapshot.suiteTimerLimitSeconds != null && !snapshot.catalogSuiteId) {
                 session.suiteTimerLimitSeconds = snapshot.suiteTimerLimitSeconds;
             }
 
@@ -1154,12 +1159,14 @@
             if (snapshot.catalogSuiteId) {
                 launchOptions.catalogSuiteId = snapshot.catalogSuiteId;
                 launchOptions.catalogSuiteName = snapshot.catalogSuiteName || '';
-                launchOptions.suiteExamMode = snapshot.suiteExamMode || '';
+                launchOptions.suiteExamMode = 'mock';
+                launchOptions.suiteTimerMode = 'countdown';
+                launchOptions.suiteTimerLimitSeconds = 60 * 60;
             }
-            if (snapshot.suiteTimerMode) {
+            if (snapshot.suiteTimerMode && !snapshot.catalogSuiteId) {
                 launchOptions.suiteTimerMode = snapshot.suiteTimerMode;
             }
-            if (snapshot.suiteTimerLimitSeconds != null) {
+            if (snapshot.suiteTimerLimitSeconds != null && !snapshot.catalogSuiteId) {
                 launchOptions.suiteTimerLimitSeconds = snapshot.suiteTimerLimitSeconds;
             }
 
@@ -1803,7 +1810,10 @@
             const startTimestamp = session.startTime || completionTime;
             const elapsedMs = Math.max(0, completionTime - startTimestamp);
             const elapsedSeconds = Math.max(0, Math.round(elapsedMs / 1000));
-            const totalDuration = elapsedSeconds > 0 ? Math.max(summedDuration, elapsedSeconds) : summedDuration;
+            const submittedDuration = Number(session.totalDurationSeconds);
+            const totalDuration = Number.isFinite(submittedDuration)
+                ? Math.max(0, Math.round(submittedDuration))
+                : (elapsedSeconds > 0 ? Math.max(summedDuration, elapsedSeconds) : summedDuration);
             const totalCorrect = session.results.reduce((sum, entry) => sum + entry.scoreInfo.correct, 0);
             const totalQuestions = session.results.reduce((sum, entry) => sum + entry.scoreInfo.total, 0);
             const accuracy = totalQuestions > 0 ? (totalCorrect / totalQuestions) : 0;
@@ -1842,7 +1852,7 @@
             const dateLabel = this._formatSuiteDateLabel(startTime);
             const catalogName = session.catalogSuiteName || '';
             const displayTitle = catalogName
-                ? (catalogName + '·' + (session.suiteExamMode === 'mock' ? '模考' : '自由'))
+                ? (catalogName + '·模考')
                 : (dateLabel + '套题练习' + suiteSequence);
 
             // 雅思学术类阅读分数换算（40 题标准表）
@@ -2304,7 +2314,7 @@
                     windowName: suiteWindowName
                 };
 
-                // 套题模式（自由/模考）：整套共用一个计时锚点，
+                // 套题模式：整套共用一个计时锚点，
                 // _resolveSuiteTimerContext 会从 session 回退读取这两个字段
                 if (options.suiteTimerMode) {
                     session.suiteTimerMode = options.suiteTimerMode;
@@ -3206,6 +3216,3 @@
     global.ExamSystemAppMixins = global.ExamSystemAppMixins || {};
     global.ExamSystemAppMixins.suitePractice = mixin;
 })(typeof window !== 'undefined' ? window : globalThis);
-
-
-

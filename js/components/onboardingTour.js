@@ -36,7 +36,7 @@
     {
       id: 'suite-start', target: '#suite-list .suite-card__start', position: 'left', activateView: 'suite', waitForElement: true,
       title: '3　开始套题与计时方式',
-      content: '<strong>操作：</strong>点击套题卡片的“开始”，再选择自由模式或 60 分钟模考模式。<br><strong>保存：</strong>P1、P2 点击“下一题”时自动保存，不需要单独提交；刷新或退出后可从断点继续。<br><strong>完成：</strong>P3 点击 Submit 后统一结算三篇成绩、回顾并导出 PDF。',
+      content: '<strong>操作：</strong>点击套题卡片的“开始”后直接进入 60 分钟倒计时模考，倒计时可点击暂停或继续。<br><strong>保存：</strong>P1、P2 点击“下一题”时自动保存，不需要单独提交；刷新或退出后可从断点继续。<br><strong>完成：</strong>P3 点击 Submit 后停止倒计时，统一结算三篇成绩；结果页可回顾并导出含总用时的 PDF。',
       showSkip: true, showPrev: true, nextText: '了解单篇练习', lockScroll: true, lockPointer: true, disableHighlightPointer: true
     },
     {
