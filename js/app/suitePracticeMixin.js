@@ -45,6 +45,40 @@
         return true;
     }
 
+    const SUITE_LOADING_ID = 'suite-central-loading';
+
+    function showSuiteLoadingOverlay(message) {
+        if (!global.document || !global.document.body) return;
+        let overlay = global.document.getElementById(SUITE_LOADING_ID);
+        if (!overlay) {
+            const style = global.document.createElement('style');
+            style.id = SUITE_LOADING_ID + '-style';
+            style.textContent = '#suite-central-loading{position:fixed;inset:0;z-index:2147482500;display:flex;align-items:center;justify-content:center;background:rgba(15,23,42,.22);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}'
+                + '#suite-central-loading[hidden]{display:none!important}'
+                + '.suite-central-loading__card{min-width:260px;max-width:calc(100vw - 40px);padding:24px 28px;border:1px solid rgba(255,255,255,.72);border-radius:18px;background:rgba(255,255,255,.94);box-shadow:0 22px 60px rgba(15,23,42,.2);text-align:center;color:#17324d}'
+                + '.suite-central-loading__spinner{width:42px;height:42px;margin:0 auto 14px;border:4px solid #dbeafe;border-top-color:#2563eb;border-radius:50%;animation:suite-loading-spin .8s linear infinite}'
+                + '.suite-central-loading__title{font-size:17px;font-weight:750;letter-spacing:.02em}'
+                + '.suite-central-loading__hint{margin-top:7px;font-size:13px;color:#64748b}'
+                + '@keyframes suite-loading-spin{to{transform:rotate(360deg)}}'
+                + '@media(prefers-reduced-motion:reduce){.suite-central-loading__spinner{animation-duration:1.8s}}';
+            global.document.head.appendChild(style);
+            overlay = global.document.createElement('div');
+            overlay.id = SUITE_LOADING_ID;
+            overlay.setAttribute('role', 'status');
+            overlay.setAttribute('aria-live', 'polite');
+            overlay.innerHTML = '<div class="suite-central-loading__card"><div class="suite-central-loading__spinner" aria-hidden="true"></div><div class="suite-central-loading__title"></div><div class="suite-central-loading__hint">正在同时准备 P1、P2、P3，请稍候</div></div>';
+            global.document.body.appendChild(overlay);
+        }
+        const title = overlay.querySelector('.suite-central-loading__title');
+        if (title) title.textContent = message || '正在加载整套题目…';
+        overlay.hidden = false;
+    }
+
+    function hideSuiteLoadingOverlay() {
+        const overlay = global.document && global.document.getElementById(SUITE_LOADING_ID);
+        if (overlay) overlay.hidden = true;
+    }
+
     const mixin = {
         initializeSuiteMode() {
             if (this._suiteModeReady) {
@@ -996,10 +1030,12 @@
                 ? Math.min(Math.max(0, snapshot.currentIndex), normalizedSequence.length - 1)
                 : 0;
 
+            showSuiteLoadingOverlay('正在恢复整套三篇题目…');
             try {
                 window.showMessage && window.showMessage('正在准备整套三篇题目和答案…', 'info');
                 await global.SuiteResources.prepare(normalizedSequence.map(item => item.examId));
             } catch (error) {
+                hideSuiteLoadingOverlay();
                 window.showMessage && window.showMessage('三篇题目尚未准备完整，请重试。已保留续做进度。', 'error');
                 return false;
             }
@@ -1076,6 +1112,7 @@
                 examWindow = null;
             }
             if (!examWindow || examWindow.closed) {
+                hideSuiteLoadingOverlay();
                 window.showMessage && window.showMessage('无法打开套题窗口，请重试。', 'error');
                 if (this.currentSuiteSession === session) {
                     this.currentSuiteSession = null;
@@ -1091,6 +1128,7 @@
             if (typeof this._focusSuiteWindow === 'function') {
                 this._focusSuiteWindow(session.windowRef);
             }
+            hideSuiteLoadingOverlay();
             return true;
         },
 
@@ -2288,6 +2326,7 @@
 
                 this._clearSuiteHandshakes();
 
+                showSuiteLoadingOverlay('正在加载整套三篇题目…');
                 window.showMessage && window.showMessage('正在准备整套三篇题目和答案…', 'info');
                 await global.SuiteResources.prepare(normalizedSequence.map(item => item.examId));
 
@@ -2375,6 +2414,8 @@
                     await this._abortSuiteSession(this.currentSuiteSession, { reason: 'startup_failed' });
                 }
                 return false;
+            } finally {
+                hideSuiteLoadingOverlay();
             }
         },
         _generateSuiteSessionId() {

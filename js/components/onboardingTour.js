@@ -54,13 +54,13 @@
     {
       id: 'practice-history', target: '#history-list', position: 'top', activateView: 'practice', waitForElement: true,
       title: '6　练习记录与继续做题',
-      content: '<strong>入口：</strong>顶部导航“练习记录”。<br><strong>查看：</strong>点击一条记录可查看用时、正确率、逐题答案、原文标记和回顾内容。<br><strong>继续：</strong>未完成的单篇或套题可从记录中接着做。',
+      content: '<strong>入口：</strong>顶部导航“练习记录”。<br><strong>已完成：</strong>点击单篇或套题记录会直接打开提交后的回顾页面，保留答案、正确结果、高亮和 Note。<br><strong>未完成：</strong>单篇或套题可从记录中接着做。',
       showSkip: true, showPrev: true, nextText: '学习导出 PDF', lockScroll: true, lockPointer: true, disableHighlightPointer: true
     },
     {
       id: 'practice-pdf', target: '#export-practice-pdf-btn', position: 'bottom', activateView: 'practice', waitForElement: true,
       title: '7　导出练习记录 PDF',
-      content: '<strong>操作：</strong>在练习记录页点击“导出 PDF”，勾选要导出的记录后确认。<br><strong>内容：</strong>PDF 包含成绩、答案、回顾信息和已保存标记。<br><strong>另一入口：</strong>单篇做题页底部也可直接导出当前练习。',
+      content: '<strong>操作：</strong>在练习记录页点击“导出 PDF”，勾选要导出的记录后确认。<br><strong>内容：</strong>PDF 包含成绩、答案、回顾信息、高亮和 Note 标记；Safari 中会先打开独立打印页，再选择“存储为 PDF”。<br><strong>另一入口：</strong>单篇或套题提交后的页面底部也可直接导出当前练习。',
       showSkip: true, showPrev: true, nextText: '认识单词本', lockScroll: true, lockPointer: true, disableHighlightPointer: true
     },
     {

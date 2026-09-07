@@ -621,6 +621,29 @@ class PdfExporter {
     table.answers tr.bad td { background: #fdf2ef; }
     table.answers tr.marked td { box-shadow: inset 0 2px 0 #f59e0b, inset 0 -2px 0 #f59e0b; }
     .mark-star { color: #d97706; font-weight: 800; }
+    .annotations {
+        margin-top: 10px;
+        padding: 9px 12px;
+        border: 1px solid #f0c36d;
+        border-left: 4px solid #d97706;
+        border-radius: 3px;
+        background: #fffaf0;
+        break-inside: avoid;
+        page-break-inside: avoid;
+    }
+    .annotations h5 { margin: 4px 0 5px; color: #7c2d12; font-size: 10.5pt; }
+    .annotations ul { margin: 0 0 5px; padding-left: 20px; }
+    .annotations li { margin: 4px 0; line-height: 1.5; }
+    .note-badge {
+        display: inline-block;
+        margin-right: 6px;
+        padding: 1px 6px;
+        border-radius: 3px;
+        background: #d97706;
+        color: #ffffff;
+        font-size: 8.5pt;
+        font-weight: 700;
+    }
     .no-detail {
         margin: 0;
         padding: 8px 12px;
@@ -866,10 +889,14 @@ class PdfExporter {
         });
         const highlightItems = Array.from(groups.values()).map((parts) => parts.join(' ').replace(/\s+/g, ' ').trim()).filter(Boolean)
             .map((text) => `<li><mark>${this.escapeHtml(text)}</mark></li>`).join('');
-        const noteItems = notes.map((note) => `<li><strong>${this.escapeHtml(note.text || '未命名笔记')}</strong>${note.comment ? `<div>${this.escapeHtml(note.comment)}</div>` : ''}</li>`).join('');
+        const noteItems = notes.map((note) => `<li><span class="note-badge">NOTE</span><strong>${this.escapeHtml(note.text || '未命名笔记')}</strong>${note.comment ? `<div>${this.escapeHtml(note.comment)}</div>` : ''}</li>`).join('')
+            + highlights
+                .filter((item) => item && (item.kind === 'note' || item.noteId) && (!item.noteId || !noteIds.has(String(item.noteId))))
+                .map((item) => `<li><span class="note-badge">NOTE</span><strong>${this.escapeHtml(item.text || '未命名笔记')}</strong></li>`)
+                .join('');
         return `<section class="annotations">
             ${highlightItems ? `<h5>高亮记录</h5><ul>${highlightItems}</ul>` : ''}
-            ${noteItems ? `<h5>Notes</h5><ul>${noteItems}</ul>` : ''}
+            ${noteItems ? `<h5>Note 标记</h5><ul>${noteItems}</ul>` : ''}
         </section>`;
     }
 

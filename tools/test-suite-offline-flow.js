@@ -93,8 +93,16 @@ const server = http.createServer((req, res) => {
         await home.locator('[data-daily-action=later]').last().click();
         assert.equal(await home.locator('#daily-suite-recommendation-modal').count(), 0);
         await home.evaluate(() => window.app.navigateToView('suite'));
+        await home.evaluate(() => {
+            const originalPrepare = window.SuiteResources.prepare.bind(window.SuiteResources);
+            window.SuiteResources.prepare = async (...args) => {
+                await new Promise(resolve => setTimeout(resolve, 250));
+                return originalPrepare(...args);
+            };
+        });
         const popupPromise = home.waitForEvent('popup');
         await home.locator('button[data-suite-id="suite-001"]').click();
+        await home.locator('#suite-central-loading').waitFor({ state: 'visible' });
         const practice = await popupPromise;
         practice.on('pageerror', error => console.log('PRACTICE ERROR:', error.message));
         practice.on('console', msg => { if (msg.type() === 'error') console.log('PRACTICE:', msg.text()); });
@@ -130,7 +138,10 @@ const server = http.createServer((req, res) => {
         await practice.locator('#export-pdf-btn').click();
         const pdfPage = await pdfPopupPromise;
         await pdfPage.locator('#suite-print-root').waitFor({ state: 'attached' });
-        assert.match(await pdfPage.locator('#suite-print-root').textContent(), /总用时\s+\d+\s+分\s+\d{2}\s+秒/);
+        const suitePdfText = await pdfPage.locator('#suite-print-root').textContent();
+        assert.match(suitePdfText, /总用时\s+\d+\s+分\s+\d{2}\s+秒/);
+        assert.match(suitePdfText, /Note 标记/);
+        assert.match(suitePdfText, /套题导出 Note/);
         await home.waitForFunction(async () => (await window.storage.get('practice_records', [])).some(record => record.practiceMode === 'suite' || record.suiteSessionId || record.metadata?.practiceMode === 'suite'), { timeout: 20000 });
         const annotationResult = await home.evaluate(async () => {
             const records = await window.storage.get('practice_records', []);
@@ -142,13 +153,15 @@ const server = http.createServer((req, res) => {
                 sections: record && record.suiteEntries ? record.suiteEntries.length : 0,
                 highlights: first && Array.isArray(first.highlights) ? first.highlights.length : 0,
                 note: first && Array.isArray(first.notes) ? first.notes[0] : null,
-                pdfHasNote: html.includes('套题导出 Note')
+                pdfHasNote: html.includes('套题导出 Note'),
+                pdfHasNoteMarker: html.includes('Note 标记')
             };
         });
         assert.equal(annotationResult.sections, 3);
         assert.ok(annotationResult.highlights >= 1);
         assert.equal(annotationResult.note && annotationResult.note.comment, '套题导出 Note');
         assert.equal(annotationResult.pdfHasNote, true);
+        assert.equal(annotationResult.pdfHasNoteMarker, true);
         await practice.evaluate(() => {
             const root = document.querySelector('#left p');
             const node = root && Array.from(root.childNodes).find(item => item.nodeType === Node.TEXT_NODE && (item.textContent || '').trim().length > 8);
@@ -169,6 +182,42 @@ const server = http.createServer((req, res) => {
             const entry = record && record.suiteEntries.find(item => String(item.examId) === String(examId));
             return !!(entry && Array.isArray(entry.highlights) && entry.highlights.some(item => item.groupId === 'post-submit-group'));
         }, ids[2]);
+        await pdfPage.close();
+        await practice.close();
+        await home.evaluate(() => window.app.navigateToView('practice'));
+        const completedSuiteCard = home.locator('.history-record-item[data-record-id]').first();
+        await completedSuiteCard.waitFor({ state: 'visible' });
+        const reviewPopupPromise = home.waitForEvent('popup');
+        await completedSuiteCard.locator('.practice-record-title').click();
+        const reviewPage = await reviewPopupPromise;
+        await reviewPage.waitForFunction(() => new URL(location.href).searchParams.get('review') === '1');
+        await reviewPage.waitForFunction(() => document.body.classList.contains('review-readonly-mode'));
+        const singlePage = await hostContext.newPage();
+        await singlePage.goto(origin + '/assets/generated/reading-exams/reading-practice-unified.html?examId=' + ids[0]);
+        await singlePage.locator('#left p').first().waitFor();
+        await singlePage.evaluate(() => {
+            const paragraph = document.querySelector('#left p');
+            const textNode = paragraph && Array.from(paragraph.childNodes).find(node => node.nodeType === Node.TEXT_NODE && (node.textContent || '').trim().length > 10);
+            if (!textNode) throw new Error('missing single note text');
+            const range = document.createRange();
+            range.setStart(textNode, 0);
+            range.setEnd(textNode, Math.min(8, textNode.textContent.length));
+            const span = document.createElement('span');
+            span.className = 'hl';
+            span.dataset.hlType = 'note';
+            span.dataset.noteId = 'single-note';
+            range.surroundContents(span);
+            window.setPracticeNotes([{ id: 'single-note', text: span.textContent, comment: '单篇 PDF Note' }]);
+        });
+        await singlePage.locator('#submit-btn').click();
+        await singlePage.waitForFunction(() => document.body.classList.contains('single-submitted-mode'));
+        await singlePage.evaluate(() => {
+            window.print = () => {
+                window.__SINGLE_PDF_NOTE_TEXT__ = document.querySelector('.practice-print-annotations')?.textContent || '';
+            };
+        });
+        await singlePage.locator('#export-pdf-btn').click();
+        await singlePage.waitForFunction(() => /单篇 PDF Note/.test(window.__SINGLE_PDF_NOTE_TEXT__ || ''));
         console.log('PASS: mock-only catalog launch, stopped submit timer, suite PDF total duration and all three saved sections.');
         await hostContext.close();
     } finally { await browser.close(); }

@@ -3939,9 +3939,14 @@
                 .filter(Boolean)
                 .map((text) => `<li><mark>${escapeHtml(text)}</mark></li>`)
                 .join('');
-            const noteDetails = (section?.notes || []).map((note) => `
-                <li><strong>${escapeHtml(note.text || '未命名笔记')}</strong>${note.comment ? ` — ${escapeHtml(note.comment)}` : ''}</li>
-            `).join('');
+            const sectionNotes = Array.isArray(section?.notes) ? section.notes : [];
+            const linkedNoteIds = new Set(sectionNotes.map((note) => String(note?.id || '')).filter(Boolean));
+            const noteDetails = sectionNotes.map((note) => `
+                <li><span class="practice-print-note-badge">NOTE</span><strong>${escapeHtml(note.text || '未命名笔记')}</strong>${note.comment ? ` — ${escapeHtml(note.comment)}` : ''}</li>
+            `).join('') + (section?.highlights || [])
+                .filter((item) => item && (item.kind === 'note' || item.noteId) && (!item.noteId || !linkedNoteIds.has(String(item.noteId))))
+                .map((item) => `<li><span class="practice-print-note-badge">NOTE</span><strong>${escapeHtml(item.text || '未命名笔记')}</strong></li>`)
+                .join('');
             const block = document.createElement('section');
             block.className = 'suite-print__passage';
             block.innerHTML = `
@@ -3957,7 +3962,7 @@
                     <h3 class="suite-print__ak-title">参考答案 Answer Key</h3>
                     ${section.markedQuestions?.length ? `<p>★ 标记题：${section.markedQuestions.join(', ')}</p>` : ''}
                     ${section.highlights?.length ? `<p>高亮标注：${section.highlights.length} 处</p>` : ''}
-                    ${(highlightDetails || noteDetails) ? `<div class="suite-print__annotations">${highlightDetails ? `<h4>高亮记录</h4><ul>${highlightDetails}</ul>` : ''}${noteDetails ? `<h4>Notes</h4><ul>${noteDetails}</ul>` : ''}</div>` : ''}
+                    ${(highlightDetails || noteDetails) ? `<div class="suite-print__annotations">${highlightDetails ? `<h4>高亮记录</h4><ul>${highlightDetails}</ul>` : ''}${noteDetails ? `<h4>Note 标记</h4><ul>${noteDetails}</ul>` : ''}</div>` : ''}
                     <table class="results-table suite-print__answers">
                         <thead><tr><th>题号</th><th>你的答案</th><th>正确答案</th><th>结果</th></tr></thead>
                         <tbody>${suiteResultRowsHtml(section.rows, section.markedQuestions)}</tbody>
@@ -3966,6 +3971,26 @@
             `;
             container.appendChild(block);
         }
+        return container;
+    }
+
+    function buildCurrentPrintAnnotations() {
+        const notes = typeof global.getPracticeNotes === 'function' ? global.getPracticeNotes() : [];
+        const noteHighlights = collectHighlights().filter((item) => item && (item.kind === 'note' || item.noteId));
+        if (!notes.length && !noteHighlights.length) return null;
+
+        const linkedIds = new Set(notes.map((note) => String(note?.id || '')).filter(Boolean));
+        const noteItems = notes.map((note) => `
+            <li><span class="practice-print-note-badge">NOTE</span><strong>${escapeHtml(note.text || '未命名笔记')}</strong>${note.comment ? ` — ${escapeHtml(note.comment)}` : ''}</li>
+        `).join('') + noteHighlights
+            .filter((item) => !item.noteId || !linkedIds.has(String(item.noteId)))
+            .map((item) => `<li><span class="practice-print-note-badge">NOTE</span><strong>${escapeHtml(item.text || '未命名笔记')}</strong></li>`)
+            .join('');
+
+        const container = document.createElement('section');
+        container.className = 'practice-print-annotations';
+        container.setAttribute('aria-label', 'Note 标记');
+        container.innerHTML = `<h3>Note 标记</h3><ul>${noteItems}</ul>`;
         return container;
     }
 
@@ -4034,7 +4059,19 @@
         try {
             // 单篇：直接打印整页（文章 + 题目 + 作答 + 高亮 + 练习详情）
             if (!local) {
-                await printWhenReady(document);
+                const annotations = buildCurrentPrintAnnotations();
+                if (annotations) document.body.appendChild(annotations);
+                let cleaned = false;
+                const cleanup = () => {
+                    if (cleaned) return;
+                    cleaned = true;
+                    global.removeEventListener('afterprint', cleanup);
+                    if (annotations && annotations.parentNode) annotations.parentNode.removeChild(annotations);
+                };
+                global.addEventListener('afterprint', cleanup, { once: true });
+                // 保持在原始点击调用栈中触发，避免 Safari 把打印视为异步弹窗而拦截。
+                global.print();
+                global.setTimeout(cleanup, 5000);
                 return;
             }
             container = await buildSuitePrintContainer(local);
@@ -4048,7 +4085,7 @@
                     .map((node) => node.outerHTML)
                     .join('\n');
                 printWindow.document.open();
-                printWindow.document.write(`<!doctype html><html><head><meta charset="UTF-8"><base href="${escapeHtml(global.location.href)}"><title>IELTS 阅读套题 PDF</title>${styleMarkup}<style>body{height:auto!important;overflow:visible!important;background:#fff!important;padding:0 18px}#suite-print-root{display:block!important}</style></head><body class="suite-printing">${container.outerHTML}</body></html>`);
+                printWindow.document.write(`<!doctype html><html><head><meta charset="UTF-8"><base href="${escapeHtml(global.location.href)}"><title>IELTS 阅读套题 PDF</title>${styleMarkup}<style>body{height:auto!important;overflow:visible!important;background:#fff!important;padding:0 18px}#suite-print-root{display:block!important}.suite-print-toolbar{position:sticky;top:0;z-index:10;display:flex;justify-content:flex-end;gap:8px;padding:10px;background:rgba(255,255,255,.94);border-bottom:1px solid #dbe3e8}.suite-print-toolbar button{padding:8px 14px;border:1px solid #1f7a4d;border-radius:6px;background:#1f7a4d;color:#fff;font-weight:700;cursor:pointer}.suite-print-toolbar button:first-child{background:#fff;color:#1f7a4d}@media print{.suite-print-toolbar{display:none!important}}</style></head><body class="suite-printing"><div class="suite-print-toolbar"><button type="button" onclick="window.close()">关闭</button><button type="button" onclick="window.print()">打印 / 另存为 PDF</button></div>${container.outerHTML}</body></html>`);
                 printWindow.document.close();
                 await waitForPrintReady(printWindow.document);
                 printWindow.focus();

@@ -337,7 +337,27 @@ class PracticeHistoryEnhancer {
             }
         }
 
-        // 2) 兼容 legacy window.practiceRecords（只读兜底）
+        // 2) 直接读取统一记录仓库，避免视图缓存尚未刷新时点开记录却找不到数据。
+        if (window.PracticeCore?.store && typeof window.PracticeCore.store.listPracticeRecords === 'function') {
+            try {
+                const records = await window.PracticeCore.store.listPracticeRecords();
+                const hit = (Array.isArray(records) ? records : []).find(r => toIdStr(r.id) === targetIdStr || toIdStr(r.sessionId) === targetIdStr);
+                if (hit) return hit;
+            } catch (err) {
+                console.warn('[PracticeHistoryEnhancer] 从统一记录仓库获取记录失败，继续降级:', err);
+            }
+        }
+        if (window.storage && typeof window.storage.get === 'function') {
+            try {
+                const records = await window.storage.get('practice_records', []);
+                const hit = (Array.isArray(records) ? records : []).find(r => toIdStr(r.id) === targetIdStr || toIdStr(r.sessionId) === targetIdStr);
+                if (hit) return hit;
+            } catch (err) {
+                console.warn('[PracticeHistoryEnhancer] 从本地记录缓存获取记录失败，继续降级:', err);
+            }
+        }
+
+        // 3) 兼容 legacy window.practiceRecords（只读兜底）
         if (Array.isArray(window.practiceRecords)) {
             const hit = window.practiceRecords.find(r => toIdStr(r.id) === targetIdStr || toIdStr(r.sessionId) === targetIdStr);
             if (hit) return hit;
@@ -347,8 +367,9 @@ class PracticeHistoryEnhancer {
     }
 
     /**
-      * 显示记录详情
-      */
+     * 打开已完成记录时直接进入提交后的回顾页面。
+     * 单篇与套题共用 openPracticeRecordReplay，套题会按 P1/P2/P3 原顺序回放。
+     */
     async showRecordDetails(recordId) {
         try {
             // 尝试从不同的数据源获取记录
@@ -358,12 +379,16 @@ class PracticeHistoryEnhancer {
                 throw new Error('记录不存在');
             }
             
-            // 使用练习记录弹窗组件显示详情
+            if (window.app && typeof window.app.openPracticeRecordReplay === 'function') {
+                await window.app.openPracticeRecordReplay(record);
+                return;
+            }
+            // 旧环境保留详情弹窗兜底，避免模块尚未加载时完全无法查看记录。
             if (window.practiceRecordModal) {
                 window.practiceRecordModal.show(record);
-            } else {
-                throw new Error('PracticeRecordModal 组件未加载');
+                return;
             }
+            throw new Error('回顾功能模块未加载');
             
         } catch (error) {
             console.error('显示记录详情失败:', error);
