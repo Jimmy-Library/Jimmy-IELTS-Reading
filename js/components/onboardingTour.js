@@ -18,7 +18,7 @@
     {
       id: 'welcome', target: null, position: 'center', activateView: 'overview',
       title: '👋 欢迎来到 Jimmy 的阅读题库',
-      content: '向导会在真实页面中带你认识完整流程，但不会自动开始考试或修改答案。你可以点击“开始向导”逐步查看，也可以点击“暂时跳过”；以后随时可从网页抬头下方重新打开。',
+      content: '向导会在真实页面中依次介绍套题、单篇练习、记录与导出、单词本、数据备份和个性化设置。它不会自动开始考试或修改答案；你可以随时退出，以后也能从网页抬头下方重新打开。',
       showSkip: true, showPrev: false, nextText: '开始向导'
     },
     {
@@ -28,7 +28,7 @@
       showSkip: true, showPrev: true, nextText: '了解固定套题', lockScroll: true, lockPointer: true, disableHighlightPointer: true
     },
     {
-      id: 'suite-catalog', target: '#suite-list', position: 'top', activateView: 'suite', waitForElement: true,
+      id: 'suite-catalog', target: '#suite-list .suite-card', position: 'top', activateView: 'suite', waitForElement: true,
       title: '2　套题模式：每日推荐与固定套题',
       content: '<strong>每日推荐：</strong>页面最上方会根据高频题和练习记录，优先组合一套未做过的 P1、P2、P3；同一天的推荐保持不变。<br><strong>固定套题：</strong>下方每张卡片列出三篇文章、总题数和最好成绩。<br><strong>断点续做：</strong>有未完成记录时，可选择“继续做题”“重新做题”或“删除记录”。',
       showSkip: true, showPrev: true, nextText: '查看开始方式', lockScroll: true, lockPointer: true, disableHighlightPointer: true
@@ -46,7 +46,7 @@
       showSkip: true, showPrev: true, nextText: '查看题目卡片', lockScroll: true, lockPointer: true, disableHighlightPointer: true
     },
     {
-      id: 'single-practice-card', target: '#exam-list-container', position: 'top', activateView: 'browse', waitForElement: true,
+      id: 'single-practice-card', target: '#exam-list-container .exam-item', position: 'top', activateView: 'browse', waitForElement: true,
       title: '5　打开文章并完成单篇练习',
       content: '<strong>操作：</strong>在文章卡片点击“开始练习”。<br><strong>做题：</strong>可计时、标记题号、高亮原文和添加笔记；Reset 清空重做，Submit 提交。<br><strong>提交后：</strong>可继续回顾解析、高亮内容，并从底部导出本次 PDF。',
       showSkip: true, showPrev: true, nextText: '查看练习记录', lockScroll: true, lockPointer: true, disableHighlightPointer: true
@@ -118,6 +118,30 @@
       showSkip: false, showPrev: true, nextText: '开始练习'
     }
   ];
+
+  const STEP_PRESENTATION = {
+    welcome: { phase: '快速总览' },
+    'custom-suite-builder': { phase: '套题练习', focus: '首页 ＞ 开启套题模式' },
+    'suite-catalog': { phase: '套题练习', focus: '套题模式 ＞ 固定套题卡片' },
+    'suite-start': { phase: '套题练习', focus: '套题卡片 ＞ 开始按钮' },
+    'single-practice-search': { phase: '单篇练习', focus: '题库浏览 ＞ 搜索与筛选栏' },
+    'single-practice-card': { phase: '单篇练习', focus: '题库浏览 ＞ 单篇文章卡片' },
+    'practice-history': { phase: '记录与导出', focus: '练习记录 ＞ 记录列表' },
+    'practice-pdf': { phase: '记录与导出', focus: '练习记录 ＞ 导出 PDF' },
+    'vocabulary-entry': { phase: '词汇学习', focus: '顶部导航 ＞ 单词本' },
+    'vocabulary-workbench': { phase: '词汇学习', focus: '单词本 ＞ 搜索、编辑与导出工具栏' },
+    'data-backup': { phase: '数据安全', focus: '设置 ＞ 数据管理' },
+    'skin-handle': { phase: '个性化设置', focus: '页面左下角 ＞ 调色板按钮' },
+    'skin-gallery': { phase: '个性化设置', focus: '皮肤工作台 ＞ 图片皮肤卡片' },
+    'custom-skin': { phase: '个性化设置', focus: '皮肤工作台 ＞ 自定义皮肤' },
+    'pointer-style': { phase: '个性化设置', focus: '皮肤工作台 ＞ 鼠标图标' },
+    'pointer-trail': { phase: '个性化设置', focus: '皮肤工作台 ＞ 轨迹动画' },
+    completion: { phase: '完成' }
+  };
+
+  function getStepPresentation(step) {
+    return STEP_PRESENTATION[step && step.id] || { phase: '使用向导' };
+  }
 
   // 状态管理器
   class TourStateManager {
@@ -352,18 +376,25 @@
     renderTooltipContent(step, current, total, options = {}) {
       if (!this._tooltip) return;
 
-      const progressPercent = ((current + 1) / total) * 100;
+      const guidedTotal = Math.max(1, total - 2);
+      const isCompletion = current >= total - 1;
+      const progressPercent = isCompletion ? 100 : Math.max(0, Math.min(100, (current / guidedTotal) * 100));
+      const progressLabel = isCompletion ? `已完成 ${guidedTotal} 个功能步骤` : `第 ${Math.max(1, current)} 步 · 共 ${guidedTotal} 步`;
+      const presentation = getStepPresentation(step);
 
       this._tooltip.innerHTML = `
         <div class="onboarding-tooltip__progress">
+          <span class="onboarding-tooltip__phase">${presentation.phase}</span>
           <div class="onboarding-tooltip__progress-bar">
             <div class="onboarding-tooltip__progress-fill" style="width: ${progressPercent}%"></div>
           </div>
-          <span class="onboarding-tooltip__progress-text">${current + 1} / ${total}</span>
+          <span class="onboarding-tooltip__progress-text">${progressLabel}</span>
           ${options.mandatory ? '<span class="onboarding-tooltip__required">首次必读</span>' : ''}
         </div>
         <h3 class="onboarding-tooltip__title">${step.title}</h3>
-        <p class="onboarding-tooltip__content">${step.content}</p>
+        ${presentation.focus ? `<div class="onboarding-tooltip__focus"><span>当前定位</span><strong>${presentation.focus}</strong></div>` : ''}
+        <div class="onboarding-tooltip__content">${step.content}</div>
+        <div class="onboarding-tooltip__shortcut" aria-label="键盘快捷键">键盘：← 上一步　→ 下一步　Esc 退出</div>
         <div class="onboarding-tooltip__actions">
           ${step.showPrev ? '<button class="onboarding-tooltip__btn onboarding-tooltip__btn--secondary" data-action="prev">上一步</button>' : '<div></div>'}
           <div>
@@ -385,7 +416,10 @@
         <div class="onboarding-welcome">
           <div class="onboarding-welcome__icon">🎓</div>
           <h3 class="onboarding-tooltip__title">${step.title}</h3>
-          <p class="onboarding-tooltip__content">${step.content}</p>
+          <div class="onboarding-tooltip__content">${step.content}</div>
+          <div class="onboarding-welcome__roadmap" aria-label="向导内容路线">
+            <span>套题练习</span><b>→</b><span>单篇练习</span><b>→</b><span>记录导出</span><b>→</b><span>单词本</span><b>→</b><span>个性化</span>
+          </div>
           <div class="onboarding-tooltip__actions onboarding-welcome__actions" style="margin-top: 16px;">
             ${step.showSkip ? '<button class="onboarding-tooltip__btn onboarding-tooltip__btn--skip" data-action="skip">暂时跳过</button>' : '<div></div>'}
             <button class="onboarding-tooltip__btn onboarding-tooltip__btn--primary" data-action="next">${step.nextText}</button>

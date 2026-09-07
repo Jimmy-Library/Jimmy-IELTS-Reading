@@ -1768,6 +1768,76 @@
             interval: null,
             active: false
         };
+        const dragWheelState = {
+            clientX: null,
+            clientY: null
+        };
+
+        function rememberDragPointer(event) {
+            if (!event) return;
+            if (Number.isFinite(event.clientX)) dragWheelState.clientX = event.clientX;
+            if (Number.isFinite(event.clientY)) dragWheelState.clientY = event.clientY;
+        }
+
+        function resetDragPointer() {
+            dragWheelState.clientX = null;
+            dragWheelState.clientY = null;
+        }
+
+        function normalizeWheelDelta(value, deltaMode, viewportSize) {
+            const amount = Number(value) || 0;
+            if (deltaMode === 1) return amount * 16;
+            if (deltaMode === 2) return amount * Math.max(1, viewportSize || window.innerHeight);
+            return amount;
+        }
+
+        function canScrollInDirection(element, deltaX, deltaY) {
+            if (!element) return false;
+            const canMoveY = deltaY < 0
+                ? element.scrollTop > 0
+                : deltaY > 0 && element.scrollTop + element.clientHeight < element.scrollHeight - 1;
+            const canMoveX = deltaX < 0
+                ? element.scrollLeft > 0
+                : deltaX > 0 && element.scrollLeft + element.clientWidth < element.scrollWidth - 1;
+            return canMoveY || canMoveX;
+        }
+
+        function findWheelScrollContainer(startElement, deltaX, deltaY) {
+            let element = startElement instanceof Element ? startElement : null;
+            while (element && element !== document.body && element !== document.documentElement) {
+                const style = window.getComputedStyle(element);
+                const canOverflowY = /^(auto|scroll|overlay)$/.test(style.overflowY);
+                const canOverflowX = /^(auto|scroll|overlay)$/.test(style.overflowX);
+                const scrollDeltaX = canOverflowX ? deltaX : 0;
+                const scrollDeltaY = canOverflowY ? deltaY : 0;
+                if (canScrollInDirection(element, scrollDeltaX, scrollDeltaY)) {
+                    return element;
+                }
+                element = element.parentElement;
+            }
+            const pageScroller = document.scrollingElement || document.documentElement;
+            return canScrollInDirection(pageScroller, deltaX, deltaY) ? pageScroller : null;
+        }
+
+        function handleWheelDuringDrag(event) {
+            if (!dragState.item) return;
+
+            rememberDragPointer(event);
+            const deltaX = normalizeWheelDelta(event.deltaX, event.deltaMode, window.innerWidth);
+            const deltaY = normalizeWheelDelta(event.deltaY, event.deltaMode, window.innerHeight);
+            if (!deltaX && !deltaY) return;
+
+            const pointerTarget = Number.isFinite(dragWheelState.clientX) && Number.isFinite(dragWheelState.clientY)
+                ? document.elementFromPoint(dragWheelState.clientX, dragWheelState.clientY)
+                : null;
+            const scrollContainer = findWheelScrollContainer(pointerTarget || event.target, deltaX, deltaY);
+            if (!scrollContainer) return;
+
+            stopAutoScroll();
+            scrollContainer.scrollLeft += deltaX;
+            scrollContainer.scrollTop += deltaY;
+            event.preventDefault();
+        }
 
         function stopAutoScroll() {
             if (autoScrollState.interval) {
@@ -1855,6 +1925,7 @@
             dragState.sourceContainer = null;
             dragState.sourcePool = null;
             dragState.sourceAllowsReuse = false;
+            resetDragPointer();
         }
 
         function handleDragStart(event) {
@@ -1865,6 +1936,7 @@
             dragState.sourceContainer = target.parentElement;
             dragState.sourcePool = sourcePool || getOriginPool(target);
             dragState.sourceAllowsReuse = !!(sourcePool && detectPoolReuse(sourcePool));
+            rememberDragPointer(event);
             event.dataTransfer.effectAllowed = 'move';
             event.dataTransfer.setData(
                 'text/plain',
@@ -1953,6 +2025,7 @@
         }
 
         function handleDragOver(event) {
+            if (dragState.item) rememberDragPointer(event);
             const container = resolveDropContainer(event.target);
             if (!container) return;
             event.preventDefault();
@@ -1992,6 +2065,7 @@
         document.addEventListener('dragover', handleDragOver);
         document.addEventListener('dragleave', handleDragLeave);
         document.addEventListener('drop', handleDrop);
+        document.addEventListener('wheel', handleWheelDuringDrag, { capture: true, passive: false });
 
         function applyClickAssign(targetContainer) {
             if (!clickSelectedItem || !targetContainer) return;

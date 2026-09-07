@@ -118,6 +118,61 @@
   white-space: nowrap;
 }
 
+.onboarding-tooltip__phase {
+  flex: 0 0 auto;
+  padding: 4px 9px;
+  border-radius: 999px;
+  color: var(--onboarding-title-color);
+  background: color-mix(in srgb, var(--skin-accent, #1f7a4d) 13%, #fff);
+  border: 1px solid color-mix(in srgb, var(--skin-accent, #1f7a4d) 24%, #fff);
+  font-size: 0.72rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.onboarding-tooltip__focus {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 9px;
+  margin: -2px 0 13px;
+  padding: 9px 11px;
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--skin-accent, #1f7a4d) 8%, #fff);
+  border-left: 3px solid var(--skin-accent, #1f7a4d);
+  color: var(--onboarding-title-color);
+  font-size: 0.82rem;
+}
+
+.onboarding-tooltip__focus span {
+  color: var(--onboarding-content-color);
+  font-size: 0.72rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.onboarding-tooltip__focus strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.onboarding-tooltip__content strong {
+  color: var(--onboarding-title-color);
+}
+
+.onboarding-tooltip__content br {
+  display: block;
+  content: '';
+  margin-top: 7px;
+}
+
+.onboarding-tooltip__shortcut {
+  margin: -8px 0 14px;
+  color: color-mix(in srgb, var(--onboarding-content-color) 72%, #fff);
+  font-size: 0.72rem;
+  text-align: right;
+}
+
 /* 按钮组 */
 .onboarding-tooltip__actions {
   display: flex;
@@ -206,6 +261,29 @@
   margin-bottom: 16px;
 }
 
+.onboarding-welcome__roadmap {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  margin: 14px auto 4px;
+  color: var(--onboarding-content-color);
+  font-size: 0.78rem;
+}
+
+.onboarding-welcome__roadmap span {
+  padding: 5px 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--skin-accent, #1f7a4d) 10%, #fff);
+  border: 1px solid color-mix(in srgb, var(--skin-accent, #1f7a4d) 20%, #fff);
+  font-weight: 700;
+}
+
+.onboarding-welcome__roadmap b {
+  color: var(--skin-accent, #1f7a4d);
+}
+
 /* 响应式适配 */
 @media (max-width: 768px) {
   .onboarding-tooltip {
@@ -224,6 +302,24 @@
 
   .onboarding-tooltip__actions {
     flex-direction: column;
+  }
+
+  .onboarding-tooltip__progress {
+    flex-wrap: wrap;
+  }
+
+  .onboarding-tooltip__progress-bar {
+    order: 3;
+    flex-basis: 100%;
+  }
+
+  .onboarding-tooltip__focus {
+    grid-template-columns: 1fr;
+    gap: 2px;
+  }
+
+  .onboarding-tooltip__shortcut {
+    display: none;
   }
 
   .onboarding-tooltip__btn {
