@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const http = require('http');
 const assert = require('assert/strict');
-const { chromium, webkit } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
+const { chromium, firefox, webkit } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
 
 const root = path.resolve(__dirname, '..');
 const ids = ['p1-low-111', 'p2-low-147', 'p3-high-181'];
@@ -114,5 +114,6 @@ let origin;
     await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
     origin = 'http://127.0.0.1:' + server.address().port;
     await runIn('chromium', chromium, { channel: 'msedge' });
+    await runIn('firefox', firefox);
     await runIn('webkit', webkit);
 })().catch((error) => { console.error(error); process.exitCode = 1; }).finally(() => server.close());
