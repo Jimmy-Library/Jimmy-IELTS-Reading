@@ -3944,15 +3944,21 @@
      * 套题：把三篇（文章 + 题目 + 该篇答案对照）拼成一份打印内容。
      * 不直接打印页面，因为页面同一时刻只渲染一篇。
      */
-    function applyPrintAnnotations(root, highlights, notes) {
+    function applyPrintAnnotations(root, highlights, notes, scope = 'left') {
         if (!root) return;
         const noteList = Array.isArray(notes) ? notes.filter(Boolean) : [];
         const noteMap = new Map(noteList.map((note) => [String(note.id || ''), note]));
         const records = (Array.isArray(highlights) ? highlights : [])
-            .filter((item) => item && (!item.scope || item.scope === 'left'))
+            .filter((item) => item && (
+                scope === 'left'
+                    ? (!item.scope || item.scope === 'left')
+                    : item.scope === scope
+            ))
             .slice();
 
-        noteList.forEach((note, index) => {
+        // Older passage Notes did not persist a scope on the note object. Keep the
+        // text fallback for the passage only; question Notes are linked by noteId.
+        if (scope === 'left') noteList.forEach((note, index) => {
             const noteId = String(note.id || '');
             const linked = records.some((item) => item.noteId && String(item.noteId) === noteId);
             if (!linked && String(note.text || '').trim()) {
@@ -4025,7 +4031,16 @@
         root.innerHTML = (dataset?.passage?.blocks || [])
             .map((block) => block?.bodyHtml || block?.html || '')
             .join('\n');
-        applyPrintAnnotations(root, section?.highlights || [], section?.notes || []);
+        applyPrintAnnotations(root, section?.highlights || [], section?.notes || [], 'left');
+        return root.innerHTML;
+    }
+
+    function buildAnnotatedQuestionHtml(dataset, section) {
+        const root = document.createElement('div');
+        root.innerHTML = (dataset?.questionGroups || [])
+            .map((group) => createGroupMarkup(group))
+            .join('\n');
+        applyPrintAnnotations(root, section?.highlights || [], section?.notes || [], 'groups');
         return root.innerHTML;
     }
 
@@ -4064,9 +4079,7 @@
             const section = summary.sections.find((s) => s.examId === passage.examId);
             const passageHtml = buildAnnotatedPassageHtml(dataset, section);
             // 完整题目：与单篇导出一致，按题组渲染全部题目（题干、选项、填空原样呈现）
-            const questionsHtml = (dataset.questionGroups || [])
-                .map((group) => createGroupMarkup(group))
-                .join('\n');
+            const questionsHtml = buildAnnotatedQuestionHtml(dataset, section);
 
             const block = document.createElement('section');
             block.className = 'suite-print__passage';
@@ -4099,7 +4112,7 @@
         const added = [];
         const decorated = [];
         const noteAnchors = new Map();
-        document.querySelectorAll('#left .hl[data-note-id]').forEach((mark) => {
+        document.querySelectorAll('#left .hl[data-note-id], #question-groups .hl[data-note-id]').forEach((mark) => {
             const noteId = String(mark.dataset.noteId || '');
             const note = noteMap.get(noteId);
             const comment = String(note?.comment || '').trim();

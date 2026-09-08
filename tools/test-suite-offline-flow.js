@@ -135,7 +135,23 @@ const server = http.createServer((req, res) => {
             span.dataset.noteId = 'note-test';
             span.dataset.highlightGroupId = 'test-group';
             range.surroundContents(span);
-            window.setPracticeNotes([{ id: 'note-test', text: span.textContent, part: 'Part 1', comment: '套题导出 Note' }]);
+            const questionRoot = document.querySelector('#question-groups p, #question-groups li, #question-groups .question-item');
+            const questionText = questionRoot && Array.from(questionRoot.childNodes)
+                .find(node => node.nodeType === Node.TEXT_NODE && (node.textContent || '').trim().length > 8);
+            if (!questionText) throw new Error('missing question annotation test text');
+            const questionRange = document.createRange();
+            questionRange.setStart(questionText, 0);
+            questionRange.setEnd(questionText, Math.min(8, questionText.textContent.length));
+            const questionSpan = document.createElement('span');
+            questionSpan.className = 'hl';
+            questionSpan.dataset.hlType = 'note';
+            questionSpan.dataset.noteId = 'question-note-test';
+            questionSpan.dataset.highlightGroupId = 'question-test-group';
+            questionRange.surroundContents(questionSpan);
+            window.setPracticeNotes([
+                { id: 'note-test', text: span.textContent, part: 'Part 1', comment: '套题导出 Note' },
+                { id: 'question-note-test', text: questionSpan.textContent, part: 'Part 1', comment: '题目标记 PDF Note' }
+            ]);
             window.dispatchEvent(new CustomEvent('practiceAnnotationsChanged', { detail: { reason: 'test' } }));
         });
         await practice.locator('#question-groups input[type=radio]').first().check();
@@ -158,6 +174,9 @@ const server = http.createServer((req, res) => {
         assert.equal(/高亮记录|Note 标记/.test(suitePdfText), false);
         assert.ok(await pdfPage.locator('.suite-print__article .pdf-inline-note').count() >= 1);
         assert.ok(await pdfPage.locator('.suite-print__article .pdf-inline-note-comment').count() >= 1);
+        assert.ok(await pdfPage.locator('.suite-print__questions .pdf-inline-note').count() >= 1);
+        assert.ok(await pdfPage.locator('.suite-print__questions .pdf-inline-note-comment').count() >= 1);
+        assert.match(suitePdfText, /题目标记 PDF Note/);
         await home.waitForFunction(async () => (await window.storage.get('practice_records', [])).some(record => record.practiceMode === 'suite' || record.suiteSessionId || record.metadata?.practiceMode === 'suite'), { timeout: 20000 });
         const annotationResult = await home.evaluate(async () => {
             const records = await window.storage.get('practice_records', []);
@@ -172,6 +191,7 @@ const server = http.createServer((req, res) => {
                 note: first && Array.isArray(first.notes) ? first.notes[0] : null,
                 pdfHasNote: html.includes('套题导出 Note'),
                 pdfHasInlinePassage: html.includes('record-passage') && html.includes('pdf-inline-note'),
+                pdfHasInlineQuestions: html.includes('record-questions') && html.includes('题目标记 PDF Note'),
                 pdfHasSeparateList: /高亮记录|Note 标记|class="annotations"/.test(html)
             };
         });
@@ -180,6 +200,7 @@ const server = http.createServer((req, res) => {
         assert.equal(annotationResult.note && annotationResult.note.comment, '套题导出 Note');
         assert.equal(annotationResult.pdfHasNote, true);
         assert.equal(annotationResult.pdfHasInlinePassage, true);
+        assert.equal(annotationResult.pdfHasInlineQuestions, true);
         assert.equal(annotationResult.pdfHasSeparateList, false);
         await practice.evaluate(() => {
             const root = document.querySelector('#left p');
@@ -204,7 +225,13 @@ const server = http.createServer((req, res) => {
         await pdfPage.close();
         await practice.close();
         await home.evaluate(() => window.app.navigateToView('practice'));
-        const completedSuiteCard = home.locator('.history-record-item[data-record-id]').first();
+        const completedSuiteRecordId = await home.evaluate(async () => {
+            const records = await window.storage.get('practice_records', []);
+            return records.find(item => item && Array.isArray(item.suiteEntries))?.id || '';
+        });
+        const completedSuiteCard = home.locator(
+            '.history-record-item[data-record-id="' + completedSuiteRecordId + '"]'
+        );
         await completedSuiteCard.waitFor({ state: 'visible' });
         const reviewPopupPromise = home.waitForEvent('popup');
         await completedSuiteCard.locator('.practice-record-title').click();
@@ -233,7 +260,22 @@ const server = http.createServer((req, res) => {
             span.dataset.hlType = 'note';
             span.dataset.noteId = 'single-note';
             range.surroundContents(span);
-            window.setPracticeNotes([{ id: 'single-note', text: span.textContent, comment: '单篇 PDF Note' }]);
+            const questionRoot = document.querySelector('#question-groups p, #question-groups li, #question-groups .question-item');
+            const questionText = questionRoot && Array.from(questionRoot.childNodes)
+                .find(node => node.nodeType === Node.TEXT_NODE && (node.textContent || '').trim().length > 8);
+            if (!questionText) throw new Error('missing single question note text');
+            const questionRange = document.createRange();
+            questionRange.setStart(questionText, 0);
+            questionRange.setEnd(questionText, Math.min(8, questionText.textContent.length));
+            const questionSpan = document.createElement('span');
+            questionSpan.className = 'hl';
+            questionSpan.dataset.hlType = 'note';
+            questionSpan.dataset.noteId = 'single-question-note';
+            questionRange.surroundContents(questionSpan);
+            window.setPracticeNotes([
+                { id: 'single-note', text: span.textContent, comment: '单篇 PDF Note' },
+                { id: 'single-question-note', text: questionSpan.textContent, comment: '单篇题目 PDF Note' }
+            ]);
         });
         await singlePage.locator('#submit-btn').click();
         await singlePage.waitForFunction(() => document.body.classList.contains('single-submitted-mode'));
@@ -241,11 +283,15 @@ const server = http.createServer((req, res) => {
             window.print = () => {
                 const comment = document.querySelector('#left .pdf-inline-note-comment');
                 const mark = document.querySelector('#left .pdf-inline-note');
-                window.__SINGLE_PDF_NOTE_TEXT__ = (mark?.textContent || '') + (comment?.textContent || '');
+                const questionComment = document.querySelector('#question-groups .pdf-inline-note-comment');
+                const questionMark = document.querySelector('#question-groups .pdf-inline-note');
+                window.__SINGLE_PDF_NOTE_TEXT__ = (mark?.textContent || '') + (comment?.textContent || '')
+                    + (questionMark?.textContent || '') + (questionComment?.textContent || '');
             };
         });
         await singlePage.locator('#export-pdf-btn').click();
         await singlePage.waitForFunction(() => /单篇 PDF Note/.test(window.__SINGLE_PDF_NOTE_TEXT__ || ''));
+        await singlePage.waitForFunction(() => /单篇题目 PDF Note/.test(window.__SINGLE_PDF_NOTE_TEXT__ || ''));
         console.log('PASS: mock-only catalog launch, stopped submit timer, suite PDF total duration and all three saved sections.');
         await hostContext.close();
     } finally { await browser.close(); }

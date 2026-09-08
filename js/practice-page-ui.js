@@ -1983,8 +1983,22 @@
             resetDragPointer();
         }
 
+        function resolveEventElement(targetOrEvent) {
+            const event = targetOrEvent && typeof targetOrEvent.composedPath === 'function'
+                ? targetOrEvent
+                : null;
+            if (event) {
+                const element = event.composedPath().find((node) => node instanceof Element);
+                if (element) return element;
+            }
+            const target = event ? event.target : targetOrEvent;
+            if (target instanceof Element) return target;
+            return target && target.parentElement instanceof Element ? target.parentElement : null;
+        }
+
         function handleDragStart(event) {
-            const target = event.target.closest(ACTIVE_DRAG_ITEM_SELECTOR);
+            const eventElement = resolveEventElement(event);
+            const target = eventElement ? eventElement.closest(ACTIVE_DRAG_ITEM_SELECTOR) : null;
             if (!target) return;
             const sourcePool = target.closest(POOL_CONTAINER_SELECTOR) || inferOptionPool(target);
             dragState.item = target;
@@ -1992,17 +2006,25 @@
             dragState.sourcePool = sourcePool || getOriginPool(target);
             dragState.sourceAllowsReuse = !!(sourcePool && detectPoolReuse(sourcePool));
             rememberDragPointer(event);
-            event.dataTransfer.effectAllowed = 'move';
-            event.dataTransfer.setData(
-                'text/plain',
-                target.dataset.answerValue
-                || target.dataset.heading
-                || target.dataset.option
-                || target.dataset.word
-                || target.dataset.value
-                || target.textContent
-                || ''
-            );
+            // Firefox requires a payload; Safari/WebKit can expose a missing or
+            // protected DataTransfer object. dragState remains the source of truth.
+            if (event.dataTransfer) {
+                try {
+                    event.dataTransfer.effectAllowed = 'move';
+                    event.dataTransfer.setData(
+                        'text/plain',
+                        target.dataset.answerValue
+                        || target.dataset.heading
+                        || target.dataset.option
+                        || target.dataset.word
+                        || target.dataset.value
+                        || target.textContent
+                        || ''
+                    );
+                } catch (_) {
+                    // Continue with dragState for WebKit and embedded browsers.
+                }
+            }
             requestAnimationFrame(() => target.classList.add('dragging'));
         }
 
@@ -2012,6 +2034,7 @@
         }
 
         function resolveDropContainer(target) {
+            target = resolveEventElement(target);
             if (!target) return null;
             const paragraphZone = target.closest('.paragraph-dropzone');
             if (paragraphZone) {
@@ -2081,25 +2104,28 @@
 
         function handleDragOver(event) {
             if (dragState.item) rememberDragPointer(event);
-            const container = resolveDropContainer(event.target);
+            const container = resolveDropContainer(event);
             if (!container) return;
             event.preventDefault();
+            if (event.dataTransfer) {
+                try { event.dataTransfer.dropEffect = 'move'; } catch (_) { /* protected mode */ }
+            }
             container.classList.add('drag-over');
 
             // Auto-scroll when dragging near viewport or scroll-container edges
-            const scrollContainer = getScrollContainer(event.target);
+            const scrollContainer = getScrollContainer(resolveEventElement(event));
             startAutoScroll(event.clientY, scrollContainer);
         }
 
         function handleDragLeave(event) {
-            const container = resolveDropContainer(event.target);
+            const container = resolveDropContainer(event);
             if (container) {
                 container.classList.remove('drag-over');
             }
         }
 
         function handleDrop(event) {
-            const container = resolveDropContainer(event.target);
+            const container = resolveDropContainer(event);
             if (!container || !dragState.item) return;
             event.preventDefault();
             stopAutoScroll();
@@ -2736,8 +2762,13 @@ body.single-submitted-mode.notes-hide-marks .hl {
                 }
                 return String(element.value || '').trim() !== '';
             }
-            if (isAnswerValueContainer(element)) {
-                return !!element.querySelector(DRAGGABLE_ITEM_SELECTOR);
+            if (element.matches('.match-dropzone, .dropzone, .paragraph-dropzone, .dropped-items, .drop-target-summary')) {
+                return !!element.querySelector(
+                    '.drag-item, .drag-item-clone, .draggable-word, .card, '
+                    + '[draggable="true"][data-option], [draggable="true"][data-value], '
+                    + '[draggable="true"][data-word], [draggable="true"][data-heading], '
+                    + '[draggable="true"][data-key]'
+                );
             }
             return false;
         });

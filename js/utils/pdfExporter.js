@@ -621,7 +621,7 @@ class PdfExporter {
     table.answers tr.bad td { background: #fdf2ef; }
     table.answers tr.marked td { box-shadow: inset 0 2px 0 #f59e0b, inset 0 -2px 0 #f59e0b; }
     .mark-star { color: #d97706; font-weight: 800; }
-    .record-passage {
+    .record-passage, .record-questions {
         margin: 10px 0 14px;
         padding: 12px 14px;
         border: 1px solid var(--rule);
@@ -631,6 +631,9 @@ class PdfExporter {
         line-height: 1.65;
     }
     .record-passage p { margin: 0 0 9px; text-align: justify; }
+    .record-questions { background: #fbfdfb; }
+    .record-questions input, .record-questions select, .record-questions textarea,
+    .record-questions button { pointer-events: none; }
     .pdf-inline-highlight {
         background: #72361c;
         color: #ffffff;
@@ -951,20 +954,29 @@ class PdfExporter {
         return marks;
     }
 
-    buildAnnotatedPassageHtml(record) {
+    buildAnnotatedSourceHtml(record, scope = 'left') {
         const dataset = this._datasetsByExam?.get(String(record?.examId || ''));
-        const rawHtml = (dataset?.passage?.blocks || [])
-            .map((block) => block?.bodyHtml || block?.html || '')
-            .join('\n');
+        const rawHtml = scope === 'groups'
+            ? (dataset?.questionGroups || []).map((group) => {
+                const lead = group?.leadHtml ? `<div class="unified-group__lead">${group.leadHtml}</div>` : '';
+                return `<section class="unified-group">${lead}${group?.bodyHtml || ''}</section>`;
+            }).join('\n')
+            : (dataset?.passage?.blocks || [])
+                .map((block) => block?.bodyHtml || block?.html || '')
+                .join('\n');
         if (!rawHtml) return '';
         const root = document.createElement('div');
         root.innerHTML = rawHtml;
         const { highlights, notes } = this.resolveAnnotations(record);
         const noteMap = new Map(notes.map((note) => [String(note?.id || ''), note]));
         const records = highlights
-            .filter((item) => item && (!item.scope || item.scope === 'left'))
+            .filter((item) => item && (
+                scope === 'left'
+                    ? (!item.scope || item.scope === 'left')
+                    : item.scope === scope
+            ))
             .slice();
-        notes.forEach((note, index) => {
+        if (scope === 'left') notes.forEach((note, index) => {
             const noteId = String(note?.id || '');
             if (!records.some((item) => item.noteId && String(item.noteId) === noteId) && String(note?.text || '').trim()) {
                 records.push({ text: String(note.text).trim(), kind: 'note', noteId: noteId || ('pdf-note-' + index), occurrence: 0 });
@@ -1017,7 +1029,15 @@ class PdfExporter {
             label.textContent = `【Note：${comment}】`;
             anchor.insertAdjacentElement('afterend', label);
         });
-        return `<section class="record-passage">${root.innerHTML}</section>`;
+        return `<section class="${scope === 'groups' ? 'record-questions' : 'record-passage'}">${root.innerHTML}</section>`;
+    }
+
+    buildAnnotatedPassageHtml(record) {
+        return this.buildAnnotatedSourceHtml(record, 'left');
+    }
+
+    buildAnnotatedQuestionsHtml(record) {
+        return this.buildAnnotatedSourceHtml(record, 'groups');
     }
 
     buildRecordHtml(record) {
@@ -1041,7 +1061,8 @@ class PdfExporter {
             bodyHtml = this.buildSuiteSectionsHtml(suiteEntries);
         } else {
             const passageHtml = this.buildAnnotatedPassageHtml(record);
-            bodyHtml = passageHtml + (hasDetails
+            const questionsHtml = this.buildAnnotatedQuestionsHtml(record);
+            bodyHtml = passageHtml + questionsHtml + (hasDetails
                 ? this.buildAnswerTableHtml(record)
                 : `<p class="no-detail">本次记录没有题级答题对比数据。<br>分数 ${metrics.correct}/${metrics.total} · 正确率 ${metrics.percentage}% · 用时 ${duration}。</p>`);
         }
@@ -1107,6 +1128,7 @@ class PdfExporter {
                     <span class="suite-section-score">${correct}/${total} · ${percentage}% · ${this.escapeHtml(duration)}</span>
                 </div>
                 ${this.buildAnnotatedPassageHtml(entryRecord)}
+                ${this.buildAnnotatedQuestionsHtml(entryRecord)}
                 ${detail}
             </section>`;
         }).join('');
