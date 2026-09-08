@@ -449,11 +449,6 @@
         setStorageNamespace();
         initializeNavigationShell();
 
-        // 首次使用向导必须独立于题库按需加载策略启动。
-        if (typeof global.OnboardingTour !== 'undefined') {
-            global.OnboardingTour.init();
-        }
-
         if (STRICT_ON_DEMAND) {
             setTimeout(function () {
                 bootstrapCoreDataInBackground();

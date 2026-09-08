@@ -943,8 +943,16 @@
                 return;
             }
 
-            if (!lastRange || lastRange.collapsed) return;
-            const spans = wrapRangeWithHighlight(lastRange);
+            // 优先使用浏览器当前的实时选区（反映用户最新意图），
+            // 实时选区消失时回退到 updateSelbar 缓存的 lastRange，
+            // 避免首次高亮后遗留的旧 lastRange 被当作目标重复包裹导致“选中却未高亮”。
+            const liveSel = window.getSelection();
+            const liveRange = (liveSel && liveSel.rangeCount && !liveSel.isCollapsed)
+                ? liveSel.getRangeAt(0)
+                : null;
+            const targetRange = liveRange || lastRange;
+            if (!targetRange || targetRange.collapsed) return;
+            const spans = wrapRangeWithHighlight(targetRange);
             if (spans.length) emitPracticeAnnotationChange('highlight_added');
             sel?.removeAllRanges();
             selbar.style.display = 'none';

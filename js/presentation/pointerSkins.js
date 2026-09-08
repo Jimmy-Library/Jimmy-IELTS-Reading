@@ -30,7 +30,7 @@
         try { value = JSON.parse(localStorage.getItem(KEY) || '{}'); } catch (_) {}
         var migrated = Number(value.defaultsVersion) === DEFAULTS_VERSION;
         return {
-            enabled: value.enabled !== false,
+            enabled: value.enabled === true,
             trailEnabled: migrated ? value.trailEnabled === true : false,
             style: styles.indexOf(value.style) >= 0 ? value.style : 'halo',
             size: clamp(value.size == null ? 32 : value.size, 18, 72),

@@ -412,8 +412,7 @@
 
     function isDailyPromptBlocked() {
         if (!document.body) return true;
-        if (document.body.classList.contains('boot-active')
-            || document.body.classList.contains('onboarding-tour-active')) return true;
+        if (document.body.classList.contains('boot-active')) return true;
         const boot = document.getElementById('boot-overlay');
         if (!boot) return false;
         const style = global.getComputedStyle ? global.getComputedStyle(boot) : null;
