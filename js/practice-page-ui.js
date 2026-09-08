@@ -684,15 +684,19 @@
 
         // Safari 对跨标签选区调用 Range.surroundContents 会抛异常。
         // 将选区拆成单个文本节点后逐段包裹，既兼容 Safari，也不会改变原有块级排版。
-        function wrapRangeWithHighlight(range, type = 'default') {
+        function wrapRangeWithHighlight(range, type = 'default', options = {}) {
             if (!range || range.collapsed) return [];
             const root = range.commonAncestorContainer.nodeType === Node.TEXT_NODE
                 ? range.commonAncestorContainer.parentNode
                 : range.commonAncestorContainer;
             if (!root) return [];
+            const skipHighlighted = options.skipHighlighted === true;
             const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
                 acceptNode(node) {
                     if (!node.textContent) return NodeFilter.FILTER_REJECT;
+                    if (skipHighlighted && node.parentElement && node.parentElement.closest('.hl')) {
+                        return NodeFilter.FILTER_REJECT;
+                    }
                     try {
                         return range.intersectsNode(node) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
                     } catch (_) {
@@ -748,28 +752,48 @@
             }
         }
 
-        // 把已存在高亮里被选中的那部分单词单独升级为粉色，其余保持原样（棕色）
-        // 返回 true 表示成功做了局部拆分
-        function highlightPartialAsPink(hlNode, range) {
-            if (!(hlNode instanceof HTMLElement) || !range) return false;
-            if (!hlNode.contains(range.startContainer) || !hlNode.contains(range.endContainer)) {
-                return false;
+        // 计算 range 与 node 文本内容的交集偏移（允许 range 端点落在 node 之外，
+        // 用于「选区跨越已高亮边界」的情况），返回 {start,end} 或 null
+        function computeRangeOffsetsInNode(node, range) {
+            try {
+                const full = node.textContent || '';
+                const nodeRange = document.createRange();
+                nodeRange.selectNodeContents(node);
+                let start, end;
+                if (node.contains(range.startContainer)) {
+                    start = offsetWithinNode(node, range.startContainer, range.startOffset);
+                } else if (range.compareBoundaryPoints(Range.START_TO_START, nodeRange) <= 0) {
+                    start = 0;
+                } else {
+                    return null;
+                }
+                if (node.contains(range.endContainer)) {
+                    end = offsetWithinNode(node, range.endContainer, range.endOffset);
+                } else if (range.compareBoundaryPoints(Range.END_TO_END, nodeRange) >= 0) {
+                    end = full.length;
+                } else {
+                    return null;
+                }
+                if (start < 0 || end < 0) return null;
+                if (end < start) { const t = start; start = end; end = t; }
+                start = Math.max(0, Math.min(start, full.length));
+                end = Math.max(0, Math.min(end, full.length));
+                if (end <= start) return null;
+                return { start, end };
+            } catch (_) {
+                return null;
             }
+        }
+
+        // 按字符偏移把已高亮节点拆成 [原色 before][玫红 middle][原色 after]
+        function splitHighlightAsPink(hlNode, start, end) {
             const full = hlNode.textContent || '';
-            let start = offsetWithinNode(hlNode, range.startContainer, range.startOffset);
-            let end = offsetWithinNode(hlNode, range.endContainer, range.endOffset);
-            if (start < 0 || end < 0) return false;
-            if (end < start) { const t = start; start = end; end = t; }
+            const baseKind = hlNode.dataset && hlNode.dataset.hlType ? hlNode.dataset.hlType : '';
+            if (baseKind === 'note' || baseKind === 'pink') return false;
             start = Math.max(0, Math.min(start, full.length));
             end = Math.max(0, Math.min(end, full.length));
             if (end <= start) return false;
-
-            const baseKind = hlNode.dataset && hlNode.dataset.hlType ? hlNode.dataset.hlType : '';
             const isReviewHighlight = hlNode.dataset && hlNode.dataset.reviewHighlight === 'true';
-            // 已是粉色且整体被选中——无需拆分
-            if (baseKind === 'pink' && start === 0 && end === full.length) {
-                return false;
-            }
             const before = full.slice(0, start);
             const middle = full.slice(start, end);
             const after = full.slice(end);
@@ -792,6 +816,14 @@
             parent.replaceChild(frag, hlNode);
             parent.normalize();
             return true;
+        }
+
+        // 把已存在高亮里被选中的那部分单词单独升级为玫红，其余保持原样（棕色）
+        function highlightPartialAsPink(hlNode, range) {
+            if (!(hlNode instanceof HTMLElement) || !range) return false;
+            const offsets = computeRangeOffsetsInNode(hlNode, range);
+            if (!offsets) return false;
+            return splitHighlightAsPink(hlNode, offsets.start, offsets.end);
         }
 
         function updateSelbar() {
@@ -952,7 +984,29 @@
                 : null;
             const targetRange = liveRange || lastRange;
             if (!targetRange || targetRange.collapsed) return;
-            const spans = wrapRangeWithHighlight(targetRange);
+
+            // 选区跨越/包含已高亮的棕色区域：先记录选区内相交的棕色高亮及其交集偏移
+            // （必须在任何 DOM 修改前完成，否则 Range 会因节点替换而失效）。
+            const brownPlan = [];
+            Array.from(document.querySelectorAll('.hl')).forEach((node) => {
+                if (!(node instanceof HTMLElement)) return;
+                const kind = node.dataset && node.dataset.hlType;
+                if (kind === 'note' || kind === 'pink') return;
+                const offsets = computeRangeOffsetsInNode(node, targetRange);
+                if (!offsets) return;
+                brownPlan.push({ node, start: offsets.start, end: offsets.end });
+            });
+
+            // 先给选区中未高亮的部分新建棕色高亮（跳过已高亮的节点，避免嵌套）
+            const spans = wrapRangeWithHighlight(targetRange, 'default', { skipHighlighted: true });
+
+            // 再把选区内已高亮的棕色升级为玫红
+            let upgraded = false;
+            brownPlan.forEach(({ node, start, end }) => {
+                if (node && node.isConnected && splitHighlightAsPink(node, start, end)) upgraded = true;
+            });
+
+            if (upgraded) emitPracticeAnnotationChange('highlight_changed');
             if (spans.length) emitPracticeAnnotationChange('highlight_added');
             sel?.removeAllRanges();
             selbar.style.display = 'none';

@@ -39,6 +39,17 @@
   gap: .72rem;
 }
 
+.hero-header__subtitle {
+  max-width: 46ch;
+  color: color-mix(in srgb, var(--skin-ink, #123f36) 72%, var(--skin-accent, #3aa987));
+  font-family: "Segoe UI", "Microsoft YaHei UI", "PingFang SC", Arial, sans-serif;
+  font-size: clamp(.8rem, 1.05vw, .98rem);
+  font-weight: 600;
+  letter-spacing: .01em;
+  line-height: 1.5;
+  white-space: normal;
+}
+
 .hero-header__title > span:last-child {
   background: linear-gradient(118deg, var(--skin-ink, #123f36) 8%, var(--skin-accent-strong, #257c67) 92%);
   background-clip: text;

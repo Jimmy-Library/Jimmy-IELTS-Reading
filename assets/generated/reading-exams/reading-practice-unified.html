@@ -529,15 +529,22 @@
                 color: #1f7a4d;
             }
 
-            /* 隐藏交互/悬浮元素 */
-            .header-controls,
+            /* 隐藏交互/悬浮元素（保留 header-controls 中的 timer 作为做题用时） */
             #settings-panel,
             #notes-panel,
             .overlay,
             #divider,
             #selbar,
-            .practice-nav {
+            .practice-nav,
+            .header-controls .header-btn {
                 display: none !important;
+            }
+
+            /* 单篇导出 PDF：打印做题用时 */
+            #timer::before {
+                content: "做题用时：";
+                font-weight: 700;
+                color: #1f7a4d;
             }
 
             .header {
