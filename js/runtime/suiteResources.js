@@ -98,7 +98,11 @@
                 const entry = global.__READING_EXAM_MANIFEST__[id];
                 if (!entry) throw new Error('题库中未找到套题篇目：' + id);
                 if (!registry.has(entry.dataKey)) {
-                    await loadScript(new URL(entry.script, new URL('assets/generated/reading-exams/', root)).href);
+                    const scriptUrl = new URL(entry.script, new URL('assets/generated/reading-exams/', root)).href;
+                    // registry.retain() 会为降低内存占用移除上一套题的数据。
+                    // 对应脚本虽然曾加载过，但必须重新执行才能再次注册数据。
+                    scripts.delete(scriptUrl);
+                    await loadScript(scriptUrl);
                 }
                 const data = registry.get(entry.dataKey);
                 if (!validDataset(data, id)) throw new Error('套题正文或答案不完整：' + id);

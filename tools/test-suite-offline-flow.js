@@ -92,6 +92,20 @@ const server = http.createServer((req, res) => {
         await home.locator('[data-daily-action=later]').last().waitFor({ state: 'visible', timeout: 60000 });
         await home.locator('[data-daily-action=later]').last().click();
         assert.equal(await home.locator('#daily-suite-recommendation-modal').count(), 0);
+        const resourceReadiness = await home.evaluate(async () => {
+            const first = window.SuiteCatalog.getSuite('suite-001');
+            const target = window.SuiteCatalog.getSuite('suite-064');
+            if (!first || !target) return { ok: false, reason: 'missing_catalog_suite' };
+            const firstLoad = await window.SuiteResources.prepare(first.examIds);
+            const targetLoad = await window.SuiteResources.prepare(target.examIds);
+            const firstReload = await window.SuiteResources.prepare(first.examIds);
+            return {
+                ok: firstLoad.datasets.length === 3 && targetLoad.datasets.length === 3 && firstReload.datasets.length === 3,
+                targetIds: target.examIds
+            };
+        });
+        assert.equal(resourceReadiness.ok, true);
+        assert.deepEqual(resourceReadiness.targetIds, ['p1-medium-1040', 'p2-low-65', 'p3-low-97']);
         await home.evaluate(() => window.app.navigateToView('suite'));
         await home.evaluate(() => {
             const originalPrepare = window.SuiteResources.prepare.bind(window.SuiteResources);
@@ -197,6 +211,13 @@ const server = http.createServer((req, res) => {
         const reviewPage = await reviewPopupPromise;
         await reviewPage.waitForFunction(() => new URL(location.href).searchParams.get('review') === '1');
         await reviewPage.waitForFunction(() => document.body.classList.contains('review-readonly-mode'));
+        await reviewPage.locator('#question-nav.question-nav--suite').waitFor({ state: 'visible' });
+        assert.equal(await reviewPage.locator('#question-nav .q-passage').count(), 3);
+        assert.equal(await reviewPage.locator('#review-nav-bar').evaluate((node) => getComputedStyle(node).display), 'none');
+        await reviewPage.locator('#question-nav .q-passage').nth(1).locator('.q-passage__label').click();
+        await reviewPage.waitForFunction(() => document.querySelectorAll('#question-nav .q-passage')[1]?.classList.contains('is-current'));
+        await reviewPage.locator('#question-nav .q-passage').nth(2).locator('.q-passage__label').click();
+        await reviewPage.waitForFunction(() => document.querySelectorAll('#question-nav .q-passage')[2]?.classList.contains('is-current'));
         const singlePage = await hostContext.newPage();
         await singlePage.goto(origin + '/assets/generated/reading-exams/reading-practice-unified.html?examId=' + ids[0]);
         await singlePage.locator('#left p').first().waitFor();

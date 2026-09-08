@@ -2723,6 +2723,8 @@
             const current = session.entries[safeIndex] || {};
             return {
                 reviewSessionId: session.sessionId,
+                suiteReviewMode: total > 1,
+                showNav: total <= 1,
                 index: safeIndex + 1,
                 currentIndex: safeIndex,
                 total,
@@ -2762,6 +2764,7 @@
                     answerComparison: this._cloneReviewData(item.answerComparison || {}),
                     correctAnswers: this._cloneReviewData(item.correctAnswers || {}),
                     scoreInfo: this._cloneReviewData(item.scoreInfo || {}),
+                    duration: Number(item.duration) || 0,
                     markedQuestions: this._cloneReviewData(item.markedQuestions || []),
                     highlights: this._cloneReviewData(item.highlights || []),
                     notes: this._cloneReviewData(item.notes || [])

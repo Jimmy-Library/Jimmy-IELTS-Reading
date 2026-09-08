@@ -531,10 +531,12 @@
                 label: (passage && passage.label) || entry.category || ('Part ' + (index + 1)),
                 title: entry.title || (passage && passage.title) || '',
                 isCurrent: entry.isCurrent === true,
+                dataset,
                 rows,
                 markedQuestions: Array.isArray(entry.markedQuestions) ? entry.markedQuestions.slice() : [],
                 highlights: Array.isArray(entry.highlights) ? entry.highlights.slice() : [],
                 notes: Array.isArray(entry.notes) ? entry.notes.map((note) => Object.assign({}, note)) : [],
+                duration: Number(entry.duration) || 0,
                 correct: finalCorrect,
                 total: finalTotal,
                 percentage: finalTotal > 0 ? Math.round((finalCorrect / finalTotal) * 100) : 0
@@ -543,9 +545,11 @@
 
         const totalCorrect = sections.reduce((sum, s) => sum + s.correct, 0);
         const totalQuestions = sections.reduce((sum, s) => sum + s.total, 0);
+        const totalDuration = sections.reduce((sum, section) => sum + (Number(section.duration) || 0), 0);
         return {
             sections,
             answersByExam,
+            duration: totalDuration,
             correct: totalCorrect,
             total: totalQuestions,
             percentage: totalQuestions > 0 ? Math.round((totalCorrect / totalQuestions) * 100) : 0
@@ -563,6 +567,37 @@
         };
         setReadOnlyMode(true);
         state.reviewViewMode = 'review';
+    }
+
+    function configureHistorySuiteReview(summary) {
+        if (!summary || !Array.isArray(summary.sections) || summary.sections.length <= 1) return;
+        const currentIndex = Math.max(0, summary.sections.findIndex((section) => section.isCurrent));
+        const passages = summary.sections.map((section, index) => {
+            const dataset = section.dataset || null;
+            const order = Array.isArray(dataset?.questionOrder) ? dataset.questionOrder : [];
+            return {
+                index,
+                examId: section.examId,
+                label: section.label || passageLabelFromDataset(dataset, index),
+                title: section.title || dataset?.meta?.title || '',
+                isCurrent: index === currentIndex,
+                dataset,
+                questions: order.map((questionId) => ({
+                    localQuestionId: questionId,
+                    label: labelFromDataset(dataset, questionId)
+                })),
+                answeredSet: new Set((section.rows || [])
+                    .filter((row) => Array.isArray(row.userAnswer)
+                        ? row.userAnswer.some((value) => String(value == null ? '' : value).trim())
+                        : String(row.userAnswer == null ? '' : row.userAnswer).trim())
+                    .map((row) => row.questionId))
+            };
+        });
+        state.suiteReviewMode = true;
+        state.suiteSequenceExamIds = passages.map((passage) => passage.examId);
+        state.suiteBlueprint = { passages };
+        state.suiteBlueprintKey = `history-review::${state.reviewSessionId || ''}::${state.suiteSequenceExamIds.join('|')}`;
+        enterLocalSuiteReview(summary);
     }
 
     /** 就地切换到套题中的某一篇（仅交卷后的本地回顾使用） */
@@ -597,8 +632,24 @@
         blueprint.passages.forEach((item, index) => {
             item.isCurrent = index === targetIndex;
         });
+        const section = local.summary?.sections?.find((item) => item.examId === passage.examId) || null;
+        const answerComparison = {};
+        (section?.rows || []).forEach((row) => {
+            answerComparison[row.questionId] = {
+                userAnswer: row.userAnswer,
+                correctAnswer: row.correctAnswer,
+                isCorrect: row.isCorrect
+            };
+        });
+        state.lastResults = {
+            answers,
+            answerComparison,
+            correct: Number(section?.correct) || 0,
+            total: Number(section?.total) || 0,
+            percentage: Number(section?.percentage) || 0
+        };
         navStatus.clear();
-        buildQuestionNav();
+        updateNavStatuses(state.lastResults);
 
         // 结果面板保持三篇合计，切换小节不应把它冲掉
         renderSuiteResults(local.summary);
@@ -606,6 +657,13 @@
             await renderExplanations();
         } catch (_) {
             // 解析渲染失败不影响回顾
+        }
+        applyHighlights(section?.highlights || []);
+        if (typeof global.setPracticeNotes === 'function') {
+            global.setPracticeNotes(section?.notes || []);
+        }
+        if (typeof global.setPracticeMarkedQuestions === 'function') {
+            global.setPracticeMarkedQuestions(section?.markedQuestions || []);
         }
     }
 
@@ -1039,7 +1097,8 @@
 
         // 套题模式：渲染全部小节的题目（一次看到约 40 题），支持跨篇跳转
         const blueprint = state.suiteBlueprint;
-        if (state.simulationMode && blueprint && Array.isArray(blueprint.passages) && blueprint.passages.length > 1) {
+        if ((state.simulationMode || state.suiteLocalReview || state.suiteReviewMode)
+            && blueprint && Array.isArray(blueprint.passages) && blueprint.passages.length > 1) {
             dom.nav.classList.add('question-nav--suite');
             dom.nav.innerHTML = blueprint.passages.map((passage) => {
                 const items = passage.questions.map((q) => {
@@ -2552,6 +2611,7 @@
             }
         }
         if (reviewSuiteSummary) {
+            configureHistorySuiteReview(reviewSuiteSummary);
             renderSuiteResults(reviewSuiteSummary);
         } else {
             renderResults(replayResults);
@@ -2560,7 +2620,7 @@
         updateNavStatuses(replayResults);
         setReadOnlyMode(data.readOnly !== false);
         // 回顾模式：计时固定为记录的完成用时并锁定（不再走动、不可点击启停）
-        freezeReviewTimer(Number(entry.duration ?? data.duration) || 0);
+        freezeReviewTimer(Number(reviewSuiteSummary?.duration ?? entry.duration ?? data.duration) || 0);
         // 题目渲染和标记组件可能分属不同脚本；立即恢复并做两次短延迟重试，避免偶发丢标记
         const restoreAnnotations = () => {
             if (replayHighlights.length && typeof applyHighlights === 'function') {

@@ -40,10 +40,46 @@ for (const scriptName of datasetScripts) {
   if (!answerKey || typeof answerKey !== 'object' || Object.keys(answerKey).length === 0) {
     problems.push(`${examId}: answerKey is empty`);
   }
+  if (!dataset.passage || !Array.isArray(dataset.passage.blocks) || dataset.passage.blocks.length === 0) {
+    problems.push(`${examId}: passage is empty`);
+  }
+  if (!Array.isArray(dataset.questionGroups) || dataset.questionGroups.length === 0) {
+    problems.push(`${examId}: questionGroups is empty`);
+  }
+  if (!Array.isArray(dataset.questionOrder) || dataset.questionOrder.length === 0) {
+    problems.push(`${examId}: questionOrder is empty`);
+  } else if (answerKey && dataset.questionOrder.some((id) => !Object.prototype.hasOwnProperty.call(answerKey, id))) {
+    problems.push(`${examId}: questionOrder contains an item without an answer`);
+  }
 }
 
 const indexContext = vm.createContext({ console, window: {} });
 vm.runInContext(read('assets/scripts/complete-exam-data.js'), indexContext, { filename: 'complete-exam-data.js' });
+vm.runInContext(read('assets/generated/reading-question-counts.js'), indexContext, { filename: 'reading-question-counts.js' });
+vm.runInContext(read('js/data/suiteCatalog.js'), indexContext, { filename: 'suiteCatalog.js' });
+const suites = indexContext.window.SuiteCatalog.getCatalog();
+if (suites.length !== 100) {
+  problems.push(`fixed suite catalog has ${suites.length} suites instead of 100`);
+}
+suites.forEach((suite) => {
+  const expectedCategories = ['P1', 'P2', 'P3'];
+  if (!Array.isArray(suite.entries) || suite.entries.length !== 3) {
+    problems.push(`${suite.id}: does not contain exactly three passages`);
+    return;
+  }
+  if (suite.totalQuestions !== 40) {
+    problems.push(`${suite.id}: contains ${suite.totalQuestions} questions instead of 40`);
+  }
+  suite.entries.forEach((entry, index) => {
+    if (entry.category !== expectedCategories[index]) {
+      problems.push(`${suite.id}: position ${index + 1} is ${entry.category}, expected ${expectedCategories[index]}`);
+    }
+    const dataset = registered[entry.id];
+    if (!dataset) {
+      problems.push(`${suite.id}: dataset is unavailable for ${entry.id}`);
+    }
+  });
+});
 const manifestContext = vm.createContext({ console, window: {} });
 vm.runInContext(read('assets/generated/reading-exams/manifest.js'), manifestContext, { filename: 'manifest.js' });
 const manifest = manifestContext.window.__READING_EXAM_MANIFEST__ || {};
