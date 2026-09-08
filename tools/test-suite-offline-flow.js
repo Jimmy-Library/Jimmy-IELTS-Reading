@@ -140,28 +140,33 @@ const server = http.createServer((req, res) => {
         await pdfPage.locator('#suite-print-root').waitFor({ state: 'attached' });
         const suitePdfText = await pdfPage.locator('#suite-print-root').textContent();
         assert.match(suitePdfText, /总用时\s+\d+\s+分\s+\d{2}\s+秒/);
-        assert.match(suitePdfText, /Note 标记/);
         assert.match(suitePdfText, /套题导出 Note/);
+        assert.equal(/高亮记录|Note 标记/.test(suitePdfText), false);
+        assert.ok(await pdfPage.locator('.suite-print__article .pdf-inline-note').count() >= 1);
+        assert.ok(await pdfPage.locator('.suite-print__article .pdf-inline-note-comment').count() >= 1);
         await home.waitForFunction(async () => (await window.storage.get('practice_records', [])).some(record => record.practiceMode === 'suite' || record.suiteSessionId || record.metadata?.practiceMode === 'suite'), { timeout: 20000 });
         const annotationResult = await home.evaluate(async () => {
             const records = await window.storage.get('practice_records', []);
             const record = records.find(item => item && (item.suiteMode || item.suiteSessionId || item.metadata?.practiceMode === 'suite'));
             const first = record && record.suiteEntries && record.suiteEntries[0];
             const exporter = window.pdfExporter || (typeof window.PdfExporter === 'function' ? new window.PdfExporter() : null);
+            if (exporter && record) await exporter.preloadStems([record]);
             const html = exporter && record ? exporter.buildRecordHtml(record) : '';
             return {
                 sections: record && record.suiteEntries ? record.suiteEntries.length : 0,
                 highlights: first && Array.isArray(first.highlights) ? first.highlights.length : 0,
                 note: first && Array.isArray(first.notes) ? first.notes[0] : null,
                 pdfHasNote: html.includes('套题导出 Note'),
-                pdfHasNoteMarker: html.includes('Note 标记')
+                pdfHasInlinePassage: html.includes('record-passage') && html.includes('pdf-inline-note'),
+                pdfHasSeparateList: /高亮记录|Note 标记|class="annotations"/.test(html)
             };
         });
         assert.equal(annotationResult.sections, 3);
         assert.ok(annotationResult.highlights >= 1);
         assert.equal(annotationResult.note && annotationResult.note.comment, '套题导出 Note');
         assert.equal(annotationResult.pdfHasNote, true);
-        assert.equal(annotationResult.pdfHasNoteMarker, true);
+        assert.equal(annotationResult.pdfHasInlinePassage, true);
+        assert.equal(annotationResult.pdfHasSeparateList, false);
         await practice.evaluate(() => {
             const root = document.querySelector('#left p');
             const node = root && Array.from(root.childNodes).find(item => item.nodeType === Node.TEXT_NODE && (item.textContent || '').trim().length > 8);
@@ -213,7 +218,9 @@ const server = http.createServer((req, res) => {
         await singlePage.waitForFunction(() => document.body.classList.contains('single-submitted-mode'));
         await singlePage.evaluate(() => {
             window.print = () => {
-                window.__SINGLE_PDF_NOTE_TEXT__ = document.querySelector('.practice-print-annotations')?.textContent || '';
+                const comment = document.querySelector('#left .pdf-inline-note-comment');
+                const mark = document.querySelector('#left .pdf-inline-note');
+                window.__SINGLE_PDF_NOTE_TEXT__ = (mark?.textContent || '') + (comment?.textContent || '');
             };
         });
         await singlePage.locator('#export-pdf-btn').click();

@@ -621,28 +621,34 @@ class PdfExporter {
     table.answers tr.bad td { background: #fdf2ef; }
     table.answers tr.marked td { box-shadow: inset 0 2px 0 #f59e0b, inset 0 -2px 0 #f59e0b; }
     .mark-star { color: #d97706; font-weight: 800; }
-    .annotations {
-        margin-top: 10px;
-        padding: 9px 12px;
-        border: 1px solid #f0c36d;
-        border-left: 4px solid #d97706;
-        border-radius: 3px;
-        background: #fffaf0;
-        break-inside: avoid;
-        page-break-inside: avoid;
+    .record-passage {
+        margin: 10px 0 14px;
+        padding: 12px 14px;
+        border: 1px solid var(--rule);
+        border-radius: 4px;
+        color: var(--ink);
+        font-size: 10.5pt;
+        line-height: 1.65;
     }
-    .annotations h5 { margin: 4px 0 5px; color: #7c2d12; font-size: 10.5pt; }
-    .annotations ul { margin: 0 0 5px; padding-left: 20px; }
-    .annotations li { margin: 4px 0; line-height: 1.5; }
-    .note-badge {
-        display: inline-block;
-        margin-right: 6px;
-        padding: 1px 6px;
-        border-radius: 3px;
-        background: #d97706;
+    .record-passage p { margin: 0 0 9px; text-align: justify; }
+    .pdf-inline-highlight {
+        background: #72361c;
         color: #ffffff;
-        font-size: 8.5pt;
+        padding: 0 1px;
+        border-radius: 2px;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+    .pdf-inline-highlight--pink { background: #ec4899; }
+    .pdf-inline-note { background: #0369d9; }
+    .pdf-inline-note-comment {
+        display: inline;
+        margin-left: 3px;
+        color: #9a3412;
+        font-size: 9pt;
         font-weight: 700;
+        font-style: italic;
+        white-space: normal;
     }
     .no-detail {
         margin: 0;
@@ -874,30 +880,144 @@ class PdfExporter {
         };
     }
 
-    buildAnnotationsHtml(record) {
-        const { highlights, notes } = this.resolveAnnotations(record);
-        if (!highlights.length && !notes.length) return '';
-        const noteIds = new Set(notes.map((note) => String(note?.id || '')).filter(Boolean));
-        const groups = new Map();
-        highlights.forEach((item, index) => {
-            if (!item || item.kind === 'note' || (item.noteId && noteIds.has(String(item.noteId)))) return;
-            const key = item.groupId || ('item-' + index);
-            const parts = groups.get(key) || [];
-            const text = String(item.text || '').trim();
-            if (text) parts.push(text);
-            groups.set(key, parts);
+    resolveTextRange(root, start, end) {
+        const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+        let node = walker.nextNode();
+        let offset = 0;
+        let startNode = null;
+        let endNode = null;
+        let startOffset = 0;
+        let endOffset = 0;
+        while (node) {
+            const length = (node.textContent || '').length;
+            const next = offset + length;
+            if (!startNode && start >= offset && start <= next) {
+                startNode = node;
+                startOffset = Math.max(0, start - offset);
+            }
+            if (!endNode && end >= offset && end <= next) {
+                endNode = node;
+                endOffset = Math.max(0, end - offset);
+            }
+            if (startNode && endNode) break;
+            offset = next;
+            node = walker.nextNode();
+        }
+        if (!startNode || !endNode) return null;
+        const range = document.createRange();
+        range.setStart(startNode, startOffset);
+        range.setEnd(endNode, endOffset);
+        return range;
+    }
+
+    wrapInlineRange(range, className) {
+        if (!range || range.collapsed) return [];
+        const ancestor = range.commonAncestorContainer.nodeType === Node.TEXT_NODE
+            ? range.commonAncestorContainer.parentNode
+            : range.commonAncestorContainer;
+        const walker = document.createTreeWalker(ancestor, NodeFilter.SHOW_TEXT, {
+            acceptNode(node) {
+                try {
+                    return node.textContent && range.intersectsNode(node)
+                        ? NodeFilter.FILTER_ACCEPT
+                        : NodeFilter.FILTER_REJECT;
+                } catch (_) {
+                    return NodeFilter.FILTER_REJECT;
+                }
+            }
         });
-        const highlightItems = Array.from(groups.values()).map((parts) => parts.join(' ').replace(/\s+/g, ' ').trim()).filter(Boolean)
-            .map((text) => `<li><mark>${this.escapeHtml(text)}</mark></li>`).join('');
-        const noteItems = notes.map((note) => `<li><span class="note-badge">NOTE</span><strong>${this.escapeHtml(note.text || '未命名笔记')}</strong>${note.comment ? `<div>${this.escapeHtml(note.comment)}</div>` : ''}</li>`).join('')
-            + highlights
-                .filter((item) => item && (item.kind === 'note' || item.noteId) && (!item.noteId || !noteIds.has(String(item.noteId))))
-                .map((item) => `<li><span class="note-badge">NOTE</span><strong>${this.escapeHtml(item.text || '未命名笔记')}</strong></li>`)
-                .join('');
-        return `<section class="annotations">
-            ${highlightItems ? `<h5>高亮记录</h5><ul>${highlightItems}</ul>` : ''}
-            ${noteItems ? `<h5>Note 标记</h5><ul>${noteItems}</ul>` : ''}
-        </section>`;
+        const segments = [];
+        let node = walker.nextNode();
+        while (node) {
+            const segment = range.cloneRange();
+            const nodeRange = document.createRange();
+            nodeRange.selectNodeContents(node);
+            try {
+                if (range.compareBoundaryPoints(Range.START_TO_START, nodeRange) <= 0) segment.setStart(node, 0);
+                if (range.compareBoundaryPoints(Range.END_TO_END, nodeRange) >= 0) segment.setEnd(node, node.textContent.length);
+                if (segment.startContainer === node && segment.endContainer === node && !segment.collapsed) segments.push(segment);
+            } catch (_) { /* keep remaining segments */ }
+            node = walker.nextNode();
+        }
+        const marks = [];
+        segments.reverse().forEach((segment) => {
+            try {
+                const mark = document.createElement('mark');
+                mark.className = className;
+                segment.surroundContents(mark);
+                marks.unshift(mark);
+            } catch (_) { /* keep remaining segments */ }
+        });
+        return marks;
+    }
+
+    buildAnnotatedPassageHtml(record) {
+        const dataset = this._datasetsByExam?.get(String(record?.examId || ''));
+        const rawHtml = (dataset?.passage?.blocks || [])
+            .map((block) => block?.bodyHtml || block?.html || '')
+            .join('\n');
+        if (!rawHtml) return '';
+        const root = document.createElement('div');
+        root.innerHTML = rawHtml;
+        const { highlights, notes } = this.resolveAnnotations(record);
+        const noteMap = new Map(notes.map((note) => [String(note?.id || ''), note]));
+        const records = highlights
+            .filter((item) => item && (!item.scope || item.scope === 'left'))
+            .slice();
+        notes.forEach((note, index) => {
+            const noteId = String(note?.id || '');
+            if (!records.some((item) => item.noteId && String(item.noteId) === noteId) && String(note?.text || '').trim()) {
+                records.push({ text: String(note.text).trim(), kind: 'note', noteId: noteId || ('pdf-note-' + index), occurrence: 0 });
+            }
+        });
+
+        const noteAnchors = new Map();
+        records.forEach((record) => {
+            const fullText = String(root.textContent || '');
+            const savedText = String(record.text || '').trim();
+            let range = null;
+            const start = Number(record.startOffset);
+            const end = Number(record.endOffset);
+            if (Number.isFinite(start) && Number.isFinite(end) && end > start && end <= fullText.length) {
+                const normalizedSaved = savedText.replace(/\s+/g, ' ').trim();
+                const normalizedOffset = fullText.slice(start, end).replace(/\s+/g, ' ').trim();
+                if (!normalizedSaved || normalizedSaved === normalizedOffset || normalizedSaved.includes(normalizedOffset) || normalizedOffset.includes(normalizedSaved)) {
+                    range = this.resolveTextRange(root, start, end);
+                }
+            }
+            if (!range && savedText) {
+                let from = 0;
+                let found = -1;
+                const occurrence = Math.max(0, Number(record.occurrence) || 0);
+                for (let index = 0; index <= occurrence; index += 1) {
+                    found = fullText.indexOf(savedText, from);
+                    if (found < 0) break;
+                    from = found + savedText.length;
+                }
+                if (found >= 0) range = this.resolveTextRange(root, found, found + savedText.length);
+            }
+            if (!range || range.collapsed) return;
+            const isNote = record.kind === 'note' || record.noteId;
+            const className = [
+                'pdf-inline-highlight',
+                record.kind === 'pink' ? 'pdf-inline-highlight--pink' : '',
+                isNote ? 'pdf-inline-note' : ''
+            ].filter(Boolean).join(' ');
+            const marks = this.wrapInlineRange(range, className);
+            const noteId = String(record.noteId || '');
+            if (noteId && noteMap.has(noteId) && marks.length) {
+                noteAnchors.set(noteId, { anchor: marks[marks.length - 1], note: noteMap.get(noteId) });
+            }
+        });
+        noteAnchors.forEach(({ anchor, note }) => {
+            const comment = String(note?.comment || '').trim();
+            if (!anchor || !comment) return;
+            const label = document.createElement('span');
+            label.className = 'pdf-inline-note-comment';
+            label.textContent = `【Note：${comment}】`;
+            anchor.insertAdjacentElement('afterend', label);
+        });
+        return `<section class="record-passage">${root.innerHTML}</section>`;
     }
 
     buildRecordHtml(record) {
@@ -919,10 +1039,11 @@ class PdfExporter {
         let bodyHtml;
         if (suiteEntries.length) {
             bodyHtml = this.buildSuiteSectionsHtml(suiteEntries);
-        } else if (hasDetails) {
-            bodyHtml = this.buildAnswerTableHtml(record);
         } else {
-            bodyHtml = `<p class="no-detail">本次记录没有题级答题对比数据。<br>分数 ${metrics.correct}/${metrics.total} · 正确率 ${metrics.percentage}% · 用时 ${duration}。</p>`;
+            const passageHtml = this.buildAnnotatedPassageHtml(record);
+            bodyHtml = passageHtml + (hasDetails
+                ? this.buildAnswerTableHtml(record)
+                : `<p class="no-detail">本次记录没有题级答题对比数据。<br>分数 ${metrics.correct}/${metrics.total} · 正确率 ${metrics.percentage}% · 用时 ${duration}。</p>`);
         }
 
         const bandLabel = record.ieltsBandLabel || metadata.ieltsBandLabel || '';
@@ -952,7 +1073,6 @@ class PdfExporter {
                 ${suiteMetaHtml}
             </div>
             ${bodyHtml}
-            ${suiteEntries.length ? '' : this.buildAnnotationsHtml(record)}
         </article>`;
     }
 
@@ -986,8 +1106,8 @@ class PdfExporter {
                     <span class="suite-section-title">${this.escapeHtml(title)}</span>
                     <span class="suite-section-score">${correct}/${total} · ${percentage}% · ${this.escapeHtml(duration)}</span>
                 </div>
+                ${this.buildAnnotatedPassageHtml(entryRecord)}
                 ${detail}
-                ${this.buildAnnotationsHtml(entryRecord)}
             </section>`;
         }).join('');
     }
@@ -999,6 +1119,7 @@ class PdfExporter {
      */
     async preloadStems(records) {
         this._stemsByExam = this._stemsByExam || new Map();
+        this._datasetsByExam = this._datasetsByExam || new Map();
         const ids = new Set();
         (records || []).forEach(r => {
             if (!r) return;
@@ -1008,11 +1129,13 @@ class PdfExporter {
             });
         });
         await Promise.all(Array.from(ids).map(async (id) => {
-            if (this._stemsByExam.has(id)) return;
+            if (this._stemsByExam.has(id) && this._datasetsByExam.has(id)) return;
             try {
                 const dataset = await this.ensureExamDataset(id);
+                this._datasetsByExam.set(id, dataset || null);
                 this._stemsByExam.set(id, dataset ? this.extractQuestionStems(dataset) : new Map());
             } catch (_) {
+                this._datasetsByExam.set(id, null);
                 this._stemsByExam.set(id, new Map());
             }
         }));

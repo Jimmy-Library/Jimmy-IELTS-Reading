@@ -3884,6 +3884,91 @@
      * 套题：把三篇（文章 + 题目 + 该篇答案对照）拼成一份打印内容。
      * 不直接打印页面，因为页面同一时刻只渲染一篇。
      */
+    function applyPrintAnnotations(root, highlights, notes) {
+        if (!root) return;
+        const noteList = Array.isArray(notes) ? notes.filter(Boolean) : [];
+        const noteMap = new Map(noteList.map((note) => [String(note.id || ''), note]));
+        const records = (Array.isArray(highlights) ? highlights : [])
+            .filter((item) => item && (!item.scope || item.scope === 'left'))
+            .slice();
+
+        noteList.forEach((note, index) => {
+            const noteId = String(note.id || '');
+            const linked = records.some((item) => item.noteId && String(item.noteId) === noteId);
+            if (!linked && String(note.text || '').trim()) {
+                records.push({
+                    scope: 'left',
+                    text: String(note.text || '').trim(),
+                    kind: 'note',
+                    noteId: noteId || ('print-note-' + index),
+                    occurrence: 0
+                });
+            }
+        });
+
+        const pendingComments = [];
+        const renderedNotes = new Set();
+        records.forEach((record) => {
+            let range = null;
+            const start = Number(record.startOffset);
+            const end = Number(record.endOffset);
+            const fullText = String(root.textContent || '');
+            if (Number.isFinite(start) && Number.isFinite(end) && end > start && end <= fullText.length) {
+                const savedText = String(record.text || '').replace(/\s+/g, ' ').trim();
+                const offsetText = fullText.slice(start, end).replace(/\s+/g, ' ').trim();
+                if (!savedText || savedText === offsetText || savedText.includes(offsetText) || offsetText.includes(savedText)) {
+                    range = resolveRangeFromOffsets(root, start, end);
+                }
+            }
+            if (!range && String(record.text || '').trim()) {
+                const text = String(record.text || '').trim();
+                let from = 0;
+                let found = -1;
+                const occurrence = Math.max(0, Number(record.occurrence) || 0);
+                for (let index = 0; index <= occurrence; index += 1) {
+                    found = fullText.indexOf(text, from);
+                    if (found < 0) break;
+                    from = found + text.length;
+                }
+                if (found >= 0) range = resolveRangeFromOffsets(root, found, found + text.length);
+            }
+            if (!range || range.collapsed) return;
+            const kind = record.kind === 'pink'
+                ? 'pink'
+                : ((record.kind === 'note' || record.noteId) ? 'note' : 'highlight');
+            const marks = wrapRestoredHighlightRange(range, kind, record);
+            marks.forEach((mark) => {
+                mark.classList.add('pdf-inline-highlight');
+                if (kind === 'pink') mark.classList.add('pdf-inline-highlight--pink');
+                if (kind === 'note') mark.classList.add('pdf-inline-note');
+            });
+            const noteId = String(record.noteId || '');
+            const note = noteId ? noteMap.get(noteId) : null;
+            if (note && !renderedNotes.has(noteId) && marks.length) {
+                renderedNotes.add(noteId);
+                pendingComments.push({ anchor: marks[marks.length - 1], note });
+            }
+        });
+
+        pendingComments.forEach(({ anchor, note }) => {
+            const comment = String(note.comment || '').trim();
+            if (!anchor || !comment) return;
+            const label = document.createElement('span');
+            label.className = 'pdf-inline-note-comment';
+            label.textContent = `【Note：${comment}】`;
+            anchor.insertAdjacentElement('afterend', label);
+        });
+    }
+
+    function buildAnnotatedPassageHtml(dataset, section) {
+        const root = document.createElement('div');
+        root.innerHTML = (dataset?.passage?.blocks || [])
+            .map((block) => block?.bodyHtml || block?.html || '')
+            .join('\n');
+        applyPrintAnnotations(root, section?.highlights || [], section?.notes || []);
+        return root.innerHTML;
+    }
+
     async function buildSuitePrintContainer(local) {
         const summary = local.summary;
         const blueprint = state.suiteBlueprint;
@@ -3917,36 +4002,12 @@
                 }
             }
             const section = summary.sections.find((s) => s.examId === passage.examId);
-            const passageHtml = (dataset.passage?.blocks || [])
-                .map((block) => block?.bodyHtml || block?.html || '')
-                .join('\n');
+            const passageHtml = buildAnnotatedPassageHtml(dataset, section);
             // 完整题目：与单篇导出一致，按题组渲染全部题目（题干、选项、填空原样呈现）
             const questionsHtml = (dataset.questionGroups || [])
                 .map((group) => createGroupMarkup(group))
                 .join('\n');
 
-            const annotationGroups = new Map();
-            (section?.highlights || []).forEach((item, index) => {
-                if (!item || item.kind === 'note') return;
-                const key = item.groupId || ('item-' + index);
-                const parts = annotationGroups.get(key) || [];
-                const text = String(item.text || '').trim();
-                if (text) parts.push(text);
-                annotationGroups.set(key, parts);
-            });
-            const highlightDetails = Array.from(annotationGroups.values())
-                .map((parts) => parts.join(' ').replace(/\s+/g, ' ').trim())
-                .filter(Boolean)
-                .map((text) => `<li><mark>${escapeHtml(text)}</mark></li>`)
-                .join('');
-            const sectionNotes = Array.isArray(section?.notes) ? section.notes : [];
-            const linkedNoteIds = new Set(sectionNotes.map((note) => String(note?.id || '')).filter(Boolean));
-            const noteDetails = sectionNotes.map((note) => `
-                <li><span class="practice-print-note-badge">NOTE</span><strong>${escapeHtml(note.text || '未命名笔记')}</strong>${note.comment ? ` — ${escapeHtml(note.comment)}` : ''}</li>
-            `).join('') + (section?.highlights || [])
-                .filter((item) => item && (item.kind === 'note' || item.noteId) && (!item.noteId || !linkedNoteIds.has(String(item.noteId))))
-                .map((item) => `<li><span class="practice-print-note-badge">NOTE</span><strong>${escapeHtml(item.text || '未命名笔记')}</strong></li>`)
-                .join('');
             const block = document.createElement('section');
             block.className = 'suite-print__passage';
             block.innerHTML = `
@@ -3961,8 +4022,6 @@
                 <div class="suite-print__answerkey">
                     <h3 class="suite-print__ak-title">参考答案 Answer Key</h3>
                     ${section.markedQuestions?.length ? `<p>★ 标记题：${section.markedQuestions.join(', ')}</p>` : ''}
-                    ${section.highlights?.length ? `<p>高亮标注：${section.highlights.length} 处</p>` : ''}
-                    ${(highlightDetails || noteDetails) ? `<div class="suite-print__annotations">${highlightDetails ? `<h4>高亮记录</h4><ul>${highlightDetails}</ul>` : ''}${noteDetails ? `<h4>Note 标记</h4><ul>${noteDetails}</ul>` : ''}</div>` : ''}
                     <table class="results-table suite-print__answers">
                         <thead><tr><th>题号</th><th>你的答案</th><th>正确答案</th><th>结果</th></tr></thead>
                         <tbody>${suiteResultRowsHtml(section.rows, section.markedQuestions)}</tbody>
@@ -3974,24 +4033,32 @@
         return container;
     }
 
-    function buildCurrentPrintAnnotations() {
+    function decorateCurrentPrintNotes() {
         const notes = typeof global.getPracticeNotes === 'function' ? global.getPracticeNotes() : [];
-        const noteHighlights = collectHighlights().filter((item) => item && (item.kind === 'note' || item.noteId));
-        if (!notes.length && !noteHighlights.length) return null;
-
-        const linkedIds = new Set(notes.map((note) => String(note?.id || '')).filter(Boolean));
-        const noteItems = notes.map((note) => `
-            <li><span class="practice-print-note-badge">NOTE</span><strong>${escapeHtml(note.text || '未命名笔记')}</strong>${note.comment ? ` — ${escapeHtml(note.comment)}` : ''}</li>
-        `).join('') + noteHighlights
-            .filter((item) => !item.noteId || !linkedIds.has(String(item.noteId)))
-            .map((item) => `<li><span class="practice-print-note-badge">NOTE</span><strong>${escapeHtml(item.text || '未命名笔记')}</strong></li>`)
-            .join('');
-
-        const container = document.createElement('section');
-        container.className = 'practice-print-annotations';
-        container.setAttribute('aria-label', 'Note 标记');
-        container.innerHTML = `<h3>Note 标记</h3><ul>${noteItems}</ul>`;
-        return container;
+        const noteMap = new Map(notes.map((note) => [String(note?.id || ''), note]));
+        const added = [];
+        const decorated = [];
+        const noteAnchors = new Map();
+        document.querySelectorAll('#left .hl[data-note-id]').forEach((mark) => {
+            const noteId = String(mark.dataset.noteId || '');
+            const note = noteMap.get(noteId);
+            const comment = String(note?.comment || '').trim();
+            mark.classList.add('pdf-inline-highlight', 'pdf-inline-note');
+            decorated.push(mark);
+            if (comment) noteAnchors.set(noteId, { mark, comment });
+        });
+        noteAnchors.forEach(({ mark, comment }, noteId) => {
+            const label = document.createElement('span');
+            label.className = 'pdf-inline-note-comment';
+            label.dataset.noteId = noteId;
+            label.textContent = `【Note：${comment}】`;
+            mark.insertAdjacentElement('afterend', label);
+            added.push(label);
+        });
+        return () => {
+            added.forEach((node) => node.remove());
+            decorated.forEach((mark) => mark.classList.remove('pdf-inline-highlight', 'pdf-inline-note'));
+        };
     }
 
     async function waitForPrintReady(root = document) {
@@ -4059,14 +4126,13 @@
         try {
             // 单篇：直接打印整页（文章 + 题目 + 作答 + 高亮 + 练习详情）
             if (!local) {
-                const annotations = buildCurrentPrintAnnotations();
-                if (annotations) document.body.appendChild(annotations);
+                const removePrintNotes = decorateCurrentPrintNotes();
                 let cleaned = false;
                 const cleanup = () => {
                     if (cleaned) return;
                     cleaned = true;
                     global.removeEventListener('afterprint', cleanup);
-                    if (annotations && annotations.parentNode) annotations.parentNode.removeChild(annotations);
+                    removePrintNotes();
                 };
                 global.addEventListener('afterprint', cleanup, { once: true });
                 // 保持在原始点击调用栈中触发，避免 Safari 把打印视为异步弹窗而拦截。
