@@ -11,6 +11,9 @@ class PdfExporter {
 
     // ---------- 数据加载(委托给 MarkdownExporter 已有逻辑) ----------
     async loadRecordsAndIndex() {
+        if (typeof window.recoverPendingPracticeAnnotations === 'function') {
+            try { await window.recoverPendingPracticeAnnotations(); } catch (_) {}
+        }
         if (!this.markdown && typeof window.MarkdownExporter === 'function') {
             this.markdown = new window.MarkdownExporter();
         }

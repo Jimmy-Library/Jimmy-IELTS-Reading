@@ -10,6 +10,38 @@ let practiceListScroller = null;
 let app = null;
 let pdfHandler = null;
 let browseStateManager = null;
+const ANNOTATION_RECOVERY_KEY_PREFIX = 'ielts_annotation_recovery::';
+
+async function recoverPendingPracticeAnnotations() {
+    const appInstance = window.app || app;
+    if (!appInstance || typeof appInstance._persistPracticeAnnotations !== 'function') return { recovered: 0, pending: 0 };
+    let keys = [];
+    try {
+        for (let index = 0; index < localStorage.length; index += 1) {
+            const key = localStorage.key(index);
+            if (key && key.startsWith(ANNOTATION_RECOVERY_KEY_PREFIX)) keys.push(key);
+        }
+    } catch (_) {
+        return { recovered: 0, pending: 0 };
+    }
+    let recovered = 0;
+    for (const key of keys) {
+        try {
+            const payload = JSON.parse(localStorage.getItem(key) || 'null');
+            if (!payload || !payload.examId) continue;
+            const saved = await appInstance._persistPracticeAnnotations(payload.examId, payload);
+            if (saved) {
+                localStorage.removeItem(key);
+                recovered += 1;
+            }
+        } catch (error) {
+            console.warn('[Annotations] Safari recovery failed:', error);
+        }
+    }
+    return { recovered, pending: Math.max(0, keys.length - recovered) };
+}
+
+if (typeof window !== 'undefined') window.recoverPendingPracticeAnnotations = recoverPendingPracticeAnnotations;
 
 function normalizeRecordId(id) {
     if (id == null) {
@@ -306,6 +338,7 @@ async function initializeLegacyComponents() {
     setupStorageSyncListener(); // Listen for storage changes from other tabs
     // Recover any completion that was locally queued before its save acknowledgement arrived.
     window.setTimeout(() => recoverOfflinePracticeCompletions(), 600);
+    window.setTimeout(() => recoverPendingPracticeAnnotations(), 900);
 }
 
 // Clean up old cache and configurations
@@ -741,7 +774,11 @@ function setupMessageListener() {
             const payload = data.data && typeof data.data === 'object' ? data.data : {};
             const appInstance = window.app || app;
             if (appInstance && typeof appInstance._persistPracticeAnnotations === 'function') {
-                appInstance._persistPracticeAnnotations(payload.examId || '', payload).catch((error) => {
+                appInstance._persistPracticeAnnotations(payload.examId || '', payload).then((saved) => {
+                    if (saved && payload.annotationRecoveryKey) {
+                        try { localStorage.removeItem(payload.annotationRecoveryKey); } catch (_) {}
+                    }
+                }).catch((error) => {
                     console.warn('[Annotations] 标注回写失败:', error);
                 });
             }

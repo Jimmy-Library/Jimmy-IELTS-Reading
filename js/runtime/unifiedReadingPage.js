@@ -5,6 +5,7 @@
     const INIT_RETRY_MS = 1500;
     const SIMULATION_DRAFT_SYNC_MS = 1200;
     const SINGLE_DRAFT_KEY_PREFIX = 'ielts_single_draft::';
+    const ANNOTATION_RECOVERY_KEY_PREFIX = 'ielts_annotation_recovery::';
     const EXPLANATION_STYLE_ID = 'reading-explanation-style';
     const PRACTICE_TIMER_BRIDGE_KEY = '__IELTS_PRACTICE_TIMER__';
     const PRACTICE_TIMER_EVENT = 'practiceTimerStateChange';
@@ -3555,24 +3556,29 @@
         const records = [];
         const addScopeHighlights = (scope, root) => {
             if (!root) return;
-            const seenByText = new Map();
             const fullText = String(root.textContent || '');
-            const cursorByText = new Map();
             Array.from(root.querySelectorAll('.hl')).forEach((node) => {
-                const text = String(node.textContent || '').trim();
+                const rawText = String(node.textContent || '');
+                const text = rawText.trim();
                 if (!text) return;
-                const key = `${scope}::${text}`;
-                const seen = seenByText.get(key) || 0;
-                seenByText.set(key, seen + 1);
-                let cursor = cursorByText.get(key) || 0;
                 let hit = -1;
-                for (let index = 0; index <= seen; index += 1) {
-                    hit = fullText.indexOf(text, cursor);
-                    if (hit < 0) break;
-                    cursor = hit + text.length;
+                try {
+                    const beforeRange = document.createRange();
+                    beforeRange.selectNodeContents(root);
+                    beforeRange.setEndBefore(node);
+                    hit = beforeRange.toString().length + rawText.length - rawText.trimStart().length;
+                } catch (_) {
+                    hit = fullText.indexOf(text);
                 }
                 if (hit < 0) return;
-                cursorByText.set(key, cursor);
+                let occurrence = 0;
+                let occurrenceCursor = 0;
+                while (occurrenceCursor < hit) {
+                    const occurrenceHit = fullText.indexOf(text, occurrenceCursor);
+                    if (occurrenceHit < 0 || occurrenceHit >= hit) break;
+                    occurrence += 1;
+                    occurrenceCursor = occurrenceHit + Math.max(1, text.length);
+                }
                 records.push({
                     scope,
                     text,
@@ -3580,7 +3586,7 @@
                     noteId: node.dataset.noteId || '',
                     groupId: node.dataset.highlightGroupId || '',
                     reviewHighlight: node.dataset.reviewHighlight === 'true',
-                    occurrence: seen,
+                    occurrence,
                     startOffset: hit,
                     endOffset: hit + text.length,
                     before: fullText.slice(Math.max(0, hit - 20), hit),
@@ -4495,17 +4501,38 @@
     }
 
     function attachAnnotationPersistenceBridge() {
-        global.addEventListener('practiceAnnotationsChanged', () => {
+        const persist = (reason = 'change') => {
             if (!(state.submitted || state.readOnly || document.body.classList.contains('practice-completed-mode'))) {
                 return;
             }
-            postMessage('PRACTICE_ANNOTATIONS_UPDATE', {
+            const identity = state.reviewRecordId || state.reviewSessionId || state.suiteSessionId || state.sessionId || 'latest';
+            const recoveryKey = `${ANNOTATION_RECOVERY_KEY_PREFIX}${encodeURIComponent(String(state.examId || 'unknown'))}::${encodeURIComponent(String(identity))}`;
+            const payload = {
                 recordId: state.reviewRecordId || null,
                 reviewSessionId: state.reviewSessionId || null,
                 highlights: collectHighlights(),
-                notes: typeof global.getPracticeNotes === 'function' ? global.getPracticeNotes() : []
-            });
+                notes: typeof global.getPracticeNotes === 'function' ? global.getPracticeNotes() : [],
+                annotationRecoveryKey: recoveryKey,
+                annotationSavedAt: Date.now(),
+                annotationReason: reason
+            };
+            try {
+                global.localStorage.setItem(recoveryKey, JSON.stringify(Object.assign({
+                    version: 1,
+                    examId: state.examId,
+                    sessionId: state.sessionId,
+                    suiteSessionId: state.suiteSessionId
+                }, payload)));
+            } catch (_) {}
+            postMessage('PRACTICE_ANNOTATIONS_UPDATE', payload);
+        };
+        global.addEventListener('practiceAnnotationsChanged', () => persist('change'));
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) persist('visibilitychange');
         });
+        global.addEventListener('pagehide', () => persist('pagehide'), { capture: true });
+        global.addEventListener('beforeunload', () => persist('beforeunload'), { capture: true });
+        document.addEventListener('freeze', () => persist('freeze'), { capture: true });
     }
 
     // 倒计时结束：仅执行一次，提示后按「交卷」流程自动结算整套

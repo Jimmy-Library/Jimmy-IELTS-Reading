@@ -525,10 +525,14 @@
                 textarea.className = 'note-item__textarea';
                 textarea.placeholder = 'Record ideas';
                 textarea.value = note.comment || '';
-                textarea.addEventListener('input', (e) => {
-                    note.comment = e.target.value;
-                    emitPracticeAnnotationChange('note_comment');
-                });
+                const commitComment = (reason) => {
+                    note.comment = textarea.value;
+                    emitPracticeAnnotationChange(reason || 'note_comment');
+                };
+                textarea.addEventListener('input', () => commitComment('note_comment'));
+                textarea.addEventListener('change', () => commitComment('note_comment_change'));
+                textarea.addEventListener('blur', () => commitComment('note_comment_blur'));
+                textarea.addEventListener('compositionend', () => commitComment('note_comment_compositionend'));
                 // 阻止点击 textarea 时关闭面板
                 textarea.addEventListener('click', (e) => {
                     e.stopPropagation();
@@ -574,7 +578,17 @@
             emitPracticeAnnotationChange('note_deleted');
         }
 
-        window.getPracticeNotes = () => notesList.map(note => ({ ...note }));
+        function syncNoteCommentsFromEditors() {
+            document.querySelectorAll('.note-item[data-note-id]').forEach((item) => {
+                const editor = item.querySelector('.note-item__textarea');
+                const note = notesList.find((entry) => entry.id === item.dataset.noteId);
+                if (note && editor) note.comment = editor.value;
+            });
+        }
+        window.getPracticeNotes = () => {
+            syncNoteCommentsFromEditors();
+            return notesList.map(note => ({ ...note }));
+        };
         window.setPracticeNotes = (notes) => {
             notesList = Array.isArray(notes) ? notes.map(note => ({ ...note })) : [];
             activeNoteId = null;
