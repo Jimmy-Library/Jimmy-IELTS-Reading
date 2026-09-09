@@ -1,6 +1,6 @@
 'use strict';
 
-const CACHE_VERSION = 'jimmy-reading-offline-v17';
+const CACHE_VERSION = 'jimmy-reading-offline-v18';
 const CORE_ASSETS = [
   './Jimmy%E9%98%85%E8%AF%BB%E6%9C%BA%E8%80%83.html',
   './js/runtime/offlineReady.js',

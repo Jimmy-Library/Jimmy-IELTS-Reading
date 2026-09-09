@@ -82,6 +82,43 @@
         const submitBtn = document.getElementById('submit-btn');
         const resetBtn = document.getElementById('reset-btn');
         const suiteFlowModeSection = document.getElementById('suite-flow-mode-section');
+        const pageHeader = document.querySelector('.header');
+        const practiceNav = document.querySelector('.practice-nav');
+        let chromeMetricsFrame = 0;
+
+        function syncPracticeChromeMetrics() {
+            if (chromeMetricsFrame) {
+                cancelAnimationFrame(chromeMetricsFrame);
+            }
+            chromeMetricsFrame = requestAnimationFrame(() => {
+                chromeMetricsFrame = 0;
+                const rootStyle = document.documentElement.style;
+                const headerHeight = pageHeader ? Math.ceil(pageHeader.getBoundingClientRect().height) : 67;
+                const navHeight = practiceNav ? Math.ceil(practiceNav.getBoundingClientRect().height) : 72;
+                rootStyle.setProperty('--practice-header-height', Math.max(1, headerHeight) + 'px');
+                rootStyle.setProperty('--practice-nav-height', Math.max(1, navHeight) + 'px');
+            });
+        }
+
+        syncPracticeChromeMetrics();
+        window.addEventListener('resize', syncPracticeChromeMetrics, { passive: true });
+        if (typeof ResizeObserver === 'function') {
+            const chromeMetricsObserver = new ResizeObserver(syncPracticeChromeMetrics);
+            if (pageHeader) chromeMetricsObserver.observe(pageHeader);
+            if (practiceNav) chromeMetricsObserver.observe(practiceNav);
+        }
+        if (typeof MutationObserver === 'function' && practiceNav) {
+            const practiceNavMetricsObserver = new MutationObserver(syncPracticeChromeMetrics);
+            practiceNavMetricsObserver.observe(practiceNav, {
+                childList: true,
+                subtree: true,
+                attributes: true,
+                attributeFilter: ['class']
+            });
+        }
+        if (document.fonts && document.fonts.ready) {
+            document.fonts.ready.then(syncPracticeChromeMetrics).catch(() => {});
+        }
 
         function toFiniteNumber(value) {
             const numeric = Number(value);
@@ -1126,6 +1163,7 @@
                         .querySelectorAll('.settings-option[data-size]')
                         .forEach((b) => b.classList.remove('active'));
                     this.classList.add('active');
+                    syncPracticeChromeMetrics();
                 });
             });
 
