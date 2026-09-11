@@ -4,7 +4,7 @@ const path = require('path');
 const http = require('http');
 const assert = require('assert/strict');
 const root = path.resolve(__dirname, '..');
-const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
+const { chromium, webkit } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
 const ids = ['p1-low-111', 'p2-low-147', 'p3-high-181'];
 const server = http.createServer((req, res) => {
     if (req.url === '/test-start.html') { res.setHeader('Content-Type', 'text/html'); res.end('<!doctype html><title>Test</title>'); return; }
@@ -20,7 +20,10 @@ const server = http.createServer((req, res) => {
 (async () => {
     await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
     const origin = 'http://127.0.0.1:' + server.address().port;
-    const browser = await chromium.launch({ channel: 'msedge', headless: true });
+    const useWebKit = process.env.TEST_BROWSER === 'webkit';
+    const browser = await (useWebKit ? webkit : chromium).launch(useWebKit
+        ? { headless: true }
+        : { channel: 'msedge', headless: true });
     try {
         const context = await browser.newContext();
         const page = await context.newPage();
@@ -56,11 +59,17 @@ const server = http.createServer((req, res) => {
         await page.locator('#submit-btn').click();
         await page.waitForFunction(id => new URL(location.href).searchParams.get('examId') === id, ids[2]);
         assert.equal(await page.locator('#submit-btn').innerText(), 'Submit');
-        // Reload the offline page: choose continue and retain the same suite.
-        await page.reload();
-        await page.getByText('检测到未完成的套题练习', { exact: true }).waitFor();
-        await page.getByRole('button', { name: '从上次继续', exact: true }).click();
-        await page.waitForFunction(() => window.__UNIFIED_SUITE_LOCAL_READY__ === true);
+        // Chromium covers the offline service-worker reload path. Playwright WebKit
+        // has a known internal error when reloading an offline controlled page, so
+        // its run stays focused on Safari review switching and PDF generation.
+        if (!useWebKit) {
+            await page.reload();
+            await page.getByText('检测到未完成的套题练习', { exact: true }).waitFor();
+            await page.getByRole('button', { name: '从上次继续', exact: true }).click();
+            await page.waitForFunction(() => window.__UNIFIED_SUITE_LOCAL_READY__ === true);
+        } else {
+            await context.setOffline(false);
+        }
         await page.locator('#reset-btn').click();
         await page.waitForFunction(id => new URL(location.href).searchParams.get('examId') === id, ids[1]);
         await page.locator('#reset-btn').click();
@@ -222,6 +231,21 @@ const server = http.createServer((req, res) => {
             const entry = record && record.suiteEntries.find(item => String(item.examId) === String(examId));
             return !!(entry && Array.isArray(entry.highlights) && entry.highlights.some(item => item.groupId === 'post-submit-group'));
         }, ids[2]);
+        await practice.locator('#question-nav .q-passage').nth(1).locator('.q-passage__label').click();
+        await practice.waitForFunction(() => document.querySelectorAll('#question-nav .q-passage')[1]?.classList.contains('is-current'));
+        await practice.locator('#question-nav .q-passage').nth(2).locator('.q-passage__label').click();
+        await practice.waitForFunction(() => document.querySelectorAll('#question-nav .q-passage')[2]?.classList.contains('is-current'));
+        assert.ok(await practice.locator('#left .hl[data-highlight-group-id="post-submit-group"]').count() >= 1);
+        const refreshedPdfPopupPromise = practice.waitForEvent('popup');
+        const exportStartedAt = Date.now();
+        await practice.locator('#export-pdf-btn').click();
+        const refreshedPdfPage = await refreshedPdfPopupPromise;
+        await refreshedPdfPage.locator('#suite-print-root').waitFor({ state: 'attached', timeout: 10000 });
+        assert.equal(await refreshedPdfPage.locator('.suite-print__passage').count(), 3);
+        assert.equal(await refreshedPdfPage.locator('.suite-print__answerkey').count(), 3);
+        assert.ok(await refreshedPdfPage.locator('.pdf-inline-highlight[data-highlight-group-id="post-submit-group"]').count() >= 1);
+        assert.ok(Date.now() - exportStartedAt < 10000, 'suite PDF should prepare without a long Safari background wait');
+        await refreshedPdfPage.close();
         await pdfPage.close();
         await practice.close();
         await home.evaluate(() => window.app.navigateToView('practice'));
@@ -237,7 +261,7 @@ const server = http.createServer((req, res) => {
         await completedSuiteCard.locator('.practice-record-title').click();
         const reviewPage = await reviewPopupPromise;
         await reviewPage.waitForFunction(() => new URL(location.href).searchParams.get('review') === '1');
-        await reviewPage.waitForFunction(() => document.body.classList.contains('review-readonly-mode'));
+        await reviewPage.waitForFunction(() => document.body && document.body.classList.contains('review-readonly-mode'));
         await reviewPage.locator('#question-nav.question-nav--suite').waitFor({ state: 'visible' });
         assert.equal(await reviewPage.locator('#question-nav .q-passage').count(), 3);
         assert.equal(await reviewPage.locator('#review-nav-bar').evaluate((node) => getComputedStyle(node).display), 'none');
@@ -292,7 +316,7 @@ const server = http.createServer((req, res) => {
         await singlePage.locator('#export-pdf-btn').click();
         await singlePage.waitForFunction(() => /单篇 PDF Note/.test(window.__SINGLE_PDF_NOTE_TEXT__ || ''));
         await singlePage.waitForFunction(() => /单篇题目 PDF Note/.test(window.__SINGLE_PDF_NOTE_TEXT__ || ''));
-        console.log('PASS: mock-only catalog launch, stopped submit timer, suite PDF total duration and all three saved sections.');
+        console.log('PASS ' + (useWebKit ? 'webkit' : 'chromium') + ': complete three-passage PDF, stable review annotations and bounded export preparation.');
         await hostContext.close();
     } finally { await browser.close(); }
 })().catch(error => { console.error(error); process.exitCode = 1; }).finally(() => server.close());

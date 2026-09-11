@@ -81,6 +81,8 @@
         suiteNavigating: false,
         // 交卷后的本地三篇回顾：{ summary, answersByExam }
         suiteLocalReview: null,
+        localReviewRenderToken: 0,
+        localReviewRenderSettled: true,
         suiteBlueprint: null,
         suiteBlueprintKey: '',
         lastInitSignature: '',
@@ -566,8 +568,21 @@
             summary,
             answersByExam: (summary && summary.answersByExam) || {}
         };
+        state.localReviewRenderSettled = true;
         setReadOnlyMode(true);
         state.reviewViewMode = 'review';
+    }
+
+    function syncCurrentLocalReviewAnnotations() {
+        const local = state.suiteLocalReview;
+        if (!local || !local.summary || !Array.isArray(local.summary.sections) || !state.localReviewRenderSettled) return;
+        const section = local.summary.sections.find((item) => String(item.examId) === String(state.examId));
+        if (!section) return;
+        section.highlights = collectHighlights();
+        section.notes = typeof global.getPracticeNotes === 'function' ? global.getPracticeNotes() : [];
+        section.markedQuestions = typeof global.getPracticeMarkedQuestions === 'function'
+            ? global.getPracticeMarkedQuestions()
+            : (section.markedQuestions || []);
     }
 
     function configureHistorySuiteReview(summary) {
@@ -608,6 +623,9 @@
         if (!blueprint || !local || !Array.isArray(blueprint.passages)) return;
         const passage = blueprint.passages[targetIndex];
         if (!passage) return;
+        syncCurrentLocalReviewAnnotations();
+        const renderToken = ++state.localReviewRenderToken;
+        state.localReviewRenderSettled = false;
 
         let dataset = passage.dataset;
         if (!dataset) {
@@ -615,10 +633,12 @@
                 dataset = await loadDatasetFor(passage.examId);
                 passage.dataset = dataset;
             } catch (error) {
+                if (renderToken === state.localReviewRenderToken) state.localReviewRenderSettled = true;
                 console.error('[UnifiedReadingPage] 回顾载入小节失败:', passage.examId, error);
                 return;
             }
         }
+        if (renderToken !== state.localReviewRenderToken) return;
 
         // 切换当前篇：渲染其文章与题目，并回填该篇作答
         state.examId = passage.examId;
@@ -659,6 +679,7 @@
         } catch (_) {
             // 解析渲染失败不影响回顾
         }
+        if (renderToken !== state.localReviewRenderToken || String(state.examId) !== String(passage.examId)) return;
         applyHighlights(section?.highlights || []);
         if (typeof global.setPracticeNotes === 'function') {
             global.setPracticeNotes(section?.notes || []);
@@ -666,6 +687,7 @@
         if (typeof global.setPracticeMarkedQuestions === 'function') {
             global.setPracticeMarkedQuestions(section?.markedQuestions || []);
         }
+        state.localReviewRenderSettled = true;
     }
 
     function suiteResultRowsHtml(rows, markedQuestions = []) {
@@ -4051,9 +4073,28 @@
     }
 
     async function buildSuitePrintContainer(local) {
-        const summary = local.summary;
+        syncCurrentLocalReviewAnnotations();
+        const sourceSummary = local.summary;
         const blueprint = state.suiteBlueprint;
-        if (!summary || !blueprint || !Array.isArray(blueprint.passages)) return null;
+        if (!sourceSummary || !blueprint || !Array.isArray(blueprint.passages)) return null;
+        const summary = Object.assign({}, sourceSummary, {
+            sections: (sourceSummary.sections || []).map((section) => Object.assign({}, section, {
+                rows: (section.rows || []).map((row) => Object.assign({}, row, {
+                    userAnswer: Array.isArray(row.userAnswer) ? row.userAnswer.slice() : row.userAnswer,
+                    correctAnswer: Array.isArray(row.correctAnswer) ? row.correctAnswer.slice() : row.correctAnswer
+                })),
+                markedQuestions: (section.markedQuestions || []).slice(),
+                highlights: (section.highlights || []).map((item) => Object.assign({}, item)),
+                notes: (section.notes || []).map((item) => Object.assign({}, item))
+            }))
+        });
+        const passages = blueprint.passages.map((passage) => Object.assign({}, passage));
+        const datasets = await Promise.all(passages.map(async (passage) => {
+            if (passage.dataset) return passage.dataset;
+            const section = summary.sections.find((item) => String(item.examId) === String(passage.examId));
+            if (section && section.dataset) return section.dataset;
+            return loadDatasetFor(passage.examId);
+        }));
 
         const container = document.createElement('div');
         container.id = 'suite-print-root';
@@ -4071,18 +4112,12 @@
         `;
         container.appendChild(head);
 
-        for (let i = 0; i < blueprint.passages.length; i += 1) {
-            const passage = blueprint.passages[i];
-            let dataset = passage.dataset;
-            if (!dataset) {
-                try {
-                    dataset = await loadDatasetFor(passage.examId);
-                    passage.dataset = dataset;
-                } catch (_) {
-                    continue;
-                }
-            }
-            const section = summary.sections.find((s) => s.examId === passage.examId);
+        for (let i = 0; i < passages.length; i += 1) {
+            const passage = passages[i];
+            const dataset = datasets[i];
+            if (!dataset) throw new Error(`套题 PDF 缺少 ${passage.examId} 的题目数据`);
+            const section = summary.sections.find((s) => String(s.examId) === String(passage.examId));
+            if (!section) throw new Error(`套题 PDF 缺少 ${passage.examId} 的练习记录`);
             const passageHtml = buildAnnotatedPassageHtml(dataset, section);
             // 完整题目：与单篇导出一致，按题组渲染全部题目（题干、选项、填空原样呈现）
             const questionsHtml = buildAnnotatedQuestionHtml(dataset, section);
@@ -4147,7 +4182,10 @@
         const targetWindow = targetDocument.defaultView || global;
         try {
             if (targetDocument.fonts && targetDocument.fonts.ready) {
-                await targetDocument.fonts.ready;
+                await Promise.race([
+                    targetDocument.fonts.ready,
+                    new Promise((resolve) => global.setTimeout(resolve, 800))
+                ]);
             }
         } catch (_) {
             // ignore font readiness failures
@@ -4158,10 +4196,23 @@
             return new Promise((resolve) => {
                 image.addEventListener('load', resolve, { once: true });
                 image.addEventListener('error', resolve, { once: true });
-                global.setTimeout(resolve, 1500);
+                global.setTimeout(resolve, 800);
             });
         }));
-        await new Promise((resolve) => targetWindow.requestAnimationFrame(() => targetWindow.requestAnimationFrame(resolve)));
+        await new Promise((resolve) => {
+            let settled = false;
+            const done = () => {
+                if (settled) return;
+                settled = true;
+                resolve();
+            };
+            global.setTimeout(done, 250);
+            try {
+                targetWindow.requestAnimationFrame(() => targetWindow.requestAnimationFrame(done));
+            } catch (_) {
+                done();
+            }
+        });
     }
 
     async function printWhenReady(root = document) {
@@ -4226,7 +4277,7 @@
                 return;
             }
             if (printWindow && !printWindow.closed) {
-                const styleMarkup = Array.from(document.head.querySelectorAll('link[rel~="stylesheet"], style'))
+                const styleMarkup = Array.from(document.head.querySelectorAll('style'))
                     .map((node) => node.outerHTML)
                     .join('\n');
                 printWindow.document.open();
@@ -4505,6 +4556,7 @@
             if (!(state.submitted || state.readOnly || document.body.classList.contains('practice-completed-mode'))) {
                 return;
             }
+            syncCurrentLocalReviewAnnotations();
             const identity = state.reviewRecordId || state.reviewSessionId || state.suiteSessionId || state.sessionId || 'latest';
             const recoveryKey = `${ANNOTATION_RECOVERY_KEY_PREFIX}${encodeURIComponent(String(state.examId || 'unknown'))}::${encodeURIComponent(String(identity))}`;
             const payload = {
