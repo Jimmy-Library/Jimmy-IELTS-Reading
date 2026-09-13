@@ -1,6 +1,20 @@
 (function registerReadingExamManifest(global) {
   'use strict';
   global.__READING_EXAM_MANIFEST__ = {
+  "p3-high-1458": {
+    "examId": "p3-high-1458",
+    "dataKey": "p3-high-1458",
+    "script": "./p3-high-1458.js",
+    "title": "Is Graffiti Art or Crime? 涂鸦是艺术还是犯罪？",
+    "category": "P3"
+  },
+  "p3-low-1933": {
+    "examId": "p3-low-1933",
+    "dataKey": "p3-low-1933",
+    "script": "./p3-low-1933.js",
+    "title": "Memory and Age 记忆与年龄",
+    "category": "P3"
+  },
   "p2-medium-243": {
     "examId": "p2-medium-243",
     "dataKey": "p2-medium-243",
@@ -4612,13 +4626,6 @@
     "dataKey": "p2-low-1456",
     "script": "./p2-low-1456.js",
     "title": "IQ Scores: How they are changing and what the changes mean 智商分数：如何变化及意义",
-    "category": "P2"
-  },
-  "p2-high-1458": {
-    "examId": "p2-high-1458",
-    "dataKey": "p2-high-1458",
-    "script": "./p2-high-1458.js",
-    "title": "Is Graffiti Art or Crime? 涂鸦是艺术还是犯罪？",
     "category": "P2"
   },
   "p2-high-1459": {

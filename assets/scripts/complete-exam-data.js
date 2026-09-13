@@ -3,6 +3,30 @@
 // 数据版本: v3.2
 window.completeExamIndex = [
 {
+        id: "p3-high-1900", title: "What Are the 1,000 Foods to Eat Before You Die? 死前必吃的1000种食物是什么？", category: "P3", frequency: "high", path: "assets/generated/reading-exams/", filename: "p3-high-1900.js", hasHtml: true, hasPdf: false,
+    },
+{
+        id: "p1-medium-1471", title: "Keep a Watchful Eye on the Bridges 留心桥梁", category: "P1", frequency: "medium", path: "assets/generated/reading-exams/", filename: "p1-medium-1471.js", hasHtml: true, hasPdf: false,
+    },
+{
+        id: "p3-high-1458", title: "Is Graffiti Art or Crime? 涂鸦是艺术还是犯罪？", category: "P3", frequency: "high", path: "assets/generated/reading-exams/", filename: "p3-high-1458.js", hasHtml: true, hasPdf: false,
+    },
+{
+        id: "p3-low-1256", title: "Stealth Forces in Weight Loss 减肥的隐秘力量", category: "P3", frequency: "low", path: "assets/generated/reading-exams/", filename: "p3-low-1256.js", hasHtml: true, hasPdf: false,
+    },
+{
+        id: "p1-medium-1486", title: "Lever Brothers' Sunlight Soap: A Revolution in Hygiene and Industry 利华兄弟的阳光香皂：卫生与工业革命", category: "P1", frequency: "medium", path: "assets/generated/reading-exams/", filename: "p1-medium-1486.js", hasHtml: true, hasPdf: false,
+    },
+{
+        id: "p2-medium-1394", title: "From princes to paupers: how Goya's portraits tell the story of Spain 从王子到贫民：戈雅肖像如何讲述西班牙的故事", category: "P2", frequency: "medium", path: "assets/generated/reading-exams/", filename: "p2-medium-1394.js", hasHtml: true, hasPdf: false,
+    },
+{
+        id: "p3-high-1849", title: "The tuatara—past and future 大蜥蜴——过去与未来", category: "P3", frequency: "high", path: "assets/generated/reading-exams/", filename: "p3-high-1849.js", hasHtml: true, hasPdf: false,
+    },
+{
+        id: "p3-low-1933", title: "Memory and Age 记忆与年龄", category: "P3", frequency: "low", path: "assets/generated/reading-exams/", filename: "p3-low-1933.js", hasHtml: true, hasPdf: false,
+    },
+{
         id: "p1-medium-1045", title: "Burying greenhouse gases to slow global warming 掩埋温室气体以减缓全球变暖", category: "P1", frequency: "medium", path: "assets/generated/reading-exams/", filename: "p1-medium-1045.js", hasHtml: true, hasPdf: false,
     },
 {

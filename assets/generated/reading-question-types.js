@@ -6,7 +6,7 @@
 (function registerReadingQuestionTypes(global) {
   'use strict';
   global.__READING_QUESTION_TYPES__ = {
-  "generatedAt": "2026-09-04",
+  "generatedAt": "2026-09-13",
   "source": "人工分类索引 + 题目数据自动识别",
   "types": [
     {
@@ -499,6 +499,15 @@
       "diagram",
       "short-answer"
     ],
+    "p1-medium-1471": [
+      "mc",
+      "matching-info",
+      "diagram"
+    ],
+    "p1-medium-1486": [
+      "matching-info",
+      "note"
+    ],
     "p1-medium-161": [
       "tfng",
       "note"
@@ -885,6 +894,11 @@
       "matching-headings",
       "matching-features"
     ],
+    "p2-medium-1394": [
+      "tfng",
+      "matching-info",
+      "summary-passage"
+    ],
     "p2-medium-144": [
       "matching-headings",
       "matching-features",
@@ -956,6 +970,11 @@
       "mc",
       "tfng",
       "matching-endings"
+    ],
+    "p3-high-1458": [
+      "mc",
+      "matching-info",
+      "summary-passage"
     ],
     "p3-high-15": [
       "mc",
@@ -1032,10 +1051,20 @@
       "ynng",
       "summary-list"
     ],
+    "p3-high-1849": [
+      "mc",
+      "ynng",
+      "summary-list"
+    ],
     "p3-high-189": [
       "mc",
       "ynng",
       "summary-list"
+    ],
+    "p3-high-1900": [
+      "mc",
+      "tfng",
+      "summary-passage"
     ],
     "p3-high-192": [
       "mc",
@@ -1111,6 +1140,11 @@
       "ynng",
       "matching-endings"
     ],
+    "p3-low-1256": [
+      "matching-info",
+      "matching-features",
+      "summary-passage"
+    ],
     "p3-low-151": [
       "mc",
       "matching-info",
@@ -1165,6 +1199,11 @@
       "mc",
       "ynng",
       "matching-endings"
+    ],
+    "p3-low-1933": [
+      "mc",
+      "matching-features",
+      "summary-passage"
     ],
     "p3-low-198": [
       "ynng",
@@ -1402,13 +1441,21 @@
     "p1-medium-1041",
     "p1-medium-1042",
     "p1-medium-1255",
+    "p1-medium-1471",
+    "p1-medium-1486",
     "p1-medium-1923",
     "p2-high-1015",
     "p2-low-240",
     "p2-low-242",
+    "p2-medium-1394",
     "p2-medium-1925",
     "p3-high-1051",
     "p3-high-1133",
+    "p3-high-1458",
+    "p3-high-1849",
+    "p3-high-1900",
+    "p3-low-1256",
+    "p3-low-1933",
     "p3-low-240",
     "p3-medium-1929",
     "p3-medium-241"

@@ -1,0 +1,1701 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IELTS 阅读练习</title>
+    <link rel="stylesheet" href="../../../css/vocabulary-notebook.css">
+    <link rel="stylesheet" href="../../../css/vocabulary-notebook-v2.css">
+    <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <script>
+        window.__READING_ORIGINAL_UI__ = true;
+        document.documentElement.removeAttribute('data-image-skin');
+        document.documentElement.removeAttribute('data-theme');
+    </script>
+    <style>
+        #image-skin-panel,
+        #season-theme-panel,
+        #skin-cursor-halo,
+        #skin-cursor-dot,
+        #skin-atmosphere-layer,
+        #season-weather-canvas,
+        #skin-atmosphere-canvas {
+            display: none !important;
+        }
+        :root {
+            --line: #d7dde5;
+            --panel: #ffffff;
+            --panel-alt: #edf2f9;
+            --text: #1f2937;
+            --muted: #64748b;
+            --accent: #2563eb;
+            --success: #15803d;
+            --danger: #b91c1c;
+            --shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+            --practice-header-height: 67px;
+            --practice-nav-height: 72px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            font-size: 16px;
+        }
+
+        body {
+            font-family: "SF Pro Text", "PingFang SC", "Noto Sans SC", system-ui, sans-serif;
+            background: linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
+            color: var(--text);
+            height: 100vh;
+            overflow: hidden;
+            padding-bottom: var(--practice-nav-height);
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 14px 22px;
+            background: rgba(255, 255, 255, 0.94);
+            border-bottom: 1px solid var(--line);
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+        }
+
+        .header h1 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            line-height: 1.4;
+        }
+
+        .header p {
+            font-size: 0.92rem;
+            color: var(--muted);
+        }
+
+        .header-content {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            min-width: 0;
+        }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        #timer,
+        .header-btn {
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: var(--panel);
+            padding: 8px 12px;
+            font-size: 0.92rem;
+            color: var(--text);
+        }
+
+        .header-btn {
+            cursor: pointer;
+        }
+
+        .shell {
+            display: flex;
+            height: calc(100vh - var(--practice-header-height) - var(--practice-nav-height));
+            min-height: 0;
+            width: 100%;
+        }
+
+        .pane {
+            overflow: auto;
+            background: var(--panel);
+            padding: 22px;
+        }
+
+        #left {
+            width: 50%;
+            min-width: 320px;
+        }
+
+        #divider {
+            flex: 0 0 8px;
+            background: linear-gradient(180deg, #e2e8f0 0%, #cbd5e1 100%);
+            border-left: 1px solid var(--line);
+            border-right: 1px solid var(--line);
+            cursor: ew-resize;
+        }
+
+        #right {
+            flex: 1;
+            min-width: 320px;
+            background: var(--panel-alt);
+            padding: 16px 20px;
+        }
+
+        #left p,
+        #right p {
+            line-height: 1.7;
+            margin: 0 0 14px;
+        }
+
+        .unified-group {
+            margin-bottom: 18px;
+        }
+
+        .group {
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            padding: 24px 32px;
+            margin-bottom: 24px;
+        }
+
+        .question-item,
+        .match-question-item,
+        .choice-item {
+            margin-bottom: 12px;
+        }
+
+        .paragraph-dropzone,
+        .match-dropzone {
+            min-height: 40px;
+            border: 2px dashed #93c5fd;
+            border-radius: 10px;
+            background: #eff6ff;
+            padding: 8px 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+        }
+
+        .paragraph-dropzone.drag-over,
+        .match-dropzone.drag-over {
+            border-color: var(--accent);
+            background: #dbeafe;
+        }
+
+        .paragraph-dropzone.dropzone-filled,
+        .match-dropzone.dropzone-filled {
+            border-style: solid;
+        }
+
+        .paragraph-label {
+            font-size: 0.9rem;
+            color: var(--muted);
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .pool-items,
+        .dropped-items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            flex: 1;
+        }
+
+        .pool-items {
+            min-height: 40px;
+        }
+
+        .pool-items.drag-over {
+            border-color: var(--accent);
+            background: rgba(37, 99, 235, 0.08);
+        }
+
+        .dropped-items:empty::after {
+            content: "拖到这里";
+            font-size: 0.82rem;
+            color: #7b8a98;
+            letter-spacing: 0.02em;
+        }
+
+        .drag-item {
+            border: 1px solid #bfdbfe;
+            border-radius: 8px;
+            background: #eff6ff;
+            padding: 6px 10px;
+            cursor: grab;
+            font-size: 0.9rem;
+            user-select: none;
+        }
+
+        .drag-item.dragging {
+            opacity: 0.55;
+        }
+
+        .drag-item--assigned {
+            border-style: solid;
+        }
+
+        .drag-item[draggable="false"] {
+            cursor: pointer;
+            border-style: solid;
+        }
+
+        .practice-nav {
+            position: fixed;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 12px 18px;
+            background: rgba(255, 255, 255, 0.96);
+            border-top: 1px solid var(--line);
+            box-shadow: 0 -8px 24px rgba(15, 23, 42, 0.06);
+            z-index: 2000;
+        }
+
+        .practice-nav .title {
+            font-weight: 700;
+            color: var(--muted);
+            white-space: nowrap;
+        }
+
+        .practice-nav .questions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .q-item,
+        .practice-nav .controls button {
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: var(--panel);
+            padding: 6px 12px;
+            font-size: 0.9rem;
+            color: var(--text);
+            cursor: pointer;
+        }
+
+        .q-item:hover,
+        .practice-nav .controls button:hover {
+            background: #f1f5f9;
+        }
+
+        .q-item.active {
+            border-color: var(--accent);
+            background: #eff6ff;
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        .q-item.answered {
+            background: #dbeafe;
+            border-color: #93c5fd;
+        }
+
+        .q-item.correct {
+            border-color: var(--success);
+            background: #dcfce7;
+            color: var(--success);
+        }
+
+        .q-item.incorrect {
+            border-color: var(--danger);
+            background: #fee2e2;
+            color: var(--danger);
+        }
+
+        /* ---- 套题模式：一次展示全部小节题目（约 40 题）+ 跨篇跳转 ---- */
+        .practice-nav .questions.question-nav--suite {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: flex-start;
+            gap: 6px 16px;
+            flex: 1 1 auto;
+            max-height: 140px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+
+        .q-passage {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .q-passage__label {
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: var(--muted);
+            background: rgba(148, 163, 184, 0.16);
+            border: none;
+            border-radius: 6px;
+            padding: 3px 7px;
+            white-space: nowrap;
+            line-height: 1.4;
+        }
+
+        .q-passage__label--btn {
+            cursor: pointer;
+            transition: background 0.15s ease, color 0.15s ease;
+        }
+
+        .q-passage__label--btn:hover {
+            background: rgba(37, 99, 235, 0.18);
+            color: var(--accent);
+        }
+
+        .q-passage.is-current .q-passage__label {
+            background: rgba(37, 99, 235, 0.16);
+            color: var(--accent);
+        }
+
+        .q-passage__items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+
+        .question-nav--suite .q-item {
+            padding: 3px 8px;
+            font-size: 0.8rem;
+            min-width: 30px;
+            text-align: center;
+        }
+
+        .question-nav--suite .q-passage:not(.is-current) .q-item {
+            opacity: 0.8;
+        }
+
+        .practice-nav .controls {
+            margin-left: auto;
+            display: flex;
+            gap: 8px;
+        }
+
+        /* ---- 导出 PDF：整页打印（文章 + 题目 + 作答 + 高亮 + 详情）---- */
+        /* 套题合并打印：屏幕上不显示，仅打印时启用 */
+        #suite-print-root {
+            display: none;
+        }
+
+        .pdf-inline-note-comment {
+            display: none;
+        }
+
+        body.suite-printing .pdf-inline-note-comment {
+            display: inline;
+            margin-left: 3px;
+            color: #9a3412;
+            font-size: 0.88em;
+            font-weight: 700;
+            font-style: italic;
+        }
+
+        @media print {
+            html, body {
+                background: #fff !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+                height: auto !important;
+                overflow: visible !important;
+                padding-bottom: 0 !important;
+            }
+
+            /* 套题导出：只打印三篇合并内容，隐藏只渲染单篇的实时页面 */
+            body.suite-printing .shell,
+            body.suite-printing .header,
+            body.suite-printing #results,
+            body.suite-printing #question-nav {
+                display: none !important;
+            }
+
+            body.suite-printing #suite-print-root {
+                display: block !important;
+            }
+
+            .pdf-inline-highlight {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            .pdf-inline-note-comment {
+                display: inline !important;
+                margin-left: 3px;
+                color: #9a3412 !important;
+                font-size: 9pt;
+                font-weight: 700;
+                font-style: italic;
+                white-space: normal;
+            }
+
+            #suite-print-root .suite-print__head h1 {
+                font-size: 18pt;
+                margin: 0 0 4px;
+            }
+
+            #suite-print-root .suite-print__head p {
+                margin: 0 0 16px;
+                font-weight: 700;
+            }
+
+            #suite-print-root .suite-print__passage {
+                page-break-before: always;
+                break-before: page;
+            }
+
+            #suite-print-root .suite-print__passage:first-of-type {
+                page-break-before: auto;
+                break-before: auto;
+            }
+
+            #suite-print-root .suite-print__title {
+                font-size: 14pt;
+                margin: 0 0 10px;
+                padding-bottom: 6px;
+                border-bottom: 2px solid #1f7a4d;
+            }
+
+            #suite-print-root .suite-print__tag {
+                display: inline-block;
+                margin-right: 8px;
+                padding: 1px 8px;
+                border-radius: 4px;
+                background: #1f7a4d;
+                color: #fff;
+                font-size: 11pt;
+            }
+
+            #suite-print-root .suite-print__score {
+                float: right;
+                font-size: 12pt;
+                color: #1f7a4d;
+            }
+
+            #suite-print-root .suite-print__article {
+                margin-bottom: 14px;
+                line-height: 1.7;
+            }
+
+            #suite-print-root .suite-print__answers {
+                width: 100%;
+                border-collapse: collapse;
+                page-break-inside: avoid;
+                break-inside: avoid;
+            }
+
+            #suite-print-root .suite-print__answers th,
+            #suite-print-root .suite-print__answers td {
+                border: 1px solid #cfd8dc;
+                padding: 5px 8px;
+                text-align: center;
+                font-size: 10pt;
+            }
+
+            /* 完整题目区（与单篇导出一致：文章后接全部题目） */
+            #suite-print-root .suite-print__questions {
+                margin: 6px 0 16px;
+                line-height: 1.6;
+                font-size: 10.5pt;
+            }
+
+            #suite-print-root .suite-print__questions .unified-group,
+            #suite-print-root .suite-print__questions .group {
+                margin: 0 0 14px;
+                break-inside: avoid;
+                page-break-inside: avoid;
+            }
+
+            #suite-print-root .suite-print__questions input[type="text"],
+            #suite-print-root .suite-print__questions .blank {
+                border: none;
+                border-bottom: 1px solid #555;
+                min-width: 90px;
+                background: transparent;
+            }
+
+            #suite-print-root .suite-print__answerkey {
+                margin-top: 12px;
+                break-inside: avoid;
+                page-break-inside: avoid;
+            }
+
+            #suite-print-root .suite-print__ak-title {
+                font-size: 12pt;
+                margin: 0 0 6px;
+                color: #1f7a4d;
+            }
+
+            /* 隐藏交互/悬浮元素（保留 header-controls 中的 timer 作为做题用时） */
+            #settings-panel,
+            #notes-panel,
+            .overlay,
+            #divider,
+            #selbar,
+            .practice-nav,
+            .header-controls .header-btn {
+                display: none !important;
+            }
+
+            /* 单篇导出 PDF：打印做题用时 */
+            #timer::before {
+                content: "做题用时：";
+                font-weight: 700;
+                color: #1f7a4d;
+            }
+
+            .header {
+                position: static !important;
+                box-shadow: none !important;
+            }
+
+            /* 双栏展开为整页单列，完整显示全部内容 */
+            .shell {
+                display: block !important;
+                height: auto !important;
+                overflow: visible !important;
+                padding: 0 !important;
+            }
+
+            #left,
+            #right {
+                width: 100% !important;
+                min-width: 0 !important;
+                max-width: none !important;
+                height: auto !important;
+                max-height: none !important;
+                overflow: visible !important;
+                display: block !important;
+                padding: 0 !important;
+            }
+
+            #right {
+                margin-top: 18px;
+            }
+
+            /* 练习记录详情（结果区）始终展开 */
+            #results {
+                display: block !important;
+            }
+
+            .unified-group,
+            .group,
+            #results {
+                break-inside: avoid;
+                page-break-inside: avoid;
+            }
+
+            /* 保留高亮底色 */
+            .hl {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+        }
+
+        .submit-btn {
+            background: var(--accent) !important;
+            color: white !important;
+            border-color: var(--accent) !important;
+            font-weight: 600;
+        }
+
+        #results {
+            display: none;
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            padding: 18px;
+            margin-top: 18px;
+        }
+
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 12px;
+            font-size: 0.92rem;
+        }
+
+        .results-table th,
+        .results-table td {
+            border: 1px solid var(--line);
+            padding: 8px 10px;
+            text-align: center;
+        }
+
+        .result-correct {
+            color: var(--success);
+            font-weight: 700;
+        }
+
+        .result-incorrect {
+            color: var(--danger);
+            font-weight: 700;
+        }
+
+        /* 套题结果：三篇分节呈现 */
+        .suite-result-total {
+            font-size: 1.02rem;
+            font-weight: 700;
+            margin: 6px 0 4px;
+        }
+
+        .suite-result-band {
+            display: inline-block;
+            margin-left: 8px;
+            padding: 2px 10px;
+            border-radius: 999px;
+            background: var(--success);
+            color: #fff;
+            font-size: 0.86rem;
+        }
+
+        .suite-result-section {
+            margin-top: 16px;
+            padding-top: 12px;
+            border-top: 1px solid var(--line);
+        }
+
+        .suite-result-section__head {
+            display: flex;
+            align-items: baseline;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .suite-result-section__tag {
+            flex: 0 0 auto;
+            font-weight: 700;
+            font-size: 0.78rem;
+            padding: 2px 8px;
+            border-radius: 4px;
+            background: rgba(37, 99, 235, 0.12);
+            color: #1d4ed8;
+        }
+
+        .suite-result-section__title {
+            flex: 1 1 auto;
+            min-width: 0;
+            font-size: 0.92rem;
+            opacity: 0.85;
+        }
+
+        .suite-result-section__score {
+            flex: 0 0 auto;
+            font-weight: 700;
+            color: var(--success);
+            white-space: nowrap;
+        }
+
+        /* 提交后展示的微信 / 二维码联系卡片 */
+        .contact-card {
+            margin-top: 20px;
+            padding: 18px 16px;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            text-align: center;
+            background: var(--panel-alt, #f8fafc);
+        }
+
+        .contact-card .contact-title {
+            margin: 0 0 12px;
+            font-size: 0.98rem;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .contact-card .contact-qr {
+            display: block;
+            width: 200px;
+            max-width: 70%;
+            height: auto;
+            margin: 0 auto 12px;
+            border-radius: 8px;
+        }
+
+        .contact-card .contact-wechat {
+            margin: 6px 0 4px;
+            font-size: 0.95rem;
+            color: var(--text);
+        }
+
+        .contact-card .wechat-id-copy {
+            display: inline-block;
+            padding: 4px 12px;
+            margin-left: 4px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #fff;
+            background: #07c160;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: inherit;
+            transition: background 0.15s ease;
+        }
+
+        .contact-card .wechat-id-copy:hover {
+            background: #06ad56;
+        }
+
+        .contact-card .wechat-id-copy.copied {
+            background: #0369d9;
+        }
+
+        .contact-card .contact-hint {
+            margin: 2px 0 0;
+            font-size: 0.8rem;
+            color: var(--muted, #94a3b8);
+        }
+
+        body.dark-mode .contact-card {
+            background: var(--panel-alt, #0f172a);
+        }
+
+        .overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.12);
+            z-index: 800;
+        }
+
+        #settings-panel,
+        #notes-panel,
+        #selbar {
+            display: none;
+        }
+
+        @media (max-width: 980px) {
+            body {
+                overflow: auto;
+                padding-bottom: calc(var(--practice-nav-height) + 16px);
+            }
+
+            .shell {
+                display: block;
+                height: auto;
+            }
+
+            #left,
+            #right {
+                width: 100%;
+                min-width: 0;
+            }
+
+            #divider {
+                display: none;
+            }
+
+            .practice-nav {
+                flex-wrap: wrap;
+                align-items: flex-start;
+            }
+
+            .practice-nav .controls {
+                margin-left: 0;
+                width: 100%;
+                justify-content: flex-end;
+            }
+        }
+
+        /* ---------------- Phase 2 Aesthetics ---------------- */
+        #timer {
+            cursor: pointer;
+            transition: opacity 0.2s ease, background 0.2s ease;
+        }
+
+        #timer:hover {
+            opacity: 0.85;
+        }
+
+        #timer.paused {
+            opacity: 0.5;
+        }
+
+        #settings-btn {
+            font-size: 1.1rem;
+            padding: 6px 12px;
+            font-weight: 700;
+        }
+
+        /* ---------------- IELTS Aesthetic Tweaks ---------------- */
+        /* Flattening corners */
+        .group,
+        .unified-group,
+        #results {
+            border-radius: 4px;
+        }
+
+        .paragraph-dropzone,
+        .match-dropzone {
+            border-radius: 4px;
+        }
+
+        .drag-item {
+            border-radius: 4px;
+        }
+
+        #timer,
+        .header-btn,
+        .q-item,
+        .practice-nav .controls button {
+            border-radius: 4px;
+        }
+
+        /* Font size utility classes */
+        html.font-normal {
+            font-size: 16px;
+        }
+
+        html.font-large {
+            font-size: 18px;
+        }
+
+        html.font-xlarge {
+            font-size: 20px;
+        }
+
+        /* Highlight visual */
+        .hl {
+            background-color: #72361c;
+            color: #fff;
+        }
+
+        /* Note highlight */
+        .hl[data-hl-type="note"] {
+            background-color: #0369d9;
+            color: #fff;
+            cursor: pointer;
+        }
+
+        .hl[data-hl-type="note"].note-anchor-active {
+            background-color: #0ea5e9;
+            box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.35);
+        }
+
+        /* Pink highlight (second highlight pass) */
+        .hl[data-hl-type="pink"] {
+            background-color: #ec4899;
+            color: #fff;
+        }
+
+        /* 回顾只读模式：隐藏选区工具条的高亮/删除按钮（仅保留 Note 查看） */
+        body.review-readonly-mode #btnHL,
+        body.review-readonly-mode #btnUH {
+            display: none;
+        }
+
+        /* 回顾只读模式：计时器不可点击 */
+        body.review-readonly-mode #timer {
+            cursor: default;
+        }
+
+        /* Dark Mode variables */
+        body.dark-mode {
+            --panel: #1e293b;
+            --panel-alt: #0f172a;
+            --text: #f8fafc;
+            --line: #334155;
+            background: #020617;
+        }
+
+        body.dark-mode .header {
+            background: rgba(30, 41, 59, 0.94);
+            border-bottom: 1px solid var(--line);
+        }
+
+        body.dark-mode .group,
+        body.dark-mode .unified-group {
+            background: var(--panel);
+        }
+
+        body.dark-mode .hl {
+            background-color: #72361c;
+            color: #fff;
+        }
+
+        body.dark-mode .hl[data-hl-type="note"] {
+            background-color: #0369d9;
+            color: #fff;
+        }
+
+        body.dark-mode .hl[data-hl-type="pink"] {
+            background-color: #ec4899;
+            color: #fff;
+        }
+
+        body.dark-mode .paragraph-dropzone,
+        body.dark-mode .match-dropzone {
+            background: #1e293b;
+            border-color: #475569;
+        }
+
+        body.dark-mode .drag-item {
+            background: #334155;
+            border-color: #64748b;
+            color: #f8fafc;
+        }
+
+        body.dark-mode #timer,
+        body.dark-mode .header-btn {
+            background: var(--panel);
+            color: #f8fafc;
+        }
+
+        /* Phase 3 Nav Dark Mode */
+        body.dark-mode .practice-nav {
+            background: var(--panel);
+            border-color: var(--line);
+        }
+
+        body.dark-mode .q-item,
+        body.dark-mode .practice-nav .controls button {
+            background: var(--panel-alt);
+            color: #f8fafc;
+            border-color: var(--line);
+        }
+
+        body.dark-mode .q-item:hover,
+        body.dark-mode .practice-nav .controls button:hover {
+            background: #334155;
+        }
+
+        body.dark-mode .q-item.active {
+            border-color: var(--accent);
+            background: #1e40af;
+            color: white;
+        }
+
+        body.dark-mode .q-item.answered {
+            background: #1e3a8a;
+            border-color: #3b82f6;
+            color: #ffffff;
+        }
+
+        body.dark-mode .q-item.correct {
+            background: #064e3b;
+            border-color: var(--success);
+            color: #dcfce7;
+        }
+
+        body.dark-mode .q-item.incorrect {
+            background: #7f1d1d;
+            border-color: var(--danger);
+            color: #fee2e2;
+        }
+
+        body.dark-mode .submit-btn {
+            background: var(--accent) !important;
+        }
+
+        /* Selection bar visual */
+        #selbar {
+            position: absolute;
+            z-index: 1000;
+            background: #1e293b;
+            color: white;
+            padding: 4px;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+            display: none;
+            /* hidden by default */
+            gap: 4px;
+        }
+
+        #selbar button {
+            background: transparent;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 0.85rem;
+        }
+
+        #selbar button:hover {
+            background: #334155;
+        }
+
+        /* Settings Panel floating */
+        #settings-panel {
+            position: fixed;
+            top: 60px;
+            right: 20px;
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            padding: 16px;
+            width: 260px;
+            z-index: 1000;
+            display: none;
+            /* toggled by JS */
+        }
+
+        #settings-panel .settings-section {
+            margin-bottom: 16px;
+        }
+
+        #settings-panel .settings-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .settings-title {
+            font-size: 0.9rem;
+            color: var(--muted);
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .settings-options {
+            display: flex;
+            gap: 8px;
+        }
+
+        .settings-option {
+            flex: 1;
+            padding: 8px;
+            background: var(--panel-alt);
+            border: 1px solid var(--line);
+            border-radius: 4px;
+            cursor: pointer;
+            color: var(--text);
+            text-align: center;
+        }
+
+        .settings-option.active {
+            border-color: var(--accent);
+            background: var(--accent);
+            color: white;
+        }
+
+        /* Notes panel —— 右侧边栏样式 */
+        :root {
+            --notes-panel-width: clamp(320px, 28vw, 380px);
+        }
+
+        @media (min-width: 981px) {
+            body.notes-panel-open .header,
+            body.notes-panel-open .shell {
+                width: calc(100% - var(--notes-panel-width));
+            }
+
+            body.notes-panel-open .practice-nav {
+                right: var(--notes-panel-width);
+            }
+        }
+
+        #notes-panel {
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: var(--notes-panel-width);
+            max-width: 92vw;
+            height: 100%;
+            background: var(--panel);
+            border-left: 1px solid var(--line);
+            box-shadow: -10px 0 30px rgba(0, 0, 0, 0.12);
+            z-index: 2100;
+            display: none;
+            /* toggled by JS */
+            flex-direction: column;
+        }
+
+        @media (max-width: 980px) {
+            #notes-panel {
+                position: relative;
+                top: auto;
+                right: auto;
+                width: 100%;
+                max-width: none;
+                height: min(52vh, 460px);
+                border-left: none;
+                border-bottom: 1px solid var(--line);
+                box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+            }
+        }
+
+        #notes-panel header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 18px;
+            border-bottom: 1px solid var(--line);
+            flex-shrink: 0;
+        }
+
+        #notes-panel header h3 {
+            margin: 0;
+            font-size: 1.15rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        #notes-panel .notes-header-actions {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        #notes-panel .notes-header-actions button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--text);
+            padding: 0;
+            display: inline-flex;
+            align-items: center;
+            opacity: 0.85;
+        }
+
+        #notes-panel .notes-header-actions button:hover {
+            opacity: 1;
+        }
+
+        /* 笔记列表容器 */
+        #notes-panel .notes-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0;
+        }
+
+        #notes-panel .notes-list__empty {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--muted, #999);
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        /* 单条笔记 */
+        .note-item {
+            border-bottom: 1px solid var(--line);
+            display: flex;
+            flex-direction: column;
+            background: var(--panel);
+            transition: background-color 0.18s ease, box-shadow 0.18s ease;
+        }
+
+        .note-item.is-active {
+            background: #dff2ff;
+            box-shadow: inset 4px 0 0 #2563eb;
+        }
+
+        body.dark-mode .note-item.is-active {
+            background: #17375e;
+        }
+
+        .note-item:last-child {
+            border-bottom: none;
+        }
+
+        .note-item__header {
+            display: flex;
+            align-items: flex-start;
+            padding: 12px 14px 8px;
+            gap: 8px;
+            background: transparent;
+            cursor: pointer;
+        }
+
+        .note-item.is-active .note-item__header {
+            background: rgba(37, 99, 235, 0.08);
+        }
+
+        body.dark-mode .note-item__header {
+            background: transparent;
+        }
+
+        .note-item__part {
+            font-weight: 700;
+            font-size: 0.85rem;
+            color: #2563eb;
+            white-space: nowrap;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+        .note-item__text {
+            flex: 1;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            word-break: break-word;
+        }
+
+        .note-item__delete {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #999;
+            font-size: 1.2rem;
+            line-height: 1;
+            padding: 0 2px;
+            flex-shrink: 0;
+            opacity: 0.6;
+            transition: opacity 0.15s, color 0.15s;
+        }
+
+        .note-item__delete:hover {
+            opacity: 1;
+            color: #e53e3e;
+        }
+
+        .note-item__textarea {
+            width: 100%;
+            min-height: 60px;
+            padding: 10px 14px 12px;
+            border: none;
+            border-top: 1px dashed var(--line);
+            resize: vertical;
+            background: transparent;
+            color: var(--text);
+            font-family: inherit;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            box-sizing: border-box;
+        }
+
+        .note-item__textarea:focus {
+            outline: none;
+            background: rgba(37, 99, 235, 0.03);
+        }
+
+        #notes-panel .notes-footer {
+            padding: 10px 18px;
+            text-align: right;
+            border-top: 1px solid var(--line);
+            flex-shrink: 0;
+        }
+
+        #notes-panel #notes-delete-all {
+            background: none;
+            border: none;
+            color: #e53e3e;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        #notes-panel #notes-delete-all:hover {
+            text-decoration: underline;
+        }
+
+        /* 眼睛图标：隐藏标注时淡化全部高亮背景 */
+        body.notes-hide-marks .hl {
+            background-color: transparent !important;
+            color: inherit !important;
+        }
+
+        /* ---------------- Exam Option Layouts ---------------- */
+        .choice-item label,
+        .checkbox-options label,
+        .options-list label,
+        .multiple-choice-options label,
+        .matching-options label,
+        .mcq-group label,
+        .radio-options label,
+        .radio-group label,
+        .multiple-choice label,
+        .true-false-ng label {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            line-height: 1.5;
+        }
+
+        .choice-item label input[type="checkbox"],
+        .checkbox-options label input[type="checkbox"],
+        .options-list label input[type="checkbox"],
+        .choice-item label input[type="radio"],
+        .multiple-choice-options label input[type="radio"],
+        .matching-options label input[type="radio"],
+        .mcq-group label input[type="radio"],
+        .radio-options label input[type="radio"],
+        .radio-group label input[type="radio"],
+        .multiple-choice label input[type="radio"],
+        .true-false-ng label input[type="radio"] {
+            margin-top: 4px;
+            flex-shrink: 0;
+            cursor: pointer;
+        }
+
+        /* ---------------- Table Completion Layout ---------------- */
+        .table-section {
+            margin-top: 12px;
+            overflow-x: auto;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: var(--bg);
+            padding: 10px 12px;
+        }
+
+        .table-section table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+
+        .table-section thead th {
+            border: 1px solid var(--line);
+            background: var(--panel-alt);
+            font-weight: 700;
+            text-align: center;
+            padding: 10px 8px;
+        }
+
+        .table-section tbody td {
+            border: 1px solid var(--line);
+            padding: 10px 10px;
+            vertical-align: top;
+            line-height: 1.45;
+        }
+
+        .table-section thead th:first-child,
+        .table-section tbody td:first-child {
+            width: 16%;
+        }
+
+        .table-section thead th:nth-child(2),
+        .table-section tbody td:nth-child(2) {
+            width: 20%;
+        }
+
+        .table-section thead th:nth-child(3),
+        .table-section tbody td:nth-child(3) {
+            width: 64%;
+        }
+
+        .table-section ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+
+        .table-section li + li {
+            margin-top: 6px;
+        }
+
+        .table-section input.blank {
+            display: inline-block;
+            min-width: 120px;
+            max-width: 180px;
+            width: 40%;
+            padding: 2px 6px;
+            border: 1px solid var(--line);
+            border-radius: 4px;
+            background: var(--panel);
+            color: var(--text);
+            vertical-align: middle;
+        }
+
+        @media (max-width: 900px) {
+            .table-section input.blank {
+                width: 100%;
+                max-width: none;
+                margin-top: 4px;
+            }
+        }
+
+        /* ---------------- Drop Targets ---------------- */
+        .drop-target-summary {
+            display: inline-flex;
+            min-width: 80px;
+            min-height: 30px;
+            border-bottom: 2px solid var(--muted);
+            margin: 0 4px;
+            vertical-align: bottom;
+            align-items: center;
+            justify-content: center;
+            padding: 0 8px;
+            background: rgba(0, 0, 0, 0.02);
+            border-radius: 4px 4px 0 0;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .drop-target-summary.drag-over {
+            border-bottom-color: var(--accent);
+            background: #dbeafe;
+        }
+
+        .drop-target-summary.dropzone-filled {
+            border-bottom-color: var(--success);
+            background: #dcfce7;
+            color: var(--success);
+            font-weight: 600;
+        }
+
+        .drop-target-summary .drag-item {
+            border: none;
+            background: transparent;
+            padding: 0;
+            margin: 0;
+            cursor: grab;
+            color: inherit;
+            font-weight: inherit;
+        }
+    </style>
+</head>
+
+<body>
+    <header class="header">
+        <div class="header-content">
+            <h1 id="exam-title">IELTS 阅读练习</h1>
+            <p id="exam-subtitle">统一阅读页</p>
+        </div>
+        <div class="header-controls">
+            <div id="timer" title="点击启停">00:00</div>
+            <button class="header-btn" id="settings-btn" title="Settings" type="button">☰</button>
+            <button class="header-btn" id="note-btn" type="button">Note</button>
+        </div>
+    </header>
+
+    <div id="settings-panel">
+        <div class="settings-section">
+            <h3 class="settings-title">字号调整</h3>
+            <div class="settings-options">
+                <button class="settings-option active" data-size="normal">A</button>
+                <button class="settings-option" data-size="large" style="font-size: 1.1rem;">A</button>
+                <button class="settings-option" data-size="xlarge" style="font-size: 1.25rem;">A</button>
+            </div>
+        </div>
+        <div class="settings-section">
+            <h3 class="settings-title">背景颜色</h3>
+            <div class="settings-options">
+                <button class="settings-option active" data-mode="light">浅色</button>
+                <button class="settings-option" data-mode="dark">深色</button>
+            </div>
+        </div>
+        <div class="settings-section" id="suite-flow-mode-section" style="display: none;">
+            <h3 class="settings-title">套题流程模式</h3>
+            <div class="settings-options">
+                <button class="settings-option" data-suite-flow-mode="auto">自动跳转下一篇</button>
+                <button class="settings-option" data-suite-flow-mode="manual">提交后停留回看</button>
+            </div>
+        </div>
+    </div>
+    <div id="notes-panel">
+        <header>
+            <h3>NOTES</h3>
+            <div class="notes-header-actions">
+                <button id="notes-eye" type="button" title="显示/隐藏标注" aria-label="显示或隐藏标注">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z" />
+                        <circle cx="12" cy="12" r="3" />
+                    </svg>
+                </button>
+                <button id="close-note" type="button" aria-label="关闭">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                </button>
+            </div>
+        </header>
+        <div class="notes-list" id="notes-list">
+            <div class="notes-list__empty" id="notes-list-empty">
+                📝 选中文章中的文字，点击 Note 按钮添加笔记
+            </div>
+        </div>
+        <div class="notes-footer">
+            <button id="notes-delete-all" type="button">DELETE ALL</button>
+        </div>
+    </div>
+    <div class="overlay"></div>
+
+    <div class="shell">
+        <section class="pane" id="left"></section>
+        <div id="divider"></div>
+        <section class="pane" id="right">
+            <div id="question-groups"></div>
+            <div id="results"></div>
+        </section>
+    </div>
+
+    <div id="selbar">
+        <button type="button" id="btnHL" data-role="highlight">Highlight</button>
+        <button type="button" id="btnUH" data-role="remove-highlight">Remove</button>
+        <button type="button" id="btnNote" data-role="note">Note</button>
+        <button type="button" id="btnDictionary" data-role="dictionary">查词</button>
+        <button type="button" id="btnTranslate" data-role="translate">翻译</button>
+        <button type="button" id="btnAddVocabulary" data-role="add-vocabulary">加入单词本</button>
+    </div>
+
+    <div class="practice-nav">
+        <div class="title">题目导航</div>
+        <div class="questions" id="question-nav"></div>
+        <div class="controls">
+            <button id="exit-btn" type="button" title="退出" style="margin-right: 8px; display: none;">Exit</button>
+            <button id="export-pdf-btn" type="button" title="导出整页与练习详情为 PDF">导出PDF</button>
+            <button id="reset-btn" type="button">Reset</button>
+            <button id="submit-btn" class="primary" type="button">Submit</button>
+        </div>
+    </div>
+
+    <script src="../../../js/runtime/readingExamRegistry.js"></script>
+    <script src="../../../js/runtime/readingExplanationRegistry.js"></script>
+    <script>
+(function (global) {
+  'use strict';
+  global.__READING_EXAM_MANIFEST__ = {
+    "p3-high-1458": { "examId": "p3-high-1458", "dataKey": "p3-high-1458", "script": "./p3-high-1458.js", "title": "Is Graffiti Art or Crime? 涂鸦是艺术还是犯罪？", "category": "P3" }
+  };
+})(typeof window !== 'undefined' ? window : this);
+
+(function registerReadingExamData(global) {
+  'use strict';
+  if (!global.__READING_EXAM_DATA__ || typeof global.__READING_EXAM_DATA__.register !== "function") {
+    throw new Error("reading_exam_registry_missing");
+  }
+  global.__READING_EXAM_DATA__.register("p3-high-1458", {
+  "schemaVersion": "ReadingExamSourceV1",
+  "examId": "p3-high-1458",
+  "meta": {
+    "title": "Is Graffiti Art or Crime? 涂鸦是艺术还是犯罪？",
+    "category": "P3",
+    "frequency": "high",
+    "pdfFilename": "",
+    "source": "IELTS清洗库 ielts-reading-tests/txt/is-graffiti-art-or-crime-de-thi-ielts-reading-4-1-2025-kem-giai-thich.txt",
+    "questionIntroHtml": "<h3>Questions</h3>"
+  },
+  "passage": {
+    "blocks": [
+      {
+        "blockId": "passage-main",
+        "kind": "html",
+        "html": "<h2>READING PASSAGE</h2>\n<h3>Is Graffiti Art or Crime? 涂鸦是艺术还是犯罪？</h3>\n<p><strong>A</strong> The term graffiti derives from the Italian graffito meaning ‘scratching’ and can be defined as uninvited marking or writing scratched or applied to objects, built structures and natural features. It is not a new phenomenon: examples can be found on ancient structures around the world, in some cases predating the Greeks and Romans. In such circumstances it has acquired invaluable historical and archaeological significance, providing a social history of life and events at that time. Graffiti is now a problem that has become pervasive, as a result of the availability of cheap and quick means of markmaking.</p>\n<p><strong>B</strong> It is usually considered a priority to remove graffiti as quickly as possible after it appears. This is for several reasons. The first is to prevent ‘copy-cat’ emulation which can occur rapidly once a clean surface is defaced. It may also be of a racist or otherwise offensive nature and many companies and councils have a policy of removing this type of graffiti within an hour or two of it being reported. Also, as paints, glues and inks dry out over time they can become increasingly difficult to remove and are usually best dealt with as soon as possible after the incident. Graffiti can also lead to more serious forms of vandalism and, ultimately, the deterioration of an area, contributing to social decline.</p>\n<p><strong>C</strong> Although graffiti may be regarded as an eyesore, any proposal to remove it from sensitive historic surfaces should be carefully considered: techniques designed for more robust or utilitarian surfaces may result in considerable damage. In the event of graffiti incidents, it is important that the owners of buildings or other structures and their consultants are aware of the approach they should take in dealing with the problem. The police should be informed as there may be other related attacks occurring locally. An incidence pattern can identify possible culprits, as can stylised signatures or nicknames, known as ‘tags’, which may already be familiar to local police. Photographs are useful to record graffiti incident and may assist the police in bringing a prosecution. Such images are also required for insurance claims, and can be helpful to cleaning operatives, allowing them to see the problem area before arriving on site.</p>\n<p><strong>D</strong> There are a variety of methods that are used to remove graffiti. Broadly these divide between chemical and mechanical systems. Chemical preparations are based on dissolving the media; these solvents can range from water to potentially hazardous chemical ‘cocktails’. Mechanical systems such as wire-brushing and grit-blasting attempt to abrade or chip the media from the surface. Care should be taken to comply with health and safety legislation with regard to the protection of both passers-by and any person carrying out the cleaning. Operatives should follow product guidelines in terms of application and removal, and wear the appropriate protective equipment. Measures must be taken to ensure that run-off, aerial mists, drips and splashes do not threaten unprotected members of the public. When examining a graffiti incident it is important to assess the ability of the substrate to withstand the prescribed treatment. If there is any doubt regarding this, then small trial areas should be undertaken to assess the impact of more extensive treatment.</p>\n<p><strong>E</strong> A variety of preventive strategies can be adopted to combat a recurring problem of graffiti at a given site. As no two sites are the same, no one set of protection measures will be suitable for all situations. Each site must be looked at individually. Surveillance systems such as closed circuit television may also help. In cities and towns around the country, prominently placed cameras have been shown to reduce anti-social behavior of all types including graffiti. Security patrols will also act as a deterrent to prevent recurring attacks. However, the cost of this may be too high for most situations. Physical barrier such as a wall, railings, doors or gates can be introduced to discourage unauthorized access to a vulnerable site. However, consideration has to be given to the impact measures have on the structure being protected. In the worst cases, they can be almost as damaging to the quality of the environment as the graffiti they prevent. In others, they might simply provide a new surface for graffiti.</p>\n<p><strong>F</strong> One of the most significant problems associated with graffiti removal is the need to remove it from surfaces that are repeatedly attacked. Under these circumstances the repeated removal of graffiti using even the most gentle methods will ultimately cause damage to the surface material. There may be situations where the preventive strategies mentioned above do not work or are not a viable proposition at a given site. Anti-graffiti coatings are usually applied by brush or spray leaving a thin veneer that essentially serves to isolate the graffiti from the surface.</p>\n<p><strong>G</strong> Removal of graffiti from a surface that has been treated in this way is much easier, usually using low-pressure water which reduces the possibility of damage. Depending on the type of barrier selected it may be necessary to reapply the coating after each graffiti removal exercise.</p>"
+      }
+    ]
+  },
+  "questionGroups": [
+    {
+      "groupId": "group-1",
+      "kind": "matching",
+      "questionIds": [
+        "q14",
+        "q15",
+        "q16",
+        "q17",
+        "q18",
+        "q19"
+      ],
+      "bodyHtml": "<div class=\"group\" id=\"q14-15-16-17-18-19-anchor\"><h4>Questions 14-19</h4><p>Reading Passage 3 has 7 paragraphs, <strong>A-G</strong>.</p><p>Which paragraph contains the following information?</p><p><em>Write the correct letter, <strong>A-G</strong>, in boxes 14-19 on your answer sheet. You may use any letter more than once.</em></p><div style=\"overflow-x: auto;\"><table class=\"matching-table\"><thead><tr><th style=\"min-width: 260px;\"></th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th><th>F</th><th>G</th></tr></thead><tbody><tr><td><strong>14</strong> why chemically cleaning graffiti may cause damage</td><td><input type=\"radio\" name=\"q14\" value=\"A\"></td><td><input type=\"radio\" name=\"q14\" value=\"B\"></td><td><input type=\"radio\" name=\"q14\" value=\"C\"></td><td><input type=\"radio\" name=\"q14\" value=\"D\"></td><td><input type=\"radio\" name=\"q14\" value=\"E\"></td><td><input type=\"radio\" name=\"q14\" value=\"F\"></td><td><input type=\"radio\" name=\"q14\" value=\"G\"></td></tr><tr><td><strong>15</strong> the benefit of a precautionary strategy on the gentle removal</td><td><input type=\"radio\" name=\"q15\" value=\"A\"></td><td><input type=\"radio\" name=\"q15\" value=\"B\"></td><td><input type=\"radio\" name=\"q15\" value=\"C\"></td><td><input type=\"radio\" name=\"q15\" value=\"D\"></td><td><input type=\"radio\" name=\"q15\" value=\"E\"></td><td><input type=\"radio\" name=\"q15\" value=\"F\"></td><td><input type=\"radio\" name=\"q15\" value=\"G\"></td></tr><tr><td><strong>16</strong> the damaging and accumulative impact of graffiti to the community</td><td><input type=\"radio\" name=\"q16\" value=\"A\"></td><td><input type=\"radio\" name=\"q16\" value=\"B\"></td><td><input type=\"radio\" name=\"q16\" value=\"C\"></td><td><input type=\"radio\" name=\"q16\" value=\"D\"></td><td><input type=\"radio\" name=\"q16\" value=\"E\"></td><td><input type=\"radio\" name=\"q16\" value=\"F\"></td><td><input type=\"radio\" name=\"q16\" value=\"G\"></td></tr><tr><td><strong>17</strong> the need for different preventive measures being taken to cope with graffiti</td><td><input type=\"radio\" name=\"q17\" value=\"A\"></td><td><input type=\"radio\" name=\"q17\" value=\"B\"></td><td><input type=\"radio\" name=\"q17\" value=\"C\"></td><td><input type=\"radio\" name=\"q17\" value=\"D\"></td><td><input type=\"radio\" name=\"q17\" value=\"E\"></td><td><input type=\"radio\" name=\"q17\" value=\"F\"></td><td><input type=\"radio\" name=\"q17\" value=\"G\"></td></tr><tr><td><strong>18</strong> a legal proposal made to the owner of building against graffiti</td><td><input type=\"radio\" name=\"q18\" value=\"A\"></td><td><input type=\"radio\" name=\"q18\" value=\"B\"></td><td><input type=\"radio\" name=\"q18\" value=\"C\"></td><td><input type=\"radio\" name=\"q18\" value=\"D\"></td><td><input type=\"radio\" name=\"q18\" value=\"E\"></td><td><input type=\"radio\" name=\"q18\" value=\"F\"></td><td><input type=\"radio\" name=\"q18\" value=\"G\"></td></tr><tr><td><strong>19</strong> the reasons of removing graffiti as soon as possible.</td><td><input type=\"radio\" name=\"q19\" value=\"A\"></td><td><input type=\"radio\" name=\"q19\" value=\"B\"></td><td><input type=\"radio\" name=\"q19\" value=\"C\"></td><td><input type=\"radio\" name=\"q19\" value=\"D\"></td><td><input type=\"radio\" name=\"q19\" value=\"E\"></td><td><input type=\"radio\" name=\"q19\" value=\"F\"></td><td><input type=\"radio\" name=\"q19\" value=\"G\"></td></tr></tbody></table></div></div>",
+      "leadHtml": ""
+    },
+    {
+      "groupId": "group-2",
+      "kind": "multi_choice",
+      "questionIds": [
+        "q20",
+        "q21"
+      ],
+      "bodyHtml": "<div class=\"group\" id=\"q20-21-anchor\"><h4>Questions 20 and 21</h4><p>Choose <strong>TWO</strong> letters, <strong>A-E</strong>.</p><p>Which two statements are true concerning the removal of graffiti</p><div class=\"checkbox-options\" data-group=\"q20-21\" data-limit=\"2\"><label><input type=\"checkbox\" name=\"q20-21\" value=\"A\"> <strong>A</strong> Cocktail removal can be safer than water treatment</label><label><input type=\"checkbox\" name=\"q20-21\" value=\"B\"> <strong>B</strong> Small patch trial before applying large scale of removing</label><label><input type=\"checkbox\" name=\"q20-21\" value=\"C\"> <strong>C</strong> Chemical treatments are the most expensive way of removing</label><label><input type=\"checkbox\" name=\"q20-21\" value=\"D\"> <strong>D</strong> There are risks for both chemical and medication method</label><label><input type=\"checkbox\" name=\"q20-21\" value=\"E\"> <strong>E</strong> Mechanical removals are much more applicable than chemical treatments</label></div></div>",
+      "leadHtml": ""
+    },
+    {
+      "groupId": "group-3",
+      "kind": "multi_choice",
+      "questionIds": [
+        "q22",
+        "q23"
+      ],
+      "bodyHtml": "<div class=\"group\" id=\"q22-23-anchor\"><h4>Questions 22 and 23</h4><p>Choose <strong>TWO</strong> letters, <strong>A-E</strong>.</p><p>Which TWO of the following preventive measures against graffiti are mentioned effective in the passage?</p><div class=\"checkbox-options\" data-group=\"q22-23\" data-limit=\"2\"><label><input type=\"checkbox\" name=\"q22-23\" value=\"A\"> <strong>A</strong> Organise more anti graffiti movement in the city communities</label><label><input type=\"checkbox\" name=\"q22-23\" value=\"B\"> <strong>B</strong> Increase the police patrols on the street</label><label><input type=\"checkbox\" name=\"q22-23\" value=\"C\"> <strong>C</strong> Build a new building with material repelling to water</label><label><input type=\"checkbox\" name=\"q22-23\" value=\"D\"> <strong>D</strong> Installing more visible security cameras</label><label><input type=\"checkbox\" name=\"q22-23\" value=\"E\"> <strong>E</strong> Provide a whole new surface with chemical coat</label></div></div>",
+      "leadHtml": ""
+    },
+    {
+      "groupId": "group-4",
+      "kind": "summary_completion",
+      "questionIds": [
+        "q24",
+        "q25",
+        "q26",
+        "q27"
+      ],
+      "bodyHtml": "<div class=\"group\" id=\"q24-25-26-27-anchor\"><h4>Questions 24-27</h4><p>Complete the summary below.</p><p>Choose <strong>NO MORE THAN TWO WORDS</strong> from the passage for each answer.</p><p>Ancient graffiti is of significance and records the <strong>24</strong> <input class=\"blank\" name=\"q24\" type=\"text\"> of details life for that period.The police can recognize newly committed incidents of graffiti by the signature which is called <strong>25</strong> <input class=\"blank\" name=\"q25\" type=\"text\"> that they are familiar with.Operatives ought to comply with relevant rules during the operation, and put on the suitable <strong>26</strong> <input class=\"blank\" name=\"q26\" type=\"text\">Removal of graffiti from a new type of coating surface can be much convenient of using <strong>27</strong> <input class=\"blank\" name=\"q27\" type=\"text\"></p></div>",
+      "leadHtml": ""
+    }
+  ],
+  "answerKey": {
+    "q14": "D",
+    "q15": "G",
+    "q16": "B",
+    "q17": "E",
+    "q18": "C",
+    "q19": "B",
+    "q20": "B",
+    "q21": "D",
+    "q22": "B",
+    "q23": "D",
+    "q24": "social history",
+    "q25": "tag",
+    "q26": "protective equipment",
+    "q27": "(low pressure) water"
+  },
+  "questionOrder": [
+    "q14",
+    "q15",
+    "q16",
+    "q17",
+    "q18",
+    "q19",
+    "q20",
+    "q21",
+    "q22",
+    "q23",
+    "q24",
+    "q25",
+    "q26",
+    "q27"
+  ],
+  "questionDisplayMap": {
+    "q14": "14",
+    "q15": "15",
+    "q16": "16",
+    "q17": "17",
+    "q18": "18",
+    "q19": "19",
+    "q20": "20",
+    "q21": "21",
+    "q22": "22",
+    "q23": "23",
+    "q24": "24",
+    "q25": "25",
+    "q26": "26",
+    "q27": "27"
+  }
+});
+})(typeof window !== "undefined" ? window : this);
+
+// 自动设置 examId（独立单篇页）
+(function () {
+  var qs = new URLSearchParams(window.location.search);
+  if (!qs.get('examId')) qs.set('examId', 'p3-high-1458');
+  if (!qs.get('dataKey')) qs.set('dataKey', 'p3-high-1458');
+  var q = qs.toString();
+  if (window.location.search !== ('?' + q)) {
+    window.location.replace(window.location.pathname + '?' + q);
+  }
+})();
+</script>
+    <script src="../../../js/runtime/suiteResources.js"></script>
+    <script src="../../../js/utils/answerMatchCore.js"></script>
+    <script src="../../../js/components/vocabularyNotebook.js"></script>
+    <script src="../../../js/practice-page-ui.js"></script>
+    <!-- 套题交卷后按雅思分数表换算三篇合计成绩 -->
+    <script src="../../../js/utils/ieltsBandScore.js"></script>
+    <script src="../../../js/runtime/unifiedReadingPage.js"></script>
+</body>
+
+</html>

@@ -249,7 +249,7 @@
         }
     });
 
-    ensureGlobalFunctionAfterGroup('filterByNewJuly2026', BROWSE_GROUP, function () {
+    ensureGlobalFunctionAfterGroup('filterByNewSeptember2026', BROWSE_GROUP, function () {
         if (typeof global.showMessage === 'function') {
             global.showMessage('题库筛选模块未就绪', 'warning');
         }

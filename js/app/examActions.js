@@ -97,16 +97,24 @@
     const AUGUST_2026_FEATURED_IDS = AUGUST_2026_NEW_IDS.slice(0, 6);
     global.__AUGUST_2026_NEW_IDS = AUGUST_2026_NEW_IDS;
 
-    const JULY_2026_NEW_IDS = [
-        'p1-high-240', 'p2-low-240', 'p2-low-242',
-        'p3-low-240', 'p3-medium-241'
+    const SEPTEMBER_2026_HIGH_IDS = [
+        'p3-high-1900', 'p1-medium-1471', 'p3-high-1458', 'p3-low-1256',
+        'p1-medium-1486', 'p2-medium-1394', 'p3-high-1849', 'p3-low-1933',
+        'p3-high-167', 'p1-low-149', 'p1-low-61'
     ];
-    global.__JULY_2026_NEW_IDS = JULY_2026_NEW_IDS;
+    global.__SEPTEMBER_2026_HIGH_IDS = SEPTEMBER_2026_HIGH_IDS;
+
+    // 9 月套题推荐优先推荐「这些最新上传的组合」——即本批新上传的 8 篇
+    const SEPTEMBER_2026_PRIORITY_IDS = [
+        'p3-high-1900', 'p1-medium-1471', 'p3-high-1458', 'p3-low-1256',
+        'p1-medium-1486', 'p2-medium-1394', 'p3-high-1849', 'p3-low-1933'
+    ];
+    global.__SEPTEMBER_2026_PRIORITY_IDS = SEPTEMBER_2026_PRIORITY_IDS;
 
     // __browseNewOnly 存放月份键（或 false）；旧值 true 视为最新批次
     const NEW_BATCHES = {
         'august-2026': { ids: AUGUST_2026_NEW_IDS, label: '2026.8月新增', filterId: 'new-august-2026' },
-        'july-2026': { ids: JULY_2026_NEW_IDS, label: '2026.7月新增', filterId: 'new-july-2026' }
+        'september-2026': { ids: SEPTEMBER_2026_HIGH_IDS, label: '2026.9月高频', filterId: 'new-september-2026' }
     };
     global.__NEW_BATCHES = NEW_BATCHES;
 
@@ -1264,8 +1272,8 @@
         filterByNewBatch('august-2026');
     };
 
-    global.filterByNewJuly2026 = function () {
-        filterByNewBatch('july-2026');
+    global.filterByNewSeptember2026 = function () {
+        filterByNewBatch('september-2026');
     };
 
     console.log('[ExamActions] 模块已加载 (Phase 2)');

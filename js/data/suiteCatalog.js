@@ -622,12 +622,26 @@
     }
 
     /**
+     * 2026.9 月高频批次：每日推荐优先推荐这些最新/重点篇目。
+     * 可用即优先；若这些篇目都练过，排序会自然回落到常规未做/高频逻辑，不会卡死。
+     */
+    function getPriorityExamIds() {
+        const list = global.__SEPTEMBER_2026_PRIORITY_IDS || global.__SEPTEMBER_2026_HIGH_IDS;
+        if (Array.isArray(list) && list.length) return new Set(list.map(String));
+        return new Set([
+            'p3-high-1900', 'p1-medium-1471', 'p3-high-1458', 'p3-low-1256',
+            'p1-medium-1486', 'p2-medium-1394', 'p3-high-1849', 'p3-low-1933'
+        ]);
+    }
+
+    /**
      * 每日推荐：未做过优先，其次按高频→次高频→低频排列；同级题目按日期稳定轮换。
      * practiceStats: { [examId]: { count, lastAt } }
      */
     function buildDailyRecommendation(options = {}) {
         const dateKey = String(options.dateKey || new Date().toISOString().slice(0, 10));
         const stats = normalizePracticeStats(options.practiceStats);
+        const priorityIds = getPriorityExamIds();
         const pools = buildPools();
         const missing = CATEGORIES.filter((category) => !pools[category].length);
         if (missing.length) return null;
@@ -648,6 +662,8 @@
                 const rightCount = Math.max(0, Number(rightStat.count) || 0);
                 const unseenDifference = Number(leftCount > 0) - Number(rightCount > 0);
                 if (unseenDifference) return unseenDifference;
+                const priorityDifference = Number(priorityIds.has(right.id)) - Number(priorityIds.has(left.id));
+                if (priorityDifference) return priorityDifference;
                 const frequencyDifference = frequencyRank(left.frequency) - frequencyRank(right.frequency);
                 if (frequencyDifference) return frequencyDifference;
                 if (leftCount !== rightCount) return leftCount - rightCount;

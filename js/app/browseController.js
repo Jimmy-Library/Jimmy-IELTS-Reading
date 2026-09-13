@@ -29,7 +29,7 @@
             filters: [
                 { id: 'all', label: '全部', type: 'all' },
                 { id: 'new-august-2026', label: '2026.8月新增', newOnly: 'august-2026' },
-                { id: 'new-july-2026', label: '2026.7月新增', newOnly: 'july-2026' },
+                { id: 'new-september-2026', label: '2026.9月高频', newOnly: 'september-2026' },
                 { id: 'p1', label: 'P1', category: 'P1' },
                 { id: 'p2', label: 'P2', category: 'P2' },
                 { id: 'p3', label: 'P3', category: 'P3' }
@@ -247,7 +247,7 @@
 
         /**
          * 仅显示指定批次的新增题目
-         * @param {string} batchKey - 批次键 (august-2026 | july-2026)，缺省为 8 月
+         * @param {string} batchKey - 批次键 (august-2026 | september-2026)，缺省为 8 月
          */
         filterByNewOnly(batchKey = 'august-2026') {
             const batch = typeof global.getNewBatch === 'function'
