@@ -82,7 +82,60 @@
     <div class="message-container" id="message-container"></div>
 
     <!-- Jimmy 品牌 Logo（固定右下角，按原比例 3:2 显示） -->
-    <img id="jimmy-brand-logo" src="Jimmy's logo.png" alt="Jimmy" decoding="async">
+    <img id="jimmy-brand-logo" src="Jimmy's logo.png" alt="联系 Jimmy" decoding="async"
+        role="button" tabindex="0" aria-controls="jimmy-contact-popover" aria-expanded="false" title="查看二维码和微信号">
+    <aside id="jimmy-contact-popover" class="jimmy-contact-popover" hidden aria-label="联系 Jimmy">
+        <button type="button" id="jimmy-contact-close" class="jimmy-contact-close" aria-label="关闭">×</button>
+        <p class="jimmy-contact-title">联系 Jimmy</p>
+        <img class="jimmy-contact-qr" src="assets/images/wechat-qr.png" alt="Jimmy 微信二维码" loading="lazy">
+        <p class="jimmy-contact-label">微信号</p>
+        <button type="button" id="jimmy-wechat-copy" class="jimmy-wechat-copy" data-wechat="-4_Alarm_Fire-" title="点击复制微信号">-4_Alarm_Fire-</button>
+        <p id="jimmy-contact-hint" class="jimmy-contact-hint" aria-live="polite">点击微信号即可复制</p>
+    </aside>
+    <script>
+        (function initJimmyContactCard() {
+            const logo = document.getElementById('jimmy-brand-logo');
+            const card = document.getElementById('jimmy-contact-popover');
+            const closeButton = document.getElementById('jimmy-contact-close');
+            const copyButton = document.getElementById('jimmy-wechat-copy');
+            const hint = document.getElementById('jimmy-contact-hint');
+            if (!logo || !card) return;
+            const setOpen = (open) => {
+                card.hidden = !open;
+                logo.setAttribute('aria-expanded', open ? 'true' : 'false');
+                if (open && closeButton) closeButton.focus({ preventScroll: true });
+            };
+            logo.addEventListener('click', () => setOpen(card.hidden));
+            logo.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    setOpen(card.hidden);
+                }
+            });
+            closeButton?.addEventListener('click', () => setOpen(false));
+            document.addEventListener('keydown', (event) => {
+                if (event.key === 'Escape' && !card.hidden) setOpen(false);
+            });
+            document.addEventListener('pointerdown', (event) => {
+                if (!card.hidden && !card.contains(event.target) && event.target !== logo) setOpen(false);
+            });
+            copyButton?.addEventListener('click', async () => {
+                const value = copyButton.dataset.wechat || '';
+                try {
+                    await navigator.clipboard.writeText(value);
+                    hint.textContent = '微信号已复制 ✓';
+                } catch (_) {
+                    const range = document.createRange();
+                    range.selectNodeContents(copyButton);
+                    const selection = window.getSelection();
+                    selection.removeAllRanges();
+                    selection.addRange(range);
+                    hint.textContent = '已选中微信号，请复制';
+                }
+                window.setTimeout(() => { hint.textContent = '点击微信号即可复制'; }, 1800);
+            });
+        }());
+    </script>
     <style>
         #jimmy-brand-logo {
             position: fixed;
@@ -94,16 +147,70 @@
             aspect-ratio: 1536 / 1024;
             object-fit: contain;
             z-index: 1500;
-            pointer-events: none;
+            pointer-events: auto;
             user-select: none;
             opacity: 0.95;
+            cursor: pointer;
+            border-radius: 18px;
+            transition: transform 0.18s ease, filter 0.18s ease;
         }
+
+        #jimmy-brand-logo:hover,
+        #jimmy-brand-logo:focus-visible {
+            transform: translateY(-3px) scale(1.03);
+            filter: drop-shadow(0 8px 14px rgba(15, 23, 42, 0.2));
+            outline: 3px solid rgba(37, 99, 235, 0.45);
+            outline-offset: 2px;
+        }
+
+        .jimmy-contact-popover {
+            position: fixed;
+            right: 18px;
+            bottom: 142px;
+            width: min(280px, calc(100vw - 36px));
+            padding: 18px;
+            border: 1px solid rgba(148, 163, 184, 0.42);
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.96);
+            box-shadow: 0 20px 48px rgba(15, 23, 42, 0.22);
+            color: #172033;
+            text-align: center;
+            z-index: 1502;
+            backdrop-filter: blur(14px);
+        }
+
+        .jimmy-contact-popover[hidden] { display: none !important; }
+
+        .jimmy-contact-close {
+            position: absolute;
+            top: 8px;
+            right: 10px;
+            width: 34px;
+            height: 34px;
+            border: 0;
+            border-radius: 50%;
+            background: #eef2f7;
+            color: #334155;
+            font-size: 24px;
+            line-height: 1;
+            cursor: pointer;
+        }
+
+        .jimmy-contact-title { margin: 2px 28px 12px; font-size: 20px; font-weight: 800; }
+        .jimmy-contact-qr { display: block; width: 190px; max-width: 100%; height: auto; margin: 0 auto 10px; border-radius: 12px; }
+        .jimmy-contact-label, .jimmy-contact-hint { margin: 5px 0; color: #64748b; }
+        .jimmy-wechat-copy { border: 0; background: transparent; color: #2563eb; font-size: 17px; font-weight: 750; cursor: pointer; }
 
         @media (max-width: 640px) {
             #jimmy-brand-logo {
                 width: 84px;
                 right: 10px;
                 bottom: 10px;
+            }
+
+            .jimmy-contact-popover {
+                right: 10px;
+                bottom: 104px;
             }
         }
 

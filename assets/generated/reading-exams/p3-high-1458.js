@@ -45,7 +45,7 @@
         "q20",
         "q21"
       ],
-      "bodyHtml": "<div class=\"group\" id=\"q20-21-anchor\"><h4>Questions 20 and 21</h4><p>Choose <strong>TWO</strong> letters, <strong>A-E</strong>.</p><p>Which two statements are true concerning the removal of graffiti</p><div class=\"checkbox-options\" data-group=\"q20-21\" data-limit=\"2\"><label><input type=\"checkbox\" name=\"q20-21\" value=\"A\"> <strong>A</strong> Cocktail removal can be safer than water treatment</label><label><input type=\"checkbox\" name=\"q20-21\" value=\"B\"> <strong>B</strong> Small patch trial before applying large scale of removing</label><label><input type=\"checkbox\" name=\"q20-21\" value=\"C\"> <strong>C</strong> Chemical treatments are the most expensive way of removing</label><label><input type=\"checkbox\" name=\"q20-21\" value=\"D\"> <strong>D</strong> There are risks for both chemical and medication method</label><label><input type=\"checkbox\" name=\"q20-21\" value=\"E\"> <strong>E</strong> Mechanical removals are much more applicable than chemical treatments</label></div></div>",
+      "bodyHtml": "<div class=\"group\" id=\"q20-21-anchor\"><h4>Questions 20 and 21</h4><p>Choose <strong>TWO</strong> letters, <strong>A-E</strong>.</p><p>Which two statements are true concerning the removal of graffiti?</p><div class=\"checkbox-options\" data-group=\"q20-21\" data-limit=\"2\"><label><input type=\"checkbox\" name=\"q20-21\" value=\"A\"> <strong>A</strong> Cocktail removal can be safer than water treatment</label><label><input type=\"checkbox\" name=\"q20-21\" value=\"B\"> <strong>B</strong> Carrying out a small patch trial before large-scale removal</label><label><input type=\"checkbox\" name=\"q20-21\" value=\"C\"> <strong>C</strong> Chemical treatments are the most expensive way of removing</label><label><input type=\"checkbox\" name=\"q20-21\" value=\"D\"> <strong>D</strong> There are risks for both chemical and mechanical methods</label><label><input type=\"checkbox\" name=\"q20-21\" value=\"E\"> <strong>E</strong> Mechanical removals are much more applicable than chemical treatments</label></div></div>",
       "leadHtml": ""
     },
     {
@@ -67,7 +67,7 @@
         "q26",
         "q27"
       ],
-      "bodyHtml": "<div class=\"group\" id=\"q24-25-26-27-anchor\"><h4>Questions 24-27</h4><p>Complete the summary below.</p><p>Choose <strong>NO MORE THAN TWO WORDS</strong> from the passage for each answer.</p><p>Ancient graffiti is of significance and records the <strong>24</strong> <input class=\"blank\" name=\"q24\" type=\"text\"> of details life for that period.The police can recognize newly committed incidents of graffiti by the signature which is called <strong>25</strong> <input class=\"blank\" name=\"q25\" type=\"text\"> that they are familiar with.Operatives ought to comply with relevant rules during the operation, and put on the suitable <strong>26</strong> <input class=\"blank\" name=\"q26\" type=\"text\">Removal of graffiti from a new type of coating surface can be much convenient of using <strong>27</strong> <input class=\"blank\" name=\"q27\" type=\"text\"></p></div>",
+      "bodyHtml": "<div class=\"group\" id=\"q24-25-26-27-anchor\"><h4>Questions 24-27</h4><p>Complete the summary below.</p><p>Choose <strong>NO MORE THAN TWO WORDS</strong> from the passage for each answer.</p><p>Ancient graffiti is of significance and records the <strong>24</strong> <input class=\"blank\" name=\"q24\" type=\"text\"> of life for that period. The police can recognize newly committed incidents of graffiti by the signature which is called <strong>25</strong> <input class=\"blank\" name=\"q25\" type=\"text\"> that they are familiar with. Operatives ought to comply with relevant rules during the operation, and put on suitable <strong>26</strong> <input class=\"blank\" name=\"q26\" type=\"text\">. Removal of graffiti from a new type of coating surface can be made much easier by using <strong>27</strong> <input class=\"blank\" name=\"q27\" type=\"text\">.</p></div>",
       "leadHtml": ""
     }
   ],
@@ -85,7 +85,7 @@
     "q24": "social history",
     "q25": "tag",
     "q26": "protective equipment",
-    "q27": "(low pressure) water"
+    "q27": "low-pressure water"
   },
   "questionOrder": [
     "q14",

@@ -64,10 +64,17 @@
     "q7": "James Darcy Lever",
     "q8": "1884",
     "q9": "Vegetable oils",
-    "q10": "Ethical / Sustainable",
+    "q10": "Ethical",
     "q11": "Germs",
     "q12": "Port Sunlight",
     "q13": "Prosperity sharing"
+  },
+  "acceptedAnswers": {
+    "q10": [
+      "ethical",
+      "sustainable",
+      "ethical and sustainable"
+    ]
   },
   "questionOrder": [
     "q1",
