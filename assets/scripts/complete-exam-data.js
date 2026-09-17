@@ -3,6 +3,30 @@
 // 数据版本: v3.2
 window.completeExamIndex = [
 {
+        id: "p1-high-1805", title: "The origins of cinema 电影的起源", category: "P1", frequency: "high", path: "assets/generated/reading-exams/", filename: "p1-high-1805.js", hasHtml: true, hasPdf: false,
+    },
+{
+        id: "p3-high-1591", title: "Rebranding Art Museums 美术馆品牌重塑", category: "P3", frequency: "high", path: "assets/generated/reading-exams/", filename: "p3-high-1591.js", hasHtml: true, hasPdf: false,
+    },
+{
+        id: "p1-high-1934", title: "The Can – A Brief History Lesson 罐头简史", category: "P1", frequency: "high", path: "assets/generated/reading-exams/", filename: "p1-high-1934.js", hasHtml: true, hasPdf: false,
+    },
+{
+        id: "p2-high-1935", title: "Photovoltaics 光伏发电", category: "P2", frequency: "high", path: "assets/generated/reading-exams/", filename: "p2-high-1935.js", hasHtml: true, hasPdf: false,
+    },
+{
+        id: "p2-high-1936", title: "Bristlecone Pines 刺果松", category: "P2", frequency: "high", path: "assets/generated/reading-exams/", filename: "p2-high-1936.js", hasHtml: true, hasPdf: false,
+    },
+{
+        id: "p3-low-1937", title: "Loss of Rare Languages 稀有语言的消亡", category: "P3", frequency: "low", path: "assets/generated/reading-exams/", filename: "p3-low-1937.js", hasHtml: true, hasPdf: false,
+    },
+{
+        id: "p1-medium-1938", title: "A Brief History of Glassmaking 玻璃制造简史", category: "P1", frequency: "medium", path: "assets/generated/reading-exams/", filename: "p1-medium-1938.js", hasHtml: true, hasPdf: false,
+    },
+{
+        id: "p3-medium-1939", title: "Rights for apes 猿类的权利", category: "P3", frequency: "medium", path: "assets/generated/reading-exams/", filename: "p3-medium-1939.js", hasHtml: true, hasPdf: false,
+    },
+{
         id: "p3-high-1900", title: "What Are the 1,000 Foods to Eat Before You Die? 死前必吃的1000种食物是什么？", category: "P3", frequency: "high", path: "assets/generated/reading-exams/", filename: "p3-high-1900.js", hasHtml: true, hasPdf: false,
     },
 {

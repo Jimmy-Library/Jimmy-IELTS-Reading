@@ -1,6 +1,48 @@
 (function registerReadingExamManifest(global) {
   'use strict';
   global.__READING_EXAM_MANIFEST__ = {
+  "p1-high-1934": {
+    "examId": "p1-high-1934",
+    "dataKey": "p1-high-1934",
+    "script": "./p1-high-1934.js",
+    "title": "The Can – A Brief History Lesson 罐头简史",
+    "category": "P1"
+  },
+  "p2-high-1935": {
+    "examId": "p2-high-1935",
+    "dataKey": "p2-high-1935",
+    "script": "./p2-high-1935.js",
+    "title": "Photovoltaics 光伏发电",
+    "category": "P2"
+  },
+  "p2-high-1936": {
+    "examId": "p2-high-1936",
+    "dataKey": "p2-high-1936",
+    "script": "./p2-high-1936.js",
+    "title": "Bristlecone Pines 刺果松",
+    "category": "P2"
+  },
+  "p3-low-1937": {
+    "examId": "p3-low-1937",
+    "dataKey": "p3-low-1937",
+    "script": "./p3-low-1937.js",
+    "title": "Loss of Rare Languages 稀有语言的消亡",
+    "category": "P3"
+  },
+  "p1-medium-1938": {
+    "examId": "p1-medium-1938",
+    "dataKey": "p1-medium-1938",
+    "script": "./p1-medium-1938.js",
+    "title": "A Brief History of Glassmaking 玻璃制造简史",
+    "category": "P1"
+  },
+  "p3-medium-1939": {
+    "examId": "p3-medium-1939",
+    "dataKey": "p3-medium-1939",
+    "script": "./p3-medium-1939.js",
+    "title": "Rights for apes 猿类的权利",
+    "category": "P3"
+  },
   "p3-high-1458": {
     "examId": "p3-high-1458",
     "dataKey": "p3-high-1458",

@@ -629,8 +629,8 @@
         const list = global.__SEPTEMBER_2026_PRIORITY_IDS || global.__SEPTEMBER_2026_HIGH_IDS;
         if (Array.isArray(list) && list.length) return new Set(list.map(String));
         return new Set([
-            'p3-high-1900', 'p1-medium-1471', 'p3-high-1458', 'p3-low-1256',
-            'p1-medium-1486', 'p2-medium-1394', 'p3-high-1849', 'p3-low-1933'
+            'p1-high-1805', 'p3-high-1591', 'p1-high-1934', 'p2-high-1935',
+            'p2-high-1936', 'p3-low-1937', 'p1-medium-1938', 'p3-medium-1939'
         ]);
     }
 

@@ -1330,6 +1330,55 @@
             cursor: pointer;
         }
 
+        .matching-table,
+        .completion-table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 10px 0;
+            border: 2px solid var(--line);
+        }
+
+        .matching-table th,
+        .matching-table td,
+        .completion-table th,
+        .completion-table td {
+            border: 1px solid var(--line);
+            padding: 8px 10px;
+            vertical-align: middle;
+        }
+
+        .matching-table thead th,
+        .completion-table thead th {
+            background: var(--panel-alt);
+            text-align: center;
+            font-weight: 700;
+        }
+
+        .matching-table td:first-child { text-align: left; }
+        .matching-table td { text-align: center; }
+        .completion-table td { text-align: left; }
+
+        /* short_answer / flow_chart / diagram_label (renderer classes, future-proof) */
+        .short-answer-list { list-style: none; padding-left: 0; }
+        .short-answer-item { margin-bottom: 14px; }
+
+        .flow-chart {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            margin: 12px 0;
+        }
+
+        .flow-box {
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            padding: 10px 14px;
+            background: var(--panel-alt, var(--bg));
+            width: 100%;
+            max-width: 560px;
+            text-align: center;
+        }
         /* ---------------- Table Completion Layout ---------------- */
         .table-section {
             margin-top: 12px;

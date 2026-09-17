@@ -83,7 +83,7 @@
     "q22": "B",
     "q23": "D",
     "q24": "social history",
-    "q25": "tag",
+    "q25": "tags",
     "q26": "protective equipment",
     "q27": "low-pressure water"
   },
