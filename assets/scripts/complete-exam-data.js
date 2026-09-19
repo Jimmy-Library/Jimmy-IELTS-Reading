@@ -27,6 +27,21 @@ window.completeExamIndex = [
         id: "p3-medium-1939", title: "Rights for apes 猿类的权利", category: "P3", frequency: "medium", path: "assets/generated/reading-exams/", filename: "p3-medium-1939.js", hasHtml: true, hasPdf: false,
     },
 {
+        id: "p1-medium-1227", title: "New Zealand Seaweed 新西兰海藻", category: "P1", frequency: "medium", path: "assets/generated/reading-exams/", filename: "p1-medium-1227.js", hasHtml: true, hasPdf: false,
+    },
+{
+        id: "p1-medium-1583", title: "Psychology of new product adoption 新产品采纳心理学", category: "P1", frequency: "medium", path: "assets/generated/reading-exams/", filename: "p1-medium-1583.js", hasHtml: true, hasPdf: false,
+    },
+{
+        id: "p3-medium-1693", title: "The communication of science 科学的传播", category: "P3", frequency: "medium", path: "assets/generated/reading-exams/", filename: "p3-medium-1693.js", hasHtml: true, hasPdf: false,
+    },
+{
+        id: "p2-medium-1764", title: "The history of the Celtic language 凯尔特语的历史", category: "P2", frequency: "medium", path: "assets/generated/reading-exams/", filename: "p2-medium-1764.js", hasHtml: true, hasPdf: false,
+    },
+{
+        id: "p3-medium-1827", title: "The Rise of Big Data 大数据的崛起", category: "P3", frequency: "medium", path: "assets/generated/reading-exams/", filename: "p3-medium-1827.js", hasHtml: true, hasPdf: false,
+    },
+{
         id: "p3-high-1900", title: "What Are the 1,000 Foods to Eat Before You Die? 死前必吃的1000种食物是什么？", category: "P3", frequency: "high", path: "assets/generated/reading-exams/", filename: "p3-high-1900.js", hasHtml: true, hasPdf: false,
     },
 {

@@ -102,14 +102,15 @@
         'p1-medium-1486', 'p2-medium-1394', 'p3-high-1849', 'p3-low-1933',
         'p3-high-167', 'p1-low-149', 'p1-low-61',
         'p1-high-1805', 'p3-high-1591', 'p1-high-1934', 'p2-high-1935',
-        'p2-high-1936', 'p3-low-1937', 'p1-medium-1938', 'p3-medium-1939'
+        'p2-high-1936', 'p3-low-1937', 'p1-medium-1938', 'p3-medium-1939',
+        'p1-medium-1227', 'p1-medium-1583', 'p3-medium-1693', 'p2-medium-1764', 'p3-medium-1827'
     ];
     global.__SEPTEMBER_2026_HIGH_IDS = SEPTEMBER_2026_HIGH_IDS;
 
     // 9 月套题推荐优先推荐「这些最新上传的组合」——即本批新上传的 8 篇
     const SEPTEMBER_2026_PRIORITY_IDS = [
-        'p1-high-1805', 'p3-high-1591', 'p1-high-1934', 'p2-high-1935',
-        'p2-high-1936', 'p3-low-1937', 'p1-medium-1938', 'p3-medium-1939'
+        'p1-medium-1227', 'p1-medium-1583', 'p2-medium-1764',
+        'p3-medium-1693', 'p3-medium-1827', 'p3-low-1937'
     ];
     global.__SEPTEMBER_2026_PRIORITY_IDS = SEPTEMBER_2026_PRIORITY_IDS;
 

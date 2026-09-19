@@ -6,7 +6,7 @@
 (function registerReadingQuestionTypes(global) {
   'use strict';
   global.__READING_QUESTION_TYPES__ = {
-  "generatedAt": "2026-09-17",
+  "generatedAt": "2026-09-19",
   "source": "人工分类索引 + 题目数据自动识别",
   "types": [
     {
@@ -499,6 +499,11 @@
       "tfng",
       "short-answer"
     ],
+    "p1-medium-1227": [
+      "matching-headings",
+      "matching-features",
+      "diagram"
+    ],
     "p1-medium-1255": [
       "tfng",
       "note",
@@ -517,6 +522,11 @@
     "p1-medium-1486": [
       "matching-info",
       "note"
+    ],
+    "p1-medium-1583": [
+      "mc",
+      "tfng",
+      "matching-features"
     ],
     "p1-medium-161": [
       "tfng",
@@ -931,6 +941,11 @@
       "mc",
       "matching-features",
       "summary-passage"
+    ],
+    "p2-medium-1764": [
+      "matching-info",
+      "matching-features",
+      "sentence"
     ],
     "p2-medium-1925": [
       "matching-headings"
@@ -1390,6 +1405,11 @@
       "matching-headings",
       "matching-features"
     ],
+    "p3-medium-1693": [
+      "mc",
+      "ynng",
+      "summary-list"
+    ],
     "p3-medium-176": [
       "mc",
       "matching-features",
@@ -1409,6 +1429,11 @@
       "mc",
       "matching-info",
       "matching-features"
+    ],
+    "p3-medium-1827": [
+      "mc",
+      "ynng",
+      "summary-passage"
     ],
     "p3-medium-183": [
       "mc",
@@ -1480,9 +1505,11 @@
     "p1-medium-1019",
     "p1-medium-1041",
     "p1-medium-1042",
+    "p1-medium-1227",
     "p1-medium-1255",
     "p1-medium-1471",
     "p1-medium-1486",
+    "p1-medium-1583",
     "p1-medium-1923",
     "p1-medium-1938",
     "p2-high-1015",
@@ -1491,6 +1518,7 @@
     "p2-low-240",
     "p2-low-242",
     "p2-medium-1394",
+    "p2-medium-1764",
     "p2-medium-1925",
     "p3-high-1051",
     "p3-high-1133",
@@ -1502,6 +1530,8 @@
     "p3-low-1933",
     "p3-low-1937",
     "p3-low-240",
+    "p3-medium-1693",
+    "p3-medium-1827",
     "p3-medium-1929",
     "p3-medium-1939",
     "p3-medium-241"
