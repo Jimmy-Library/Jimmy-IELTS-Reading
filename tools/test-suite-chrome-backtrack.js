@@ -52,6 +52,19 @@ const server = http.createServer((req, res) => {
         await page.locator('#submit-btn').click();
         await page.waitForFunction(id => new URL(location.href).searchParams.get('examId') === id, ids[1]);
 
+        // Legacy Chrome tabs may hold a newer snapshot with only blank values.
+        // Its timestamp must not let it erase the real, answered progress.
+        await page.evaluate(({ sessionId, ids }) => {
+            const answers = Object.fromEntries(Array.from({ length: 14 }, (_, index) => [`q${index + 1}`, '']));
+            const savedAt = Date.now() + 60000;
+            const emptySnapshot = {
+                draft: { answers, highlights: [], notes: [], markedQuestions: [] },
+                savedAt, updatedAt: savedAt, sequenceExamIds: ids
+            };
+            localStorage.setItem(`ielts_suite_draft::${sessionId}::${ids[0]}`, JSON.stringify(emptySnapshot));
+            sessionStorage.setItem(`ielts_sim_draft::${sessionId}::${ids[0]}`, JSON.stringify(emptySnapshot));
+        }, { sessionId, ids });
+
         const grouped = page.locator('#question-groups input[type=checkbox]').filter({ hasNot: page.locator('[disabled]') });
         assert.ok(await grouped.count() > 0, 'suite-006 P2 must contain grouped checkboxes');
         const first = grouped.first();

@@ -314,14 +314,12 @@
         const set = new Set();
         const suiteSessionId = state.suiteSessionId ? String(state.suiteSessionId).trim() : '';
         const targetExamId = examId ? String(examId).trim() : '';
-        if (!suiteSessionId || !targetExamId || !global.sessionStorage) {
+        if (!suiteSessionId || !targetExamId) {
             return set;
         }
         try {
-            const raw = global.sessionStorage.getItem(`ielts_sim_draft::${suiteSessionId}::${targetExamId}`);
-            if (!raw) return set;
-            const parsed = JSON.parse(raw);
-            const answers = parsed && parsed.draft && parsed.draft.answers;
+            const saved = readSuiteSavedEntry(targetExamId);
+            const answers = saved && saved.draft && saved.draft.answers;
             if (answers && typeof answers === 'object') {
                 Object.keys(answers).forEach((qid) => {
                     const value = answers[qid];
@@ -362,9 +360,22 @@
                 : null;
             const sessionSaved = JSON.parse(sessionRaw || 'null');
             const localSaved = JSON.parse(localRaw || 'null');
-            const parsed = !sessionSaved || (localSaved && Number(localSaved.savedAt) >= Number(sessionSaved.savedAt || 0))
-                ? localSaved : sessionSaved;
-            return parsed && parsed.draft && typeof parsed.draft === 'object' ? parsed.draft : {};
+            const progress = readSuiteProgress();
+            const progressDraft = progress?.draftsByExam?.[targetExamId];
+            const candidates = [
+                { draft: sessionSaved?.draft, savedAt: Number(sessionSaved?.updatedAt) || 0 },
+                { draft: localSaved?.draft, savedAt: Number(localSaved?.savedAt) || 0 },
+                {
+                    draft: progressDraft,
+                    savedAt: Number(progress?.draftSavedAtByExam?.[targetExamId])
+                        || Number(progress?.updatedAt)
+                        || 0
+                }
+            ].filter((entry) => entry.draft && typeof entry.draft === 'object');
+            const contentful = candidates.filter((entry) => draftHasContent(entry.draft));
+            const pool = contentful.length ? contentful : candidates;
+            pool.sort((left, right) => right.savedAt - left.savedAt);
+            return pool[0]?.draft || {};
         } catch (_) {
             return {};
         }
@@ -2800,7 +2811,7 @@
 
     function persistSimulationDraftMirror(draft) {
         const key = getSimulationDraftStorageKey();
-        if (!key || !global.sessionStorage || !draft) {
+        if (!key || !global.sessionStorage || !draft || !draftHasContent(draft)) {
             return;
         }
         try {
@@ -2894,10 +2905,15 @@
         }
         const hasAnswers = draft.answers
             && typeof draft.answers === 'object'
-            && Object.keys(draft.answers).length > 0;
+            && Object.values(draft.answers).some((value) => (
+                Array.isArray(value)
+                    ? value.some((entry) => entry != null && String(entry).trim() !== '')
+                    : value != null && String(value).trim() !== ''
+            ));
         const hasHighlights = Array.isArray(draft.highlights) && draft.highlights.length > 0;
+        const hasNotes = Array.isArray(draft.notes) && draft.notes.length > 0;
         const hasMarks = Array.isArray(draft.markedQuestions) && draft.markedQuestions.length > 0;
-        return Boolean(hasAnswers || hasHighlights || hasMarks);
+        return Boolean(hasAnswers || hasHighlights || hasNotes || hasMarks);
     }
 
     function saveSingleDraft(reason = 'auto') {
@@ -3016,10 +3032,15 @@
             progress.draftsByExam = progress.draftsByExam && typeof progress.draftsByExam === 'object'
                 ? progress.draftsByExam
                 : {};
+            if (!draftHasContent(draft)) return;
             progress.elapsedByExam = progress.elapsedByExam && typeof progress.elapsedByExam === 'object'
                 ? progress.elapsedByExam
                 : {};
+            progress.draftSavedAtByExam = progress.draftSavedAtByExam && typeof progress.draftSavedAtByExam === 'object'
+                ? progress.draftSavedAtByExam
+                : {};
             progress.draftsByExam[String(state.examId)] = draft;
+            progress.draftSavedAtByExam[String(state.examId)] = savedAt;
             progress.elapsedByExam[String(state.examId)] = Math.max(0, Number(elapsed) || 0);
             const contextIndex = Number(state.simulationCtx && state.simulationCtx.currentIndex);
             const fallbackIndex = lockedIds.indexOf(String(state.examId));
@@ -3042,7 +3063,7 @@
         const key = getSuiteDraftStorageKey();
         if (!key || !global.localStorage) return;
         const draft = cloneDraftSafely(collectCurrentDraft());
-        if (!draft) return;
+        if (!draft || !draftHasContent(draft)) return;
         const savedAt = Date.now();
         const elapsed = getPageElapsedSeconds();
         try {
@@ -3328,7 +3349,7 @@
         }
         state.simulationDraftFingerprint = fingerprint;
         const mirroredDraft = cloneDraftSafely(draft);
-        if (!mirroredDraft) {
+        if (!mirroredDraft || !draftHasContent(mirroredDraft)) {
             return;
         }
         persistSimulationDraftMirror(mirroredDraft);
@@ -4692,12 +4713,25 @@
     }
 
     function readSuiteSavedEntry(examId) {
+        let directEntry = null;
         try {
             const entry = JSON.parse(global.localStorage.getItem('ielts_suite_draft::' + state.suiteSessionId + '::' + examId) || 'null');
-            if (entry && (!entry.sequenceExamIds || entry.sequenceExamIds.every((id, i) => id === state.suiteSequenceExamIds[i]))) return entry;
+            if (entry && (!entry.sequenceExamIds || entry.sequenceExamIds.every((id, i) => id === state.suiteSequenceExamIds[i]))) {
+                directEntry = entry;
+            }
         } catch (_) {}
         const progress = readSuiteProgress();
-        return progress ? { draft: progress.draftsByExam?.[examId], elapsed: progress.elapsedByExam?.[examId] || 0 } : null;
+        const progressEntry = progress ? {
+            draft: progress.draftsByExam?.[examId],
+            elapsed: progress.elapsedByExam?.[examId] || 0,
+            savedAt: Number(progress.draftSavedAtByExam?.[examId]) || Number(progress.updatedAt) || 0
+        } : null;
+        const candidates = [directEntry, progressEntry]
+            .filter((entry) => entry && entry.draft && typeof entry.draft === 'object');
+        const contentful = candidates.filter((entry) => draftHasContent(entry.draft));
+        const pool = contentful.length ? contentful : candidates;
+        pool.sort((left, right) => Number(right.savedAt || right.updatedAt || 0) - Number(left.savedAt || left.updatedAt || 0));
+        return pool[0] || null;
     }
 
     async function initSuiteDraftFlow() {
@@ -4792,7 +4826,7 @@
             await displaySuitePassage(targetIndex);
             // Inform the host without asking it to open another URL.
             postMessage('SIMULATION_NAVIGATE', { examId: previousId, localNavigation: true, targetIndex,
-                draft, resultSnapshot, elapsed });
+                draft: draftHasContent(draft) ? draft : null, resultSnapshot, elapsed });
             syncSimulationDraftSnapshot('navigate');
         } finally {
             state.suiteNavigating = false;
