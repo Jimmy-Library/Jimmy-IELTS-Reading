@@ -2263,9 +2263,46 @@
     }
 
     function applyReplayAnswersToDom(answers = {}) {
+        // 成组勾选/单选（DOM name 形如 q6_7，覆盖第 6、7 题共用一个选项池）：
+        // 作答键是 q6/q7，按 name="q6" 查元素永远查不到，回看时整组显示为空。
+        // 这里先按组名展开回填，再跳过这些题号，避免逐题查找落空。
+        const replayGroupedIds = new Set();
+        const replayGroupedInputs = new Map();
+        document.querySelectorAll('input[type="radio"][name], input[type="checkbox"][name]').forEach((input) => {
+            const groupName = String(input.getAttribute('name') || '').trim();
+            if (!groupName) return;
+            // 与保存侧（collectAnswers → resolveCheckboxQuestionIds）同一口径，
+            // 组名形如 q7-8 / q6-7-8-9 时按题目组展开，避免与题号错配
+            const questionIds = resolveCheckboxQuestionIds(groupName);
+            if (!Array.isArray(questionIds) || questionIds.length <= 1) return;
+            const existing = replayGroupedInputs.get(groupName) || { questionIds, inputs: [] };
+            existing.inputs.push(input);
+            replayGroupedInputs.set(groupName, existing);
+        });
+        replayGroupedInputs.forEach((group) => {
+            const mergedValues = [];
+            group.questionIds.forEach((questionId) => {
+                replayGroupedIds.add(questionId);
+                if (!Object.prototype.hasOwnProperty.call(answers, questionId)) return;
+                splitAnswerTokens(answers[questionId]).forEach((entry) => {
+                    const normalized = canonicalizeAnswerToken(entry);
+                    if (normalized) mergedValues.push(normalized);
+                });
+            });
+            const normalizedValues = Array.from(new Set(mergedValues));
+            group.inputs.forEach((input) => {
+                const candidate = canonicalizeAnswerToken(
+                    input.value || input.dataset?.option || input.dataset?.value || input.id || ''
+                );
+                input.checked = normalizedValues.includes(candidate)
+                    || normalizedValues.some((value) => compareAnswers(input.value, value));
+            });
+        });
+
         Object.entries(answers).forEach(([questionId, rawValue]) => {
             const normalizedId = normalizeReplayQuestionId(questionId);
             if (!normalizedId) return;
+            if (replayGroupedIds.has(normalizedId)) return;
             if (applyDropzoneAnswer(normalizedId, rawValue)) {
                 return;
             }
@@ -3361,8 +3398,8 @@
             document.querySelectorAll('input[type="radio"][name], input[type="checkbox"][name]').forEach((input) => {
                 const groupName = String(input.getAttribute('name') || '').trim();
                 if (!groupName) return;
-                const questionIds = expandQuestionSequence(groupName);
-                if (questionIds.length <= 1) return;
+                const questionIds = resolveCheckboxQuestionIds(groupName);
+                if (!Array.isArray(questionIds) || questionIds.length <= 1) return;
                 const existing = groupedChoiceInputs.get(groupName) || {
                     questionIds,
                     inputs: []
@@ -4668,7 +4705,13 @@
         const savedEntries = state.suiteSequenceExamIds.map(readSuiteSavedEntry);
         const hasProgress = savedEntries.some(entry => entry && (Number(entry.elapsed) > 0 || draftHasContent(entry.draft)));
         const navigationType = global.performance?.getEntriesByType('navigation')[0]?.type;
-        const choice = hasProgress && (navigationType === 'reload' || !state.forceResume)
+        // 宿主（或题号导航）按「具体某一篇」打开本页时：URL 已指明目标小节，
+        // 直接恢复该篇作答即可，不要弹「从上次继续 / 重新开始」弹窗——
+        // 弹窗会挡住已恢复的答案，选「重新开始」还会清掉整套三篇的草稿，
+        // 表现为「点题号跳到别的篇章后所有做题记录被重置」。
+        const targetedIndex = state.suiteSequenceExamIds.indexOf(state.examId);
+        const hasExplicitPassageTarget = targetedIndex >= 0 && state.suiteSequenceExamIds.length > 1;
+        const choice = (!hasExplicitPassageTarget && hasProgress && (navigationType === 'reload' || !state.forceResume))
             ? await showResumePrompt({ elapsed: progress?.elapsed || 0 }, true)
             : 'continue';
         if (choice === 'restart') {
@@ -4695,7 +4738,11 @@
             suiteTimerLimitSeconds: state.suiteTimerLimitSeconds
         }, 'resume');
         state.simulationContextReady = true;
-        const idx = choice === 'restart' ? 0 : Number(progress?.currentIndex ?? state.simulationCtx.currentIndex);
+        const idx = choice === 'restart'
+            ? 0
+            : (hasExplicitPassageTarget
+                ? targetedIndex
+                : Number(progress?.currentIndex ?? state.simulationCtx?.currentIndex ?? 0));
         await displaySuitePassage(Math.min(2, Math.max(0, idx)));
         state.suiteRestoreDone = true;
         global.__UNIFIED_SUITE_LOCAL_READY__ = true;
