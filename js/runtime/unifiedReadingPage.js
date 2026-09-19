@@ -213,12 +213,14 @@
             };
             // 套题全部小节 examId（逗号分隔）。通过 URL 直接下发，确保「打开即三篇」，
             // 不再单纯依赖父窗口 SIMULATION_CONTEXT 消息（该消息可能因时序竞态丢失，导致只显示一篇）。
-            const seqIdsRaw = decodeParam(params.get('suiteSequenceExamIds'));
-            if (seqIdsRaw) {
-                const ids = seqIdsRaw.split(',').map((s) => s.trim()).filter(Boolean);
-                if (ids.length > 1) {
-                    state.suiteSequenceExamIds = ids;
-                }
+        }
+        // 套题小节序列由 URL 直接下发，模拟/经典/驻足三种流程通用：
+        // 经典流程没有页内跨篇导航，但仍需要它来定位并恢复当前小节的已存作答。
+        const seqIdsRaw = decodeParam(params.get('suiteSequenceExamIds'));
+        if (seqIdsRaw) {
+            const ids = seqIdsRaw.split(',').map((s) => s.trim()).filter(Boolean);
+            if (ids.length > 1) {
+                state.suiteSequenceExamIds = ids;
             }
         }
     }
@@ -2929,9 +2931,10 @@
     }
 
     function isSuiteDraftEligible() {
+        // 只要处于套题会话（模拟/经典/驻足任一流程）就要保存作答：
+        // 经典流程没有页内切篇，宿主按小节重开本页时必须能从这里恢复作答。
         return Boolean(
-            state.simulationMode
-            && !state.suiteBooting
+            !state.suiteBooting
             && !state.readOnly
             && !state.reviewMode
             && !state.submitted
@@ -3276,7 +3279,9 @@
     }
 
     function syncSimulationDraftSnapshot(reason = 'periodic') {
-        if (!state.simulationMode || state.suiteBooting || state.readOnly || state.submitted || !state.suiteSessionId) {
+        // 套题三种流程（模拟/经典/驻足）都要本地保存作答：
+        // 经典流程没有页内切篇，宿主重开本小节页时只能靠这份草稿恢复作答。
+        if (state.suiteBooting || state.readOnly || state.submitted || !state.suiteSessionId || !state.examId) {
             return;
         }
         const draft = collectCurrentDraft();
@@ -3292,12 +3297,18 @@
         persistSimulationDraftMirror(mirroredDraft);
         // 额外写一份到 localStorage（套题单篇草稿，关页不丢失）
         saveSuiteDraft(reason);
+        const restartPending = state.suiteRestartPending === true;
+        state.suiteRestartPending = false;
+        // 只有模拟流程才向宿主回报草稿：经典/驻足流程没有这条信道，
+        // 乱发消息会干扰宿主对当前小节的判断。
+        if (!state.simulationMode) {
+            return;
+        }
         postMessage('SIMULATION_DRAFT_SYNC', {
             draft: mirroredDraft,
-            restartSuite: state.suiteRestartPending === true,
+            restartSuite: restartPending,
             elapsed: getPageElapsedSeconds()
         });
-        state.suiteRestartPending = false;
     }
 
     function bindSuiteDraftFlushHandlers() {
@@ -3317,13 +3328,13 @@
 
     function refreshSimulationDraftSyncLifecycle() {
         const shouldSync = Boolean(
-            state.simulationMode
-            && !state.suiteBooting
+            !state.suiteBooting
             && !state.submitted
-            && state.simulationContextReady
-            && !state.readOnly
             && state.suiteSessionId
             && state.examId
+            && !state.readOnly
+            // 模拟流程等待宿主上下文就绪；经典/驻足流程没有该消息，直接开始同步
+            && (state.simulationContextReady || !state.simulationMode)
         );
         if (!shouldSync) {
             stopSimulationDraftSync();
@@ -4605,6 +4616,21 @@
             setReadOnlyMode(true);
         }
         if (state.simulationMode && !state.reviewMode) await initSuiteDraftFlow();
+        // 经典/驻足流程：宿主按小节打开本页时，直接恢复该小节已保存的作答。
+        // 没有这一步，重新打开（或刷新）前面做过的一篇会呈现整篇空白，
+        // 表现为「回看前面的题目时所有题目被重置」。
+        if (!state.simulationMode && state.suiteSessionId && !state.reviewMode && !state.readOnly) {
+            try {
+                const savedEntry = readSuiteSavedEntry(state.examId);
+                if (savedEntry && draftHasContent(savedEntry.draft)) {
+                    applyDraftToDom(savedEntry.draft);
+                    state.simulationDraftFingerprint = buildDraftFingerprint(savedEntry.draft);
+                    state.suiteRestoreDone = true;
+                }
+            } catch (error) {
+                console.warn('[SuiteDraft] 小节作答恢复失败:', error);
+            }
+        }
         state.suiteBooting = false;
         refreshSimulationDraftSyncLifecycle();
         // 单篇模式：检测本地草稿并询问续做
