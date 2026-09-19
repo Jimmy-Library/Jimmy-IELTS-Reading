@@ -153,6 +153,12 @@
         }
     }
 
+    // 秒 →「X 分 Y 秒」（套题总用时 / 每篇停留时间显示用）
+    function formatDurationLabel(seconds) {
+        const total = Math.max(0, Math.round(Number(seconds) || 0));
+        return `${Math.floor(total / 60)} 分 ${String(total % 60).padStart(2, '0')} 秒`;
+    }
+
     function escapeHtml(value) {
         return String(value == null ? '' : value)
             .replace(/&/g, '&amp;')
@@ -433,6 +439,12 @@
                 };
             });
 
+            // 该篇「停留做题时间」：当前篇取本页计时，其余篇取各自草稿里累计的 elapsed
+            const savedEntryForPassage = passage.isCurrent ? null : readSuiteSavedEntry(passage.examId);
+            const passageDuration = passage.isCurrent
+                ? Math.max(0, Math.round(getPageElapsedSeconds()))
+                : Math.max(0, Math.round(Number(savedEntryForPassage && savedEntryForPassage.elapsed) || 0));
+
             return {
                 examId: passage.examId,
                 label: passage.label,
@@ -442,6 +454,7 @@
                 markedQuestions,
                 highlights,
                 notes,
+                duration: passageDuration,
                 correct,
                 total,
                 percentage: total > 0 ? Math.round((correct / total) * 100) : 0
@@ -740,6 +753,7 @@
                 <div class="suite-result-section__head">
                     <span class="suite-result-section__tag">${section.label}</span>
                     <span class="suite-result-section__title">${section.title}</span>
+                    <span class="suite-result-section__time">停留 ${formatDurationLabel(section.duration)}</span>
                     <span class="suite-result-section__score">${section.correct}/${section.total} · ${section.percentage}%</span>
                 </div>
                 <table class="results-table">
@@ -754,6 +768,7 @@
         dom.results.innerHTML = `
             <h4>套题结果 · 三篇合计</h4>
             <p class="suite-result-total">得分 ${summary.correct} / ${summary.total} · ${summary.percentage}% ${bandHtml}</p>
+            <p class="suite-result-duration">总用时 ${formatDurationLabel(summary.duration)}${summary.sections && summary.sections.length ? ` · 三篇停留时间 ${summary.sections.map((sec) => `${sec.label} ${formatDurationLabel(sec.duration)}`).join(' / ')}` : ''}</p>
             ${sectionsHtml}
         `;
         dom.results.style.display = 'block';
@@ -4137,6 +4152,7 @@
                 <h2 class="suite-print__title">
                     <span class="suite-print__tag">${passage.label}</span>
                     ${dataset.meta?.title || passage.examId}
+                    ${section && Number(section.duration) ? `<span class="suite-print__score">停留用时 ${formatDurationLabel(section.duration)}</span>` : ''}
                     ${section ? `<span class="suite-print__score">${section.correct}/${section.total} · ${section.percentage}%</span>` : ''}
                 </h2>
                 <div class="suite-print__article">${passageHtml}</div>
@@ -4602,6 +4618,12 @@
             return;
         }
         state.countdownExpiryHandled = true;
+        // 套题模式：时间到不自动交卷，先让用户选「继续做题」或「交卷」。
+        // 继续则计时从 60:00 起改为正计时，最后照实记录总用时。
+        if (state.simulationMode) {
+            showSuiteTimeoutPrompt();
+            return;
+        }
         try {
             if (typeof global.showMessage === 'function') {
                 global.showMessage('考试时间到，已自动交卷。', 'info');
@@ -4611,9 +4633,65 @@
             .then(() => handleSubmit())
             .catch((error) => {
                 console.error('[UnifiedReadingPage] 倒计时自动交卷失败:', error);
-                // 失败时允许后续再次尝试，避免卡死在未交卷状态
                 state.countdownExpiryHandled = false;
             });
+    }
+
+    // 套题超时对话框：继续做题（转为正计时）/ 交卷。不提供暂停，计时始终在走。
+    function showSuiteTimeoutPrompt() {
+        if (state.suiteTimeoutPromptShown) return;
+        state.suiteTimeoutPromptShown = true;
+        const overlay = document.createElement('div');
+        overlay.id = 'suite-timeout-overlay';
+        overlay.style.cssText = ['position:fixed', 'inset:0', 'z-index:99999', 'display:flex',
+            'align-items:center', 'justify-content:center', 'background:rgba(15,23,42,0.55)'].join(';');
+        const card = document.createElement('div');
+        card.style.cssText = ['background:#fff', 'color:#1e293b', 'border-radius:14px', 'max-width:400px',
+            'width:88%', 'padding:24px 22px', 'box-shadow:0 18px 48px rgba(15,23,42,0.35)',
+            'font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,sans-serif', 'text-align:center'].join(';');
+        const title = document.createElement('div');
+        title.style.cssText = 'font-size:1.05rem;font-weight:600;margin-bottom:8px;';
+        title.textContent = '考试时间到';
+        const desc = document.createElement('div');
+        desc.style.cssText = 'font-size:0.85rem;opacity:0.75;margin-bottom:20px;line-height:1.6;';
+        desc.textContent = '60 分钟已用完。继续做题将按已用时间正计时（从 60:00 起累加），总用时与每篇停留时间都会照实记录；也可以现在就交卷。';
+        const row = document.createElement('div');
+        row.style.cssText = 'display:flex;gap:12px;justify-content:center;';
+        const mk = (label, primary) => {
+            const b = document.createElement('button');
+            b.type = 'button';
+            b.textContent = label;
+            b.style.cssText = ['flex:1', 'padding:10px 0', 'border-radius:9px', 'cursor:pointer', 'font-size:0.9rem',
+                'border:1px solid', primary
+                    ? 'border-color:#2563eb;background:#2563eb;color:#fff'
+                    : 'border-color:#cbd5e1;background:#fff;color:#475569'].join(';');
+            return b;
+        };
+        const continueBtn = mk('继续做题', true);
+        const submitBtn = mk('立即交卷', false);
+        const close = () => { if (overlay.parentNode) overlay.parentNode.removeChild(overlay); };
+        continueBtn.addEventListener('click', () => {
+            close();
+            state.suiteOvertime = true;
+            // 计时继续跑（套题不可暂停），显示层会自动转为 60:00 起正计时
+            const bridge = getPracticeTimerBridge();
+            if (bridge && typeof bridge.setRunning === 'function') bridge.setRunning(true);
+        });
+        submitBtn.addEventListener('click', () => {
+            close();
+            Promise.resolve().then(() => handleSubmit()).catch((error) => {
+                console.error('[UnifiedReadingPage] 超时交卷失败:', error);
+                state.countdownExpiryHandled = false;
+                state.suiteTimeoutPromptShown = false;
+            });
+        });
+        row.appendChild(continueBtn);
+        row.appendChild(submitBtn);
+        card.appendChild(title);
+        card.appendChild(desc);
+        card.appendChild(row);
+        overlay.appendChild(card);
+        document.body.appendChild(overlay);
     }
 
     async function bootstrap() {

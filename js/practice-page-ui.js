@@ -261,8 +261,13 @@
             if (!timerEl) return;
             timerEl.style.opacity = timerRunning ? '1' : '0.5';
             timerEl.classList.toggle('paused', !timerRunning);
-            timerEl.title = timerRunning ? '点击暂停计时' : '点击继续计时';
-            timerEl.setAttribute('aria-label', timerRunning ? '计时器，点击暂停' : '计时已暂停，点击继续');
+            if (suiteTimerContext.active) {
+                timerEl.title = '套题计时中（不可暂停）';
+                timerEl.setAttribute('aria-label', '计时器，套题计时中不可暂停');
+            } else {
+                timerEl.title = timerRunning ? '点击暂停计时' : '点击继续计时';
+                timerEl.setAttribute('aria-label', timerRunning ? '计时器，点击暂停' : '计时已暂停，点击继续');
+            }
         }
 
         function renderTimerDisplay() {
@@ -274,15 +279,23 @@
                     return;
                 }
                 let displaySeconds = Math.floor(elapsedSeconds);
+                let overtime = false;
                 if (suiteTimerContext.mode === 'countdown' && Number.isFinite(suiteTimerContext.limitSeconds)) {
-                    displaySeconds = Math.max(0, Math.ceil(suiteTimerContext.limitSeconds - elapsedSeconds));
+                    // 超时后改为正计时：从 60:00 起继续往上走（选「继续做题」不会被截断成 00:00）
+                    overtime = elapsedSeconds >= suiteTimerContext.limitSeconds;
+                    displaySeconds = overtime
+                        ? Math.floor(elapsedSeconds)
+                        : Math.max(0, Math.ceil(suiteTimerContext.limitSeconds - elapsedSeconds));
                 }
                 timerEl.textContent = formatTimerSeconds(displaySeconds);
                 timerEl.dataset.timerMode = suiteTimerContext.mode || 'elapsed';
                 timerEl.dataset.timerState = timerRunning ? 'running' : 'paused';
                 timerEl.dataset.timerSource = suiteTimerContext.source || '';
+                if (overtime) timerEl.dataset.timerOvertime = '1';
+                else delete timerEl.dataset.timerOvertime;
                 if (suiteTimerContext.mode === 'countdown') {
-                    timerEl.classList.toggle('timer-expired', displaySeconds <= 0);
+                    // 到点即高亮（正计时阶段继续保持高亮）
+                    timerEl.classList.toggle('timer-expired', overtime);
                 } else {
                     timerEl.classList.remove('timer-expired');
                 }
@@ -1131,6 +1144,8 @@
                 e.preventDefault();
                 e.stopPropagation();
                 if (submissionLocked || timerLocked) return;
+                // 套题（模考）模式不允许暂停：时间只能由超时对话框的「继续做题 / 交卷」决定
+                if (suiteTimerContext.active) return;
                 setTimerRunning(!timerRunning);
             });
         }
