@@ -11,7 +11,7 @@
     }
 
     var STORAGE_KEY = 'image_skin';
-    var DEFAULT_SKIN = 'spring';
+    var DEFAULT_SKIN = 'blossom-reader';
     var currentScript = document.currentScript;
     var appRoot = currentScript ? new URL('../../', currentScript.src) : new URL('./', global.location.href);
     var reducedMotion = global.matchMedia && global.matchMedia('(prefers-reduced-motion: reduce)').matches;
