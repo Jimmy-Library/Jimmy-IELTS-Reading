@@ -234,6 +234,9 @@
     function captureDom() {
         dom.title = document.getElementById('exam-title');
         dom.subtitle = document.getElementById('exam-subtitle');
+        dom.partLabel = document.getElementById('exam-part-label');
+        dom.partInstruction = document.getElementById('exam-part-instruction');
+        dom.suiteCustomModeBadge = document.getElementById('suite-custom-mode-badge');
         dom.left = document.getElementById('left');
         dom.groups = document.getElementById('question-groups');
         dom.results = document.getElementById('results');
@@ -1041,8 +1044,36 @@
         if (dom.subtitle) {
             dom.subtitle.textContent = `统一阅读页 · ${dataset.meta?.category || ''} · ${questionCount} 题`;
         }
+        const categoryMatch = String(dataset.meta?.category || '').match(/P\s*([123])/i);
+        const partNumber = categoryMatch ? categoryMatch[1] : '1';
+        const displayedNumbers = (Array.isArray(dataset.questionOrder) ? dataset.questionOrder : [])
+            .map((questionId) => questionNumberFromId(questionId))
+            .filter((value) => Number.isFinite(value));
+        const firstQuestion = displayedNumbers.length ? Math.min(...displayedNumbers) : null;
+        const lastQuestion = displayedNumbers.length ? Math.max(...displayedNumbers) : null;
+        if (dom.partLabel) {
+            dom.partLabel.textContent = `Part ${partNumber}`;
+        }
+        if (dom.partInstruction) {
+            dom.partInstruction.textContent = firstQuestion != null && lastQuestion != null
+                ? `Read the passage and answer Questions ${firstQuestion}–${lastQuestion}.`
+                : 'Read the passage and answer the questions.';
+        }
+        if (dom.suiteCustomModeBadge) {
+            dom.suiteCustomModeBadge.hidden = !(
+                state.suiteSessionId || state.simulationMode || state.suiteLocalReview || state.suiteReviewMode
+            );
+        }
         if (dom.left) {
             dom.left.innerHTML = passageHtml;
+            const firstHeading = dom.left.querySelector(':scope > h1:first-child, :scope > h2:first-child');
+            if (firstHeading && /reading\s+passage/i.test(firstHeading.textContent || '')) {
+                firstHeading.classList.add('practice-passage-preface');
+                const prefaceText = firstHeading.nextElementSibling;
+                if (prefaceText && prefaceText.tagName === 'P' && /questions?|reading\s+passage/i.test(prefaceText.textContent || '')) {
+                    prefaceText.classList.add('practice-passage-preface');
+                }
+            }
         }
         if (dom.groups) {
             dom.groups.innerHTML = groupsHtml;
@@ -1394,9 +1425,9 @@
         });
     }
 
-    // 交卷后不再展示答案解析。数据文件（reading-explanations/）与
-    // ensureExplanationDataset 等逻辑保留，将来恢复时移除下面这行即可。
-    const SHOW_EXPLANATIONS_AFTER_SUBMIT = false;
+    // 交卷及练习记录回顾时显示已经通过题号校验的解析。
+    // 没有解析数据的文章仍按原样显示，不生成占位或推测内容。
+    const SHOW_EXPLANATIONS_AFTER_SUBMIT = true;
 
     async function renderExplanations() {
         // 仍先清理，避免切换小节/回顾时残留上一篇的解析节点
