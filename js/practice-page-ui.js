@@ -1700,14 +1700,20 @@
             const normalized = normalizeQuestionId(questionId) || questionId;
             if (!normalized) return false;
             const elements = findAnswerElements(normalized, true);
+            const explicitAnchor =
+                document.getElementById(`${normalized}-anchor`) ||
+                document.getElementById(normalized);
             if (elements.length) {
                 const focusTarget =
                     elements.find((element) =>
                         element.tagName === 'INPUT' || element.tagName === 'TEXTAREA' || element.tagName === 'SELECT'
                     ) || elements[0];
                 if (focusTarget) {
-                    if (!window.scrollToElement(focusTarget)) {
-                        focusTarget.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    const questionContainer = explicitAnchor || focusTarget.closest(
+                        '.question-item, .tfng-item, .match-question-item, .question-row, .summary-completion, [data-question-id], [data-question]'
+                    ) || focusTarget;
+                    if (!window.scrollToElement(questionContainer)) {
+                        questionContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     }
                     if (typeof focusTarget.focus === 'function') {
                         try {
@@ -1719,9 +1725,7 @@
                     return true;
                 }
             }
-            const anchor =
-                document.getElementById(`${normalized}-anchor`) ||
-                document.getElementById(normalized);
+            const anchor = explicitAnchor;
             if (anchor) {
                 window.scrollToElement(anchor);
                 return true;
@@ -1844,6 +1848,7 @@
                     event.preventDefault();
                     return;
                 }
+                event.stopImmediatePropagation();
                 const explicitTarget = item.dataset.target || item.getAttribute('data-scroll-target');
                 if (explicitTarget && window.scrollToElement(explicitTarget)) {
                     event.preventDefault();
