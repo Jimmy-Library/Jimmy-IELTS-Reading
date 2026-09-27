@@ -1033,8 +1033,11 @@
             type: 'button'
         }, actionConfig.startLabel);
         if (isSelecting) {
-            startBtn.disabled = true;
-            startBtn.setAttribute('aria-disabled', 'true');
+            startBtn.disabled = false;
+            startBtn.removeAttribute('aria-disabled');
+            startBtn.dataset.action = 'suite-custom-select';
+            startBtn.textContent = currentCategory ? ('添加至 ' + currentCategory) : '加入套题';
+            startBtn.classList.add('suite-custom-add-button');
         }
         actions.appendChild(startBtn);
 
