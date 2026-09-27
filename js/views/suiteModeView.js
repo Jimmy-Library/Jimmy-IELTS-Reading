@@ -546,16 +546,19 @@
 
         // suitePracticeMixin 在 session-suite 懒加载分组里（依赖 practice-suite），
         // ensureSessionSuiteReady 会加载两者并重新把 mixin 挂到 app 上
-        const ready = typeof global.ensureSessionSuiteReady === 'function'
-            ? global.ensureSessionSuiteReady()
-            : Promise.resolve();
+        const ready = typeof global.ensureSuiteAppReady === 'function'
+            ? global.ensureSuiteAppReady()
+            : (typeof global.ensureSessionSuiteReady === 'function'
+                ? global.ensureSessionSuiteReady().then(() => global.app)
+                : (global.AppLazyLoader && typeof global.AppLazyLoader.ensureGroup === 'function'
+                    ? global.AppLazyLoader.ensureGroup('session-suite').then(() => global.app)
+                    : Promise.reject(new Error('套题加载器未就绪'))));
 
         Promise.resolve(ready)
-            .then(() => {
-                const app = global.app;
+            .then((readyApp) => {
+                const app = readyApp || global.app;
                 if (!app || typeof app.startCatalogSuite !== 'function') {
-                    global.showMessage && global.showMessage('套题模块未就绪，请刷新页面重试。', 'error');
-                    return null;
+                    throw new Error('套题模块未就绪');
                 }
                 return app.startCatalogSuite(suiteId, 'mock');
             })
