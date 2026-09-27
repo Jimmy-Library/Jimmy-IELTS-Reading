@@ -4651,10 +4651,7 @@
         state.countdownExpiryHandled = true;
         // 套题模式：时间到不自动交卷，先让用户选「继续做题」或「交卷」。
         // 继续则计时从 60:00 起改为正计时，最后照实记录总用时。
-        const inSuiteSession = (Array.isArray(state.suiteSequenceExamIds) && state.suiteSequenceExamIds.length > 1)
-            || !!state.suiteSessionId
-            || state.simulationMode;
-        if (inSuiteSession) {
+        if (state.simulationMode) {
             showSuiteTimeoutPrompt();
             return;
         }
@@ -4688,11 +4685,7 @@
         title.textContent = '考试时间到';
         const desc = document.createElement('div');
         desc.style.cssText = 'font-size:0.85rem;opacity:0.75;margin-bottom:20px;line-height:1.6;';
-        const limitSeconds = Number.isFinite(Number(state.suiteTimerLimitSeconds)) && Number(state.suiteTimerLimitSeconds) > 0
-            ? Math.floor(Number(state.suiteTimerLimitSeconds))
-            : 60 * 60;
-        const limitClock = `${Math.floor(limitSeconds / 60)}:${String(limitSeconds % 60).padStart(2, '0')}`;
-        desc.textContent = `已用满 ${Math.round(limitSeconds / 60)} 分钟。继续做题则计时改为正计时（从 ${limitClock} 起继续累加），总用时和每篇停留时间都会照实记录；也可以现在就交卷。`;
+        desc.textContent = '60 分钟已用完。继续做题将按已用时间正计时（从 60:00 起累加），总用时与每篇停留时间都会照实记录；也可以现在就交卷。';
         const row = document.createElement('div');
         row.style.cssText = 'display:flex;gap:12px;justify-content:center;';
         const mk = (label, primary) => {
