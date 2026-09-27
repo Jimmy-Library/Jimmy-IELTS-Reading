@@ -3148,12 +3148,26 @@ function clearSearch() {
     searchExams('');
 }
 
+function getSearchExamRenderOptions() {
+    let draft = null;
+    if (window.appStateService && typeof window.appStateService.getCustomSuiteDraft === 'function') {
+        draft = window.appStateService.getCustomSuiteDraft();
+    } else if (typeof window.getCustomSuiteDraftState === 'function') {
+        draft = window.getCustomSuiteDraftState();
+    } else {
+        draft = window.customSuiteDraft || null;
+    }
+    return draft && draft.status && draft.status !== 'idle'
+        ? { selectionMode: 'custom-suite', customSuiteDraft: draft }
+        : {};
+}
+
 function performSearch(query) {
     const normalizedQuery = query.toLowerCase().trim();
     if (!normalizedQuery) {
         const currentFiltered = getFilteredExamsState();
         const baseList = currentFiltered.length ? currentFiltered : getExamIndexState();
-        displayExams(baseList);
+        displayExams(baseList, getSearchExamRenderOptions());
         return;
     }
 
@@ -3173,7 +3187,7 @@ function performSearch(query) {
     });
 
     console.log('[Search] 搜索结果数量:', searchResults.length);
-    displayExams(searchResults);
+    displayExams(searchResults, getSearchExamRenderOptions());
 }
 
 async function toggleBulkDelete() {
