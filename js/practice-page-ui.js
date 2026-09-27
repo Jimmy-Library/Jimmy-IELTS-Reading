@@ -438,21 +438,28 @@
             const note = notesList.find((entry) => entry.id === noteId);
             if (!note) return false;
             openNotesPanel(note.id);
-            requestAnimationFrame(() => {
+            requestAnimationFrame(() => requestAnimationFrame(() => {
                 const item = document.querySelector('.note-item[data-note-id="' + note.id + '"]');
                 const anchors = getNoteAnchorEls(note);
                 const anchor = anchors[0] || null;
                 document.querySelectorAll('.hl[data-hl-type="note"].note-anchor-active')
                     .forEach((el) => el.classList.remove('note-anchor-active'));
                 anchors.forEach((el) => el.classList.add('note-anchor-active'));
-                item?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                const list = document.getElementById('notes-list');
+                if (item && list) {
+                    const listRect = list.getBoundingClientRect();
+                    const itemRect = item.getBoundingClientRect();
+                    const targetTop = list.scrollTop + itemRect.top - listRect.top
+                        - Math.max(0, (list.clientHeight - itemRect.height) / 2);
+                    list.scrollTo({ top: Math.max(0, targetTop), behavior: 'smooth' });
+                }
                 if (options.revealAnchor && anchor) {
                     window.scrollToElement?.(anchor);
                 }
                 if (options.focusEditor !== false) {
                     item?.querySelector('.note-item__textarea')?.focus({ preventScroll: true });
                 }
-            });
+            }));
             return true;
         }
 
@@ -708,8 +715,16 @@
             if (!element) return false;
             const pane = element.closest('.pane');
             if (pane && typeof pane.scrollTo === 'function') {
-                const offsetTop = element.offsetTop - 20;
-                pane.scrollTo({ top: offsetTop < 0 ? 0 : offsetTop, behavior: 'smooth' });
+                const paneRect = pane.getBoundingClientRect();
+                const elementRect = element.getBoundingClientRect();
+                const currentTop = pane.scrollTop;
+                const targetTop = currentTop + elementRect.top - paneRect.top
+                    - Math.max(20, (pane.clientHeight - elementRect.height) / 2);
+                const maxTop = Math.max(0, pane.scrollHeight - pane.clientHeight);
+                pane.scrollTo({
+                    top: Math.min(maxTop, Math.max(0, targetTop)),
+                    behavior: 'smooth'
+                });
             } else if (typeof element.scrollIntoView === 'function') {
                 element.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
