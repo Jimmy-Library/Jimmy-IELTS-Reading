@@ -76,36 +76,6 @@
         return sessionSuitePromise;
     }
 
-    function ensureSuiteAppReady() {
-        return ensureSessionSuiteReady().then(function waitForSuiteApp() {
-            return new Promise(function (resolve, reject) {
-                var attempts = 0;
-                function check() {
-                    reapplyAppMixins();
-                    var app = global.app;
-                    var mixins = global.ExamSystemAppMixins;
-                    if (app && typeof app.startSuitePractice !== 'function' && mixins && mixins.suitePractice) {
-                        try {
-                            Object.assign(Object.getPrototypeOf(app), mixins.suitePractice);
-                            Object.assign(app, mixins.suitePractice);
-                        } catch (_) {}
-                    }
-                    if (app && typeof app.startSuitePractice === 'function' && typeof app.startCatalogSuite === 'function') {
-                        resolve(app);
-                        return;
-                    }
-                    attempts += 1;
-                    if (attempts >= 100) {
-                        reject(new Error('套题模块未就绪'));
-                        return;
-                    }
-                    global.setTimeout(check, 100);
-                }
-                check();
-            });
-        });
-    }
-
     // 向后兼容：提供 window.ensureBrowseGroup，避免 main.js 注入垃圾 shim 警告
     if (typeof global.ensureBrowseGroup !== 'function') {
         global.ensureBrowseGroup = ensureBrowseGroup;
@@ -113,7 +83,6 @@
     if (typeof global.ensureSessionSuiteReady !== 'function') {
         global.ensureSessionSuiteReady = ensureSessionSuiteReady;
     }
-    global.ensureSuiteAppReady = ensureSuiteAppReady;
 
     function ensureExamData() {
         if (typeof global.ensureExamDataScripts === 'function') {
@@ -518,7 +487,6 @@
         ensurePracticeSuiteGroup: ensurePracticeSuiteGroup,
         ensureStateCoreGroup: ensureStateCoreGroup,
         ensureSessionSuiteReady: ensureSessionSuiteReady,
-        ensureSuiteAppReady: ensureSuiteAppReady,
         browseReady: function () { return browseGroupPromise || ensureBrowseGroup(); },
         examDataReady: ensureExamData
     });
