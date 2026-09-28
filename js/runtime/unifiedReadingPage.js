@@ -384,7 +384,25 @@
             const contentful = candidates.filter((entry) => draftHasContent(entry.draft));
             const pool = contentful.length ? contentful : candidates;
             pool.sort((left, right) => right.savedAt - left.savedAt);
-            return pool[0]?.draft || {};
+            const mergedDraft = Object.assign({}, pool[0]?.draft || {});
+
+            // The answer mirrors are written at different moments. A newer
+            // answer-only snapshot can contain empty annotation arrays and
+            // must not erase a previous passage's saved highlights or Notes.
+            ['highlights', 'notes', 'markedQuestions'].forEach((field) => {
+                const best = candidates.reduce((selected, entry) => {
+                    const value = entry?.draft?.[field];
+                    if (!Array.isArray(value)) return selected;
+                    if (!Array.isArray(selected) || value.length > selected.length) {
+                        return value;
+                    }
+                    return selected;
+                }, Array.isArray(mergedDraft[field]) ? mergedDraft[field] : []);
+                mergedDraft[field] = best.map((item) => (
+                    item && typeof item === 'object' ? Object.assign({}, item) : item
+                ));
+            });
+            return mergedDraft;
         } catch (_) {
             return {};
         }
@@ -395,6 +413,10 @@
      * 每篇用自己的 answerKey 与 questionOrder，题号沿用该篇的显示编号。
      */
     function buildSuiteResultSections() {
+        // Flush the visible passage synchronously before collecting all three
+        // sections. This prevents the last edited Note/highlight from being
+        // omitted when Submit is pressed immediately after editing it.
+        syncSimulationDraftSnapshot('submit');
         const blueprint = state.suiteBlueprint;
         if (!blueprint || !Array.isArray(blueprint.passages) || blueprint.passages.length <= 1) {
             return null;
@@ -410,6 +432,17 @@
                 ? dataset.questionOrder
                 : Object.keys(answerKey);
             const passageDraft = getDraftForExam(passage.examId);
+            const isVisiblePassage = String(passage.examId || '') === String(state.examId || '');
+            if (isVisiblePassage) {
+                // Prefer the live editor state for the visible passage so a
+                // just-typed Note is included even before the next autosave.
+                if (typeof global.getPracticeHighlights === 'function') {
+                    passageDraft.highlights = global.getPracticeHighlights();
+                }
+                if (typeof global.getPracticeNotes === 'function') {
+                    passageDraft.notes = global.getPracticeNotes();
+                }
+            }
             const answers = passageDraft.answers && typeof passageDraft.answers === 'object'
                 ? passageDraft.answers
                 : {};
