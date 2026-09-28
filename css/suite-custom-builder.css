@@ -117,3 +117,9 @@
   .custom-suite-builder { grid-template-columns: 1fr; gap: 14px; padding: 20px; }
   .custom-suite-builder__button { width: 100%; }
 }
+
+/* The autonomous builder belongs only to Suite mode. */
+#browse-view .custom-suite-builder,
+#practice-view .custom-suite-builder {
+  display: none !important;
+}
