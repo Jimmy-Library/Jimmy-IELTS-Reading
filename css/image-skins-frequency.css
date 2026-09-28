@@ -58,3 +58,28 @@ html[data-image-skin] #browse-view .exam-item[data-frequency="unknown"] {
     --exam-card-to: color-mix(in srgb, rgb(var(--skin-panel-alt-rgb)) 84%, var(--skin-accent-soft) 16%);
     --exam-card-edge: color-mix(in srgb, var(--skin-accent) 68%, #94a3b8 32%);
 }
+
+/* Summer sunflower: muted blue-grey controls with warm cream and blush cards. */
+html[data-image-skin="summer-sunflower"] #browse-view .exam-item[data-frequency="ultra-high"],
+html[data-image-skin="summer-sunflower"] #browse-view .exam-item[data-frequency="high"] {
+    --exam-card-from: #fffaf5;
+    --exam-card-mid: #f6e8e2;
+    --exam-card-to: #ead9da;
+    --exam-card-edge: #b88d68;
+}
+
+html[data-image-skin="summer-sunflower"] #browse-view .exam-item[data-frequency="medium"] {
+    --exam-card-from: #fbfaf5;
+    --exam-card-mid: #f2eadb;
+    --exam-card-to: #e6dfc8;
+    --exam-card-edge: #c5a34f;
+}
+
+html[data-image-skin="summer-sunflower"] #browse-view .exam-item[data-frequency="low"],
+html[data-image-skin="summer-sunflower"] #browse-view .exam-item[data-frequency="standard"],
+html[data-image-skin="summer-sunflower"] #browse-view .exam-item[data-frequency="unknown"] {
+    --exam-card-from: #fcfcfb;
+    --exam-card-mid: #f5f7f8;
+    --exam-card-to: #e9edf1;
+    --exam-card-edge: #aeb8c7;
+}

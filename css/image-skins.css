@@ -15,6 +15,20 @@
     --skin-shift-y: 0px;
 }
 
+:root[data-image-skin="summer-sunflower"] {
+    --skin-accent: #9aa5b6;
+    --skin-accent-strong: #626b7a;
+    --skin-accent-soft: rgba(231, 196, 105, 0.22);
+    --skin-ink: #555c6b;
+    --skin-base: #f5f2e9;
+    --skin-panel-rgb: 252, 252, 250;
+    --skin-panel-alt-rgb: 237, 240, 243;
+    --skin-image: url("../skin/summer.jpg");
+    --skin-image-opacity: .42;
+    --skin-image-position: 50% 50%;
+    --skin-image-filter: saturate(.92) contrast(.96) brightness(1.04);
+}
+
 :root[data-image-skin="snoopy-study"] {
     --skin-accent: #0f7f8f;
     --skin-accent-strong: #17465e;

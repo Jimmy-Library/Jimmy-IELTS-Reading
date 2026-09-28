@@ -24,7 +24,26 @@
     <script>
         (function () {
             try {
-                var savedImageSkin = localStorage.getItem('image_skin') || 'spring';
+                var defaultSkin = 'summer-sunflower';
+                var migrationKey = 'image_skin_default_summer_v1';
+                var savedImageSkin = localStorage.getItem('image_skin');
+                if (!localStorage.getItem(migrationKey)) {
+                    var hasCustomSkin = savedImageSkin === 'custom'
+                        || Boolean(localStorage.getItem('custom_image_skin_active_profile_v1'))
+                        || Boolean(localStorage.getItem('custom_image_skin_profiles_v1'))
+                        || Boolean(localStorage.getItem('custom_image_skin_settings_v1'))
+                        || Boolean(localStorage.getItem('custom_image_skin_thumb_v1'));
+                    if (hasCustomSkin && !savedImageSkin) {
+                        savedImageSkin = 'custom';
+                        localStorage.setItem('image_skin', savedImageSkin);
+                    }
+                    if (!hasCustomSkin) {
+                        savedImageSkin = defaultSkin;
+                        localStorage.setItem('image_skin', savedImageSkin);
+                    }
+                    localStorage.setItem(migrationKey, '1');
+                }
+                savedImageSkin = savedImageSkin || defaultSkin;
                 document.documentElement.setAttribute('data-image-skin', savedImageSkin);
                 document.documentElement.removeAttribute('data-theme');
             } catch (e) {}

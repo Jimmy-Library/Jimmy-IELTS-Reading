@@ -11,14 +11,16 @@
     }
 
     var STORAGE_KEY = 'image_skin';
-    var DEFAULT_SKIN = 'spring';
+    var DEFAULT_SKIN = 'summer-sunflower';
+    var DEFAULT_MIGRATION_KEY = 'image_skin_default_summer_v1';
     var currentScript = document.currentScript;
     var appRoot = currentScript ? new URL('../../', currentScript.src) : new URL('./', global.location.href);
     var reducedMotion = global.matchMedia && global.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     var SKINS = [
         { id: 'custom', name: '自定义模式', note: '图片 · 配色 · 字体 · 形状', color: '#6d5bd0', fallback: 'linear-gradient(145deg,#f5f3ff,#8b7de3)', image: '', custom: true },
-        { id: 'spring', name: '春日新绿', note: '默认 · 清新专注', color: '#2f855a', fallback: 'linear-gradient(145deg,#f7fff8,#9ae6b4)', image: '' },
+        { id: 'summer-sunflower', name: '向日葵夏日', note: '默认 · 明亮松弛', color: '#9aa5b6', fallback: 'linear-gradient(145deg,#fbfaf5,#e8dcc0)', image: 'skin/summer.jpg', position: '50% 50%' },
+        { id: 'spring', name: '春日新绿', note: '清新 · 专注自然', color: '#2f855a', fallback: 'linear-gradient(145deg,#f7fff8,#9ae6b4)', image: '' },
         { id: 'autumn-gold', name: '秋日暖金', note: '琥珀 · 丰收暖意', color: '#c8792b', fallback: 'linear-gradient(145deg,#fff8e8,#d77b2c)', image: '' },
         { id: 'winter-glass', name: '冬日冰晶', note: '冰蓝 · 澄澈安静', color: '#6f9fc2', fallback: 'linear-gradient(145deg,#ffffff,#9fc8df)', image: '' },
         { id: 'snoopy-study', name: '史努比夜读', note: '湖蓝 · 静谧陪伴', color: '#0f7f8f', image: 'skin/史努比1.jpg', position: '50% 58%' },
@@ -47,7 +49,24 @@
 
     function savedSkinId() {
         try {
-            return skinById(localStorage.getItem(STORAGE_KEY) || DEFAULT_SKIN).id;
+            var saved = localStorage.getItem(STORAGE_KEY);
+            if (!localStorage.getItem(DEFAULT_MIGRATION_KEY)) {
+                var hasCustomSkin = saved === 'custom'
+                    || Boolean(localStorage.getItem('custom_image_skin_active_profile_v1'))
+                    || Boolean(localStorage.getItem('custom_image_skin_profiles_v1'))
+                    || Boolean(localStorage.getItem('custom_image_skin_settings_v1'))
+                    || Boolean(localStorage.getItem('custom_image_skin_thumb_v1'));
+                if (hasCustomSkin && !saved) {
+                    saved = 'custom';
+                    localStorage.setItem(STORAGE_KEY, saved);
+                }
+                if (!hasCustomSkin) {
+                    saved = DEFAULT_SKIN;
+                    localStorage.setItem(STORAGE_KEY, saved);
+                }
+                localStorage.setItem(DEFAULT_MIGRATION_KEY, '1');
+            }
+            return skinById(saved || DEFAULT_SKIN).id;
         } catch (_) {
             return DEFAULT_SKIN;
         }

@@ -216,6 +216,7 @@
         'pink': pinkShader,
         'white': whiteShader,
         'spring': forestGreenShader,
+        'summer-sunflower': yellowShader,
         'autumn-gold': orangeShader,
         'winter-glass': whiteShader,
         'snoopy-study': tealShader,
