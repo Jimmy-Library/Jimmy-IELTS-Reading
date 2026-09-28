@@ -623,7 +623,7 @@
             return {
                 index,
                 examId: section.examId,
-                label: section.label || passageLabelFromDataset(dataset, index),
+                label: `P${index + 1}`,
                 title: section.title || dataset?.meta?.title || '',
                 isCurrent: index === currentIndex,
                 dataset,
@@ -741,6 +741,64 @@
     }
 
     /** 交卷后按 P1/P2/P3 分篇呈现三篇结果，并给出总分与雅思分数 */
+    // 顶部成绩条：提交后在页面顶部清晰显示「答对 X / 共 N 题」，套题另给雅思分数
+    function ensureScoreBanner() {
+        if (dom.scoreBanner && document.body.contains(dom.scoreBanner)) return dom.scoreBanner;
+        const banner = document.createElement('section');
+        banner.className = 'practice-score-banner';
+        banner.setAttribute('aria-live', 'polite');
+        banner.hidden = true;
+        const anchor = document.querySelector('.exam-instruction-banner');
+        if (anchor && anchor.parentNode) {
+            anchor.parentNode.insertBefore(banner, anchor.nextSibling);
+        } else if (document.querySelector('.shell')) {
+            const shell = document.querySelector('.shell');
+            shell.parentNode.insertBefore(banner, shell);
+        } else {
+            document.body.insertBefore(banner, document.body.firstChild);
+        }
+        dom.scoreBanner = banner;
+        return banner;
+    }
+
+    function suiteBandLabel(correct, total) {
+        const core = global.IeltsBandScore;
+        if (!core || typeof core.scoreSuite !== 'function') return null;
+        try {
+            return core.scoreSuite(correct, total) || null;
+        } catch (error) {
+            console.error('[UnifiedReadingPage] 计算分数失败:', error);
+            return null;
+        }
+    }
+
+    function renderScoreBanner(info) {
+        if (!info || !Number.isFinite(Number(info.total)) || Number(info.total) <= 0) return;
+        const banner = ensureScoreBanner();
+        const correct = Number(info.correct) || 0;
+        const total = Number(info.total) || 0;
+        const percentage = Number.isFinite(Number(info.percentage))
+            ? Math.round(Number(info.percentage))
+            : Math.round((correct / total) * 100);
+        const bandHtml = info.bandLabel
+            ? `<span class="practice-score-banner__band">雅思 ${info.bandLabel}${info.estimated ? '（折算）' : ''}</span>`
+            : '';
+        banner.innerHTML = `
+            <span class="practice-score-banner__title">${info.title || '本次答题'}</span>
+            <span class="practice-score-banner__main">答对 <strong>${correct}</strong> / 共 <strong>${total}</strong> 题</span>
+            <span class="practice-score-banner__rate">正确率 ${percentage}%</span>
+            ${bandHtml}
+        `;
+        banner.hidden = false;
+    }
+
+    function hideScoreBanner() {
+        if (dom.scoreBanner) {
+            dom.scoreBanner.hidden = true;
+            dom.scoreBanner.innerHTML = '';
+        }
+    }
+
     function renderSuiteResults(summary) {
         if (!dom.results || !summary || !Array.isArray(summary.sections)) return;
 
@@ -832,7 +890,7 @@
                 index,
                 examId: String(examId),
                 isCurrent,
-                label: passageLabelFromDataset(dataset, index),
+                label: `P${index + 1}`,
                 title: (dataset && dataset.meta && dataset.meta.title) || '',
                 // 保留数据集：交卷时据此就地算出三篇的成绩（含各自 answerKey）
                 dataset,
@@ -894,6 +952,99 @@
         return state.explanation;
     }
 
+    // 按指定篇目加载解析数据（套题导出 PDF 时要为三篇分别取，不能只用当前页的 state.dataKey）
+    async function loadExplanationPayloadFor(examId, dataKey) {
+        const registry = global.__READING_EXPLANATION_DATA__;
+        if (!registry || typeof registry.get !== 'function') return null;
+        let manifest = {};
+        try {
+            manifest = await ensureExplanationManifest();
+        } catch (_) {
+            return null;
+        }
+        const entry = manifest[dataKey] || manifest[examId];
+        if (!entry || !entry.dataKey || !entry.script) return null;
+        if (!registry.has(entry.dataKey)) {
+            try {
+                await loadScript(entry.script);
+            } catch (_) {
+                return null;
+            }
+        }
+        return registry.get(entry.dataKey) || null;
+    }
+
+    // 套题 PDF 用：把某篇的逐题解析渲染成打印版 HTML（与页面上的解析卡同一套类名与内容）
+    function buildPrintExplanationHtml(payload, dataset, section) {
+        const sections = Array.isArray(payload && payload.questionExplanations) ? payload.questionExplanations : [];
+        if (!sections.length) return '';
+        const displayMap = (dataset && dataset.questionDisplayMap) || {};
+        const rowMap = {};
+        ((section && section.rows) || []).forEach((row) => {
+            rowMap[String(row.questionId)] = row;
+        });
+        const renderValue = (value) => {
+            if (Array.isArray(value)) {
+                if (!value.length) return '';
+                return `<ul class="reading-explanation-list">${value
+                    .map((line) => `<li>${escapeHtml(String(line))}</li>`).join('')}</ul>`;
+            }
+            return escapeHtml(String(value == null ? '' : value));
+        };
+        const cards = [];
+        sections.forEach((sec) => {
+            (Array.isArray(sec.items) ? sec.items : []).forEach((item) => {
+                const qid = String(item.questionId || '');
+                if (!qid) return;
+                const number = displayMap[qid] || qid.replace(/^q/i, '');
+                const outcome = rowMap[qid] || null;
+                const userText = outcome ? formatAnswerForDisplay(outcome.userAnswer) : '';
+                const blank = outcome ? !userText : true;
+                const correct = !!(outcome && outcome.isCorrect === true);
+                const rows = [
+                    ['题目', item.stem],
+                    ['翻译', item.translation],
+                    ['答案', formatAnswerForDisplay(item.answer)],
+                    ['你的答案', outcome ? (userText || '未作答') : null],
+                    ['词性分析', item.wordClass],
+                    ['定位句', item.locating && item.locating.quote
+                        ? `第 ${item.locating.paragraph || '?'} 段：${item.locating.quote}` : ''],
+                    ['同义替换', Array.isArray(item.synonyms) ? item.synonyms : (item.synonyms ? [item.synonyms] : null)],
+                    ['定位技巧', item.locatingTip],
+                    ['解析', item.analysis],
+                    ['辨析', Array.isArray(item.traps) ? item.traps : (item.traps ? [item.traps] : null)]
+                ];
+                const body = rows.map(([label, value]) => {
+                    if (value == null || value === '' || (Array.isArray(value) && !value.length)) return '';
+                    let chip = '';
+                    let rowClass = 'reading-explanation-card__row';
+                    if (label === '答案') {
+                        rowClass += ' reading-explanation-card__row--answer';
+                        chip = '<span class="reading-explanation-chip reading-explanation-chip--is-answer">正确答案</span>';
+                    }
+                    if (label === '你的答案' && outcome) {
+                        rowClass += blank ? ' is-blank' : (correct ? ' is-correct' : ' is-wrong');
+                        chip = `<span class="reading-explanation-chip reading-explanation-chip--${blank ? 'is-blank' : (correct ? 'is-correct' : 'is-wrong')}">${blank ? '未作答' : (correct ? '✓ 正确' : '✗ 错误')}</span>`;
+                    }
+                    return `<div class="${rowClass}"><span class="reading-explanation-card__key">${escapeHtml(label)}：</span>${renderValue(value)}${chip}</div>`;
+                }).join('');
+                cards.push(`
+                    <div class="reading-explanation-card reading-question-explanation" data-question-id="${escapeHtml(qid)}">
+                        <div class="reading-explanation-card__label">Q${escapeHtml(String(number))} 讲解</div>
+                        ${body}
+                    </div>
+                `);
+            });
+        });
+        if (!cards.length) return '';
+        return `
+            <div class="suite-print__explanations">
+                <h3 class="suite-print__ak-title">题目解析 Explanations</h3>
+                ${cards.join('')}
+            </div>
+        `;
+    }
+
     function ensureExplanationStyles() {
         if (document.getElementById(EXPLANATION_STYLE_ID)) {
             return;
@@ -901,33 +1052,232 @@
         const style = document.createElement('style');
         style.id = EXPLANATION_STYLE_ID;
         style.textContent = `
+            /* ===== 解析排版：统一字号梯度 17 / 16 / 14 / 11 =====
+               基准 16px（试卷正文 18px 的下一级），行高一律 1.75；
+               卡片标题 17px、行标签 14px、角标 11px，靠字重与颜色分层。
+               试卷样式 #left li, #right li 是 18px，下面用更高优先级把卡片内的字号锁死。 */
+            :is(#left, #right) :is(.reading-explanation-card, .reading-question-explanation-list) :is(p, li) {
+                font-size: 16px;
+                line-height: 1.75;
+                color: #1f2937;
+            }
             .reading-explanation-card {
-                margin: 10px 0 14px;
-                padding: 10px 12px;
-                border: 1px solid rgba(37, 99, 235, 0.22);
-                border-left: 4px solid rgba(37, 99, 235, 0.9);
-                border-radius: 8px;
-                background: rgba(239, 246, 255, 0.75);
+                margin: 12px 0 16px;
+                padding: 12px 14px 12px 16px;
+                border: 1px solid rgba(37, 99, 235, 0.18);
+                border-left: 4px solid rgba(37, 99, 235, 0.85);
+                border-radius: 10px;
+                background: rgba(239, 246, 255, 0.7);
+                font-size: 16px;
+                line-height: 1.75;
+                color: #1f2937;
             }
             .reading-explanation-card__label {
-                font-size: 12px;
-                line-height: 1.3;
-                margin-bottom: 6px;
+                margin: 0 0 9px;
+                padding-bottom: 7px;
+                border-bottom: 1px dashed rgba(37, 99, 235, 0.28);
+                font-size: 17px;
+                line-height: 1.4;
                 font-weight: 700;
+                letter-spacing: 0.02em;
                 color: #1d4ed8;
             }
             .reading-explanation-card__text {
-                font-size: 14px;
-                line-height: 1.6;
+                font-size: 16px;
+                line-height: 1.75;
                 color: #1f2937;
                 white-space: pre-wrap;
             }
-            .reading-group-explanation {
-                margin-top: 10px;
-            }
-            .reading-question-explanation {
+            .reading-explanation-card__row {
+                display: flex;
+                align-items: baseline;
                 margin-top: 8px;
+                font-size: 16px;
+                line-height: 1.75;
+                color: #1f2937;
             }
+            .reading-explanation-card__row:first-child { margin-top: 0; }
+            .reading-explanation-card__key {
+                flex: 0 0 5.4em;
+                font-size: 14px;
+                font-weight: 700;
+                line-height: 2;
+                color: #1d4ed8;
+                white-space: nowrap;
+            }
+            .reading-explanation-card__row > *:not(.reading-explanation-card__key) {
+                flex: 1 1 auto;
+                min-width: 0;
+                max-width: 100%;
+            }
+            .reading-explanation-card__row--answer .reading-explanation-card__key { color: #047857; }
+            .reading-explanation-card__row--answer > *:not(.reading-explanation-card__key) {
+                font-weight: 700;
+                color: #065f46;
+            }
+            .reading-explanation-card__quote { color: #334155; font-style: italic; }
+            .reading-explanation-list {
+                margin: 0;
+                padding-left: 1.35em;
+            }
+            .reading-explanation-list li { margin-top: 3px; }
+            .reading-explanation-link {
+                display: inline-block;
+                margin-top: 10px;
+                font-size: 14px;
+                font-weight: 600;
+                color: #1d4ed8;
+                text-decoration: none;
+                border-bottom: 1px dashed currentColor;
+                cursor: pointer;
+            }
+            .reading-explanation-link:hover { color: #1e40af; }
+            .locating-mark {
+                background: rgba(253, 224, 71, 0.38);
+                border-bottom: 1px solid rgba(202, 138, 4, 0.55);
+                border-radius: 3px 3px 0 0;
+                cursor: pointer;
+            }
+            .locating-mark:hover { background: rgba(253, 224, 71, 0.62); }
+            .locating-badge {
+                display: inline-block;
+                margin: 0 2px 0 1px;
+                padding: 0 5px;
+                font-size: 11px;
+                font-weight: 700;
+                line-height: 16px;
+                vertical-align: super;
+                border-radius: 8px;
+                background: #f59e0b;
+                color: #fff;
+                cursor: pointer;
+                user-select: none;
+            }
+            .locating-mark.is-flashing, .question-item.is-flashing,
+            .tfng-item.is-flashing, .match-question-item.is-flashing,
+            .summary-completion.is-flashing, .question-row.is-flashing {
+                animation: locatingFlash 1.6s ease-out 2;
+                outline: 2px solid rgba(245, 158, 11, 0.85);
+                outline-offset: 2px;
+                border-radius: 6px;
+            }
+            @keyframes locatingFlash {
+                0% { background-color: rgba(253, 224, 71, 0.85); }
+                100% { background-color: transparent; }
+            }
+            /* 顶部成绩条：提交后清晰显示答对数 / 总题数（套题另附分数） */
+            .practice-score-banner {
+                display: flex;
+                align-items: center;
+                flex-wrap: wrap;
+                gap: 8px 18px;
+                margin: 8px 18px 4px;
+                padding: 10px 18px;
+                border: 1px solid #cfd8de;
+                border-left: 6px solid #267dbb;
+                border-radius: 3px;
+                background: #f4f8fb;
+                color: #12374f;
+                font-size: 17px;
+                line-height: 1.5;
+            }
+            .practice-score-banner[hidden] { display: none; }
+            .practice-score-banner__title {
+                font-size: 15px;
+                font-weight: 700;
+                color: #456;
+            }
+            .practice-score-banner__main { font-size: 17px; }
+            .practice-score-banner__main strong {
+                font-size: 23px;
+                font-weight: 700;
+                color: #0b5ea8;
+                padding: 0 2px;
+            }
+            .practice-score-banner__rate {
+                font-size: 15px;
+                color: #456;
+            }
+            .practice-score-banner__band {
+                margin-left: auto;
+                padding: 2px 12px;
+                border-radius: 999px;
+                background: #b45309;
+                color: #fff;
+                font-size: 17px;
+                font-weight: 700;
+                letter-spacing: 0.02em;
+            }
+            /* 解析卡：考生答案与对错标记 */
+            .reading-explanation-chip {
+                display: inline-block;
+                margin-left: 8px;
+                padding: 1px 9px;
+                border-radius: 10px;
+                border: 1px solid #d1d5db;
+                background: #f3f4f6;
+                color: #4b5563;
+                font-size: 13px;
+                font-weight: 700;
+                line-height: 1.6;
+                white-space: nowrap;
+            }
+            .reading-explanation-chip--is-answer {
+                border-color: #86efac;
+                background: #dcfce7;
+                color: #14532d;
+            }
+            .reading-explanation-chip--is-correct {
+                border-color: #86efac;
+                background: #dcfce7;
+                color: #14532d;
+            }
+            .reading-explanation-chip--is-wrong {
+                border-color: #fca5a5;
+                background: #fee2e2;
+                color: #991b1b;
+            }
+            .reading-explanation-card__row.is-correct > *:not(.reading-explanation-card__key) { color: #15803d; }
+            .reading-explanation-card__row.is-wrong > *:not(.reading-explanation-card__key) { color: #b91c1c; }
+            .reading-explanation-card__row.is-blank > *:not(.reading-explanation-card__key) { color: #6b7280; }
+            /* 套题 PDF：解析区紧凑排版，避免动辄几十页 */
+            .suite-print__explanations { margin-top: 16px; }
+            .suite-print__explanations .reading-explanation-card {
+                margin: 9px 0;
+                padding: 8px 10px;
+                font-size: 11px;
+                line-height: 1.6;
+                break-inside: avoid;
+                page-break-inside: avoid;
+            }
+            .suite-print__explanations .reading-explanation-card__label {
+                margin-bottom: 5px;
+                padding-bottom: 4px;
+                font-size: 12px;
+            }
+            .suite-print__explanations .reading-explanation-card__row {
+                margin-top: 4px;
+                font-size: 11px;
+                line-height: 1.6;
+            }
+            .suite-print__explanations .reading-explanation-card__key {
+                flex: 0 0 5.2em;
+                font-size: 10.5px;
+                line-height: 1.7;
+            }
+            .suite-print__explanations .reading-explanation-list li {
+                margin-top: 2px;
+                font-size: 11px;
+                line-height: 1.6;
+            }
+            .suite-print__explanations .reading-explanation-chip {
+                margin-left: 6px;
+                padding: 0 6px;
+                font-size: 10px;
+            }
+            .reading-group-explanation,
+            .reading-question-explanation { margin-top: 10px; scroll-margin-top: 12px; }
+            .reading-question-explanation-item { scroll-margin-top: 12px; }
             .reading-question-explanation-list {
                 margin-top: 10px;
                 padding: 10px 12px;
@@ -937,12 +1287,15 @@
             }
             .reading-question-explanation-list h5 {
                 margin: 0 0 8px;
-                font-size: 13px;
+                font-size: 17px;
+                font-weight: 700;
+                line-height: 1.45;
                 color: #1e3a8a;
             }
             .reading-question-explanation-list .reading-question-explanation-item + .reading-question-explanation-item {
-                margin-top: 8px;
+                margin-top: 9px;
             }
+
         `;
         document.head.appendChild(style);
     }
@@ -967,8 +1320,23 @@
         return parseQuestionNumber(questionId);
     }
 
+    // questionRange 允许 {start,end} 或 "1-6" / "Questions 1–6" 这样的字符串
+    function normalizeQuestionRange(range) {
+        if (range && Number.isFinite(Number(range.start)) && Number.isFinite(Number(range.end))) {
+            return { start: Number(range.start), end: Number(range.end) };
+        }
+        const nums = String(range == null ? '' : range).match(/\d+/g);
+        if (nums && nums.length >= 2) {
+            return { start: Number(nums[0]), end: Number(nums[1]) };
+        }
+        if (nums && nums.length === 1) {
+            return { start: Number(nums[0]), end: Number(nums[0]) };
+        }
+        return null;
+    }
+
     function sectionOverlap(section, numbers = []) {
-        const range = section?.questionRange;
+        const range = normalizeQuestionRange(section?.questionRange);
         if (!range || !Number.isFinite(range.start) || !Number.isFinite(range.end)) {
             return 0;
         }
@@ -976,24 +1344,19 @@
     }
 
     function pickSectionForGroup(questionNumbers = [], preferMode = null) {
+        return pickSectionsForGroup(questionNumbers, preferMode)[0] || null;
+    }
+
+    // 一个 DOM 题组可能横跨多个解析小节（例如 27–40 一段里含选择/摘要/判断三节），
+    // 逐题渲染时必须把每个相交小节都取出来，否则只有第一节的题目能拿到讲解卡。
+    function pickSectionsForGroup(questionNumbers = [], preferMode = null) {
         const sections = Array.isArray(state.explanation?.questionExplanations) ? state.explanation.questionExplanations : [];
         const filtered = preferMode ? sections.filter((item) => item?.mode === preferMode) : sections;
-        if (!filtered.length) {
-            return null;
-        }
-        let best = null;
-        let bestScore = -1;
-        filtered.forEach((section) => {
-            const score = sectionOverlap(section, questionNumbers);
-            if (score > bestScore) {
-                best = section;
-                bestScore = score;
-            }
-        });
-        if (best && bestScore > 0) {
-            return best;
-        }
-        return null;
+        return filtered
+            .map((section, index) => ({ section, index, score: sectionOverlap(section, questionNumbers) }))
+            .filter((entry) => entry.score > 0)
+            .sort((a, b) => (b.score - a.score) || (a.index - b.index))
+            .map((entry) => entry.section);
     }
 
     function createExplanationCard(label, text, className = '') {
@@ -1009,6 +1372,354 @@
         body.className = 'reading-explanation-card__text';
         body.textContent = String(text || '').trim();
         card.appendChild(body);
+        return card;
+    }
+
+    // ===== 解析定位句联动（ReadingExplanationV2：每题带 locating 段号+原句） =====
+    function collectExplanationItems() {
+        const sections = Array.isArray(state.explanation?.questionExplanations)
+            ? state.explanation.questionExplanations : [];
+        const items = [];
+        sections.forEach((section) => {
+            (Array.isArray(section?.items) ? section.items : []).forEach((item) => {
+                if (item && (item.questionId || Number.isFinite(Number(item.questionNumber)))) items.push(item);
+            });
+        });
+        return items;
+    }
+
+    function findExplanationItem(questionId) {
+        const wanted = String(questionId || '');
+        const num = Number(String(wanted).replace(/^q/i, ''));
+        return collectExplanationItems().find((item) => String(item.questionId || '') === wanted
+            || (Number.isFinite(num) && Number(item.questionNumber) === num)) || null;
+    }
+
+    function resolveLocating(questionId) {
+        const item = findExplanationItem(questionId);
+        const locating = item && item.locating;
+        if (!locating || !locating.quote) return null;
+        return { questionId: String(item.questionId || questionId), paragraph: locating.paragraph || '', quote: String(locating.quote) };
+    }
+
+    // 文章的正文段落（跳过标题、导语、以及解析卡片）
+    function passageBodyParagraphs() {
+        if (!dom.left) return [];
+        return Array.from(dom.left.querySelectorAll('p')).filter((el) => {
+            if (el.closest('.reading-explanation-card')) return false;
+            const text = (el.textContent || '').trim();
+            if (!text) return false;
+            if (/^you should spend about/i.test(text)) return false;
+            return true;
+        });
+    }
+
+    function locateParagraphElement(paragraph) {
+        const label = String(paragraph == null ? '' : paragraph).trim();
+        const paragraphs = passageBodyParagraphs();
+        if (!paragraphs.length) return null;
+        const asNumber = Number(label.replace(/[^0-9]/g, ''));
+        if (Number.isFinite(asNumber) && asNumber >= 1 && asNumber <= paragraphs.length) {
+            return paragraphs[asNumber - 1];
+        }
+        if (/^[A-Za-z]$/.test(label)) {
+            const letter = label.toUpperCase();
+            const hit = paragraphs.find((el) => new RegExp(`(^|[^A-Za-z])${letter}([^A-Za-z]|$)`).test((el.textContent || '').slice(0, 40)));
+            if (hit) return hit;
+        }
+        return null;
+    }
+
+    // 忽略标点前后的空格：`"Life , by"` 与 `"Life, by"` 视为同一串，同时记录回真实下标
+    function buildLoosePunctuation(text) {
+        const BEFORE = ',.;:!?)]}\u00bb\u201d\u2019';
+        const AFTER = '([{\u00ab\u201c\u2018';
+        let out = '';
+        const index = [];
+        for (let i = 0; i < text.length; i += 1) {
+            const ch = text[i];
+            const prev = out[out.length - 1] || '';
+            const next = text[i + 1] || '';
+            // 标点前的空格（"Life , by"）与左括号后的空格都视为不存在
+            if (ch === ' ' && (BEFORE.includes(next) || AFTER.includes(prev))) continue;
+            out += ch;
+            index.push(i);
+        }
+        return { text: out, index: index };
+    }
+
+    // 题号可能是区间（例如 38-40 一组判断题）：角标取区间首个题号，避免整组没有角标
+    function explanationBadgeNumber(value) {
+        const first = String(value == null ? '' : value).split(/[-~\u2013\u2014]/)[0].trim();
+        const number = Number(first);
+        return Number.isFinite(number) ? number : null;
+    }
+
+    // 在元素内按「忽略空白差异」的方式把 quote 找出来并包成可点击标记
+    function wrapQuoteInElement(root, quote, questionId, badgeNumber) {
+        if (!root || !quote) return false;
+        const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null);
+        const nodes = [];
+        let combined = '';
+        let node;
+        while ((node = walker.nextNode())) {
+            // 跳过角标数字本身：它插在句子里，会污染引文匹配
+            if (node.parentElement && node.parentElement.closest('.locating-badge')) continue;
+            // 不跳过已标记节点：同一句可能被多道题引用，需要补挂题号角标
+            nodes.push({ node: node, start: combined.length });
+            combined += node.nodeValue || '';
+        }
+        if (!combined) return false;
+        let normalized = '';
+        const map = [];
+        for (let i = 0; i < combined.length; i += 1) {
+            const ch = combined[i];
+            if (/\s/.test(ch)) {
+                if (normalized.endsWith(' ') || !normalized) continue;
+                normalized += ' ';
+                map.push(i);
+            } else {
+                normalized += ch;
+                map.push(i);
+            }
+        }
+        const target = String(quote).replace(/\s+/g, ' ').trim().replace(/[\u2018\u2019]/g, "'").replace(/[\u201c\u201d]/g, '"');
+        const haystack = normalized.replace(/[\u2018\u2019]/g, "'").replace(/[\u201c\u201d]/g, '"');
+        let matchLen = target.length;
+        let at = haystack.indexOf(target);
+        if (at < 0) {
+            // 引文来自「去标签后的纯文本」，标签边界可能多出空格（原文 "Wonderful Life</em>, by"
+            // 去标签后成为 "Wonderful Life , by"），而 DOM 拼接出来没有这个空格。
+            // 退一步：忽略标点前后的空格再匹配一次，并换回真实下标。
+            const looseHay = buildLoosePunctuation(haystack);
+            const looseTarget = buildLoosePunctuation(target).text;
+            const looseAt = looseTarget ? looseHay.text.indexOf(looseTarget) : -1;
+            if (looseAt < 0) return false;
+            at = looseHay.index[looseAt];
+            matchLen = looseHay.index[looseAt + looseTarget.length - 1] - at + 1;
+        }
+        const rawStart = map[at];
+        const rawEnd = map[at + matchLen - 1] + 1;
+        const segments = nodes.filter((entry) => entry.start < rawEnd && (entry.start + (entry.node.nodeValue || '').length) > rawStart);
+        if (!segments.length) return false;
+        let first = null;
+        segments.forEach((entry) => {
+            const value = entry.node.nodeValue || '';
+            const from = Math.max(0, rawStart - entry.start);
+            const to = Math.min(value.length, rawEnd - entry.start);
+            const piece = entry.node.splitText(from);
+            if (to - from < piece.nodeValue.length) piece.splitText(to - from);
+            const existing = piece.parentElement && piece.parentElement.closest('.locating-mark');
+            if (existing) {
+                // 这段文字已经被别的题标记过：只把本题题号登记上去
+                const owned = String(existing.dataset.question || '').split(/\s+/).filter(Boolean);
+                if (!owned.includes(String(questionId))) {
+                    existing.dataset.question = owned.concat(String(questionId)).join(' ');
+                }
+                if (!first) first = existing;
+                return;
+            }
+            const mark = document.createElement('span');
+            mark.className = 'locating-mark';
+            mark.dataset.question = String(questionId);
+            piece.parentNode.insertBefore(mark, piece);
+            mark.appendChild(piece);
+            if (!first) first = mark;
+        });
+        if (first && first.dataset.question && !String(first.dataset.question).split(/\s+/).includes(String(questionId))) {
+            first.dataset.question = String(first.dataset.question).split(/\s+/).filter(Boolean).concat(String(questionId)).join(' ');
+        }
+        if (first && badgeNumber != null && String(badgeNumber).trim() !== ''
+            && !first.querySelector('.locating-badge[data-question="' + String(questionId) + '"]')) {
+            const badge = document.createElement('span');
+            badge.className = 'locating-badge';
+            badge.dataset.question = String(questionId);
+            badge.textContent = String(badgeNumber);
+            badge.title = `第 ${badgeNumber} 题的定位句（点击跳到题目）`;
+            first.insertBefore(badge, first.firstChild);
+        }
+        return true;
+    }
+
+    function decorateLocatingSentences() {
+        if (!dom.left || !state.explanation) return;
+        const items = collectExplanationItems();
+        if (!items.length) return;
+        ensureExplanationStyles();
+        let marked = 0;
+        items.forEach((item) => {
+            const locating = item && item.locating;
+            if (!locating || !locating.quote) return;
+            const questionId = String(item.questionId || '');
+            if (!questionId || dom.left.querySelector(`.locating-mark[data-question~="${escapeSelector(questionId)}"]`)) return;
+            const badge = explanationBadgeNumber(item.questionNumber);
+            // 先在该段内找；段落序号与 DOM 对不上时（标题/导语/分节差异）退回整篇再找一次
+            const scoped = locateParagraphElement(locating.paragraph);
+            if ((scoped && wrapQuoteInElement(scoped, locating.quote, questionId, badge))
+                || wrapQuoteInElement(dom.left, locating.quote, questionId, badge)) {
+                marked += 1;
+            }
+        });
+        return marked;
+    }
+
+    function flashElement(el) {
+        if (!el) return;
+        el.classList.remove('is-flashing');
+        void el.offsetWidth;
+        el.classList.add('is-flashing');
+        setTimeout(() => el.classList.remove('is-flashing'), 3400);
+    }
+
+    function scrollToQuestion(questionId) {
+        if (!dom.groups) return false;
+        const groupEl = dom.groups;
+        const container = locateQuestionContainer(groupEl, questionId);
+        if (!container) return false;
+        container.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        flashElement(container);
+        return true;
+    }
+
+    // 原文角标 → 该题讲解的开头（统一落点；没有讲解卡时退回题目本身）
+    function scrollToExplanation(questionId) {
+        const qid = String(questionId || '').trim();
+        if (!qid) return false;
+        const selector = `.reading-question-explanation[data-question-id~="${escapeSelector(qid)}"], `
+            + `.reading-question-explanation-item[data-question-id~="${escapeSelector(qid)}"]`;
+        const card = document.querySelector(selector);
+        if (!card) return scrollToQuestion(qid);
+        card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        flashElement(card);
+        return true;
+    }
+
+    function scrollToLocating(questionId) {
+        if (!dom.left) return false;
+        const mark = dom.left.querySelector(`.locating-mark[data-question~="${escapeSelector(String(questionId))}"]`);
+        if (!mark) return false;
+        mark.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        flashElement(mark);
+        return true;
+    }
+
+    function bindExplanationNavigation() {
+        if (state.explanationNavBound) return;
+        state.explanationNavBound = true;
+        document.addEventListener('click', (event) => {
+            const badge = event.target.closest('.locating-badge, .locating-mark');
+            if (badge) {
+                const qid = String(badge.dataset.question || '').split(/\s+/).filter(Boolean)[0];
+                if (qid) {
+                    event.preventDefault();
+                    scrollToExplanation(qid);
+                }
+                return;
+            }
+            const link = event.target.closest('.reading-explanation-link');
+            if (link) {
+                event.preventDefault();
+                scrollToLocating(link.dataset.question || '');
+            }
+        });
+    }
+
+    // V2 结构化解析卡片（题目/翻译/答案/定位句/同义替换/技巧/辨析/词性）
+    // 解析卡上的小标记（正确答案 / 对错判定）
+    function makeExplanationChip(text, className) {
+        const chip = document.createElement('span');
+        chip.className = 'reading-explanation-chip' + (className ? ' reading-explanation-chip--' + className : '');
+        chip.textContent = text;
+        return chip;
+    }
+
+    // 考生答案按原样展示（数组按顿号连接）
+    function formatAnswerForDisplay(value) {
+        if (Array.isArray(value)) {
+            return value.map((entry) => String(entry == null ? '' : entry).trim()).filter(Boolean).join(', ');
+        }
+        return String(value == null ? '' : value).trim();
+    }
+
+    function createStructuredExplanationCard(item, number) {
+        const card = document.createElement('div');
+        card.className = 'reading-explanation-card reading-question-explanation';
+        const cardQid = String((item && item.questionId) || (Number.isFinite(Number(number)) ? 'q' + number : ''));
+        if (cardQid) card.dataset.questionId = cardQid;
+        // 考生作答与判定：解析里直接标出「你的答案」以及对错
+        const comparison = (state.lastResults && state.lastResults.answerComparison) || null;
+        const outcome = (cardQid && comparison && comparison[cardQid]) ? comparison[cardQid] : null;
+        const userAnswerText = outcome ? formatAnswerForDisplay(outcome.userAnswer) : '';
+        const header = document.createElement('div');
+        header.className = 'reading-explanation-card__label';
+        header.textContent = `Q${number} 讲解`;
+        card.appendChild(header);
+        const rows = [
+            ['题目', item.stem],
+            ['翻译', item.translation],
+            ['答案', item.answer],
+            ['你的答案', outcome ? (userAnswerText || '未作答') : null],
+            ['词性分析', item.wordClass],
+            ['定位句', item.locating && item.locating.quote
+                ? `第 ${item.locating.paragraph || '?'} 段：${item.locating.quote}`
+                : ''],
+            ['同义替换', Array.isArray(item.synonyms) ? item.synonyms : (item.synonyms ? [item.synonyms] : null)],
+            ['定位技巧', item.locatingTip],
+            ['解析', item.analysis],
+            ['辨析', Array.isArray(item.traps) ? item.traps : (item.traps ? [item.traps] : null)]
+        ];
+        rows.forEach(([label, value]) => {
+            if (value == null || value === '' || (Array.isArray(value) && !value.length)) return;
+            const row = document.createElement('div');
+            row.className = 'reading-explanation-card__row';
+            if (label === '答案') row.classList.add('reading-explanation-card__row--answer');
+            const key = document.createElement('span');
+            key.className = 'reading-explanation-card__key';
+            key.textContent = `${label}：`;
+            row.appendChild(key);
+            if (Array.isArray(value)) {
+                const ul = document.createElement('ul');
+                ul.className = 'reading-explanation-list';
+                value.forEach((line) => {
+                    const li = document.createElement('li');
+                    li.textContent = String(line);
+                    ul.appendChild(li);
+                });
+                const holder = document.createElement('div');
+                holder.appendChild(ul);
+                row.appendChild(holder);
+            } else if (label === '定位句') {
+                const span = document.createElement('span');
+                span.className = 'reading-explanation-card__quote';
+                span.textContent = String(value);
+                row.appendChild(span);
+            } else {
+                const span = document.createElement('span');
+                span.textContent = String(value);
+                row.appendChild(span);
+                if (label === '答案') {
+                    row.appendChild(makeExplanationChip('正确答案', 'is-answer'));
+                }
+                if (label === '你的答案' && outcome) {
+                    const blank = !userAnswerText;
+                    const correct = outcome.isCorrect === true;
+                    row.appendChild(makeExplanationChip(
+                        blank ? '未作答' : (correct ? '✓ 正确' : '✗ 错误'),
+                        blank ? 'is-blank' : (correct ? 'is-correct' : 'is-wrong')
+                    ));
+                    row.classList.add(blank ? 'is-blank' : (correct ? 'is-correct' : 'is-wrong'));
+                }
+            }
+            card.appendChild(row);
+        });
+        if (item.locating && item.locating.quote) {
+            const link = document.createElement('a');
+            link.className = 'reading-explanation-link';
+            link.href = 'javascript:void(0)';
+            link.dataset.question = String(item.questionId || ('q' + number));
+            link.textContent = '📍 回到原文定位句';
+            card.appendChild(link);
+        }
         return card;
     }
 
@@ -1351,12 +2062,25 @@
         groupEl.appendChild(card);
     }
 
+    // V2 条目 = 带结构化字段（stem/analysis/locating 等），其余沿用旧的整段文本卡片
+    function isStructuredExplanation(item) {
+        return !!(item && (item.stem || item.analysis || item.translation || item.locating));
+    }
+
+    function buildExplanationCard(item, number) {
+        return isStructuredExplanation(item)
+            ? createStructuredExplanationCard(item, number)
+            : createExplanationCard(`Q${number} 讲解`, item && item.text ? item.text : '', 'reading-question-explanation');
+    }
+
     function renderPerQuestionExplanations(groupEl, section, questionPairs) {
         const itemMap = new Map();
         (section?.items || []).forEach((item) => {
-            const number = Number(item?.questionNumber);
-            if (!Number.isFinite(number)) return;
-            itemMap.set(number, item.text || '');
+            // 题号可能是区间（如 "38-40" 一组多选）：按区间首个题号登记，保证该题仍能拿到讲解卡
+            const number = parseQuestionNumber(item?.questionNumber);
+            if (number == null) return;
+            if (itemMap.has(number)) return;
+            itemMap.set(number, item);
         });
         if (!itemMap.size) {
             renderGroupExplanation(groupEl, section, questionPairs.map((pair) => pair.number));
@@ -1365,14 +2089,22 @@
 
         const fallback = [];
         questionPairs.forEach(({ questionId, number }) => {
-            const text = itemMap.get(number);
-            if (!text) return;
+            const item = itemMap.get(number);
+            if (!item || (!isStructuredExplanation(item) && !item.text)) return;
+            // 同一道题在页面上可能出现在多个题组里（题组 questionIds 互相重叠），
+            // 只渲染第一处，避免同一题出现两张讲解卡。
+            if (questionId && document.querySelector(
+                `.reading-question-explanation[data-question-id~="${escapeSelector(questionId)}"], `
+                + `.reading-question-explanation-item[data-question-id~="${escapeSelector(questionId)}"]`)) {
+                return;
+            }
             const container = locateQuestionContainer(groupEl, questionId);
             if (container) {
-                const card = createExplanationCard(`Q${number} 讲解`, text, 'reading-question-explanation');
+                const card = buildExplanationCard(item, number);
+                if (questionId) card.dataset.questionId = questionId;
                 container.appendChild(card);
             } else {
-                fallback.push({ number, text });
+                fallback.push({ number, item, questionId });
             }
         });
 
@@ -1384,9 +2116,11 @@
         const heading = document.createElement('h5');
         heading.textContent = section?.sectionTitle || '题目讲解';
         wrapper.appendChild(heading);
-        fallback.forEach(({ number, text }) => {
-            const item = createExplanationCard(`Q${number}`, text, 'reading-question-explanation-item');
-            wrapper.appendChild(item);
+        fallback.forEach(({ number, item, questionId }) => {
+            const card = buildExplanationCard(item, number);
+            card.classList.add('reading-question-explanation-item');
+            if (questionId) card.dataset.questionId = questionId;
+            wrapper.appendChild(card);
         });
         groupEl.appendChild(wrapper);
     }
@@ -1407,18 +2141,31 @@
             })).filter((pair) => Number.isFinite(pair.number));
             const questionNumbers = questionPairs.map((pair) => pair.number);
             const splitMode = EXPLANATION_SPLIT_KINDS.has(group.kind);
+            const matchedSections = pickSectionsForGroup(questionNumbers, null);
+            const anySection = matchedSections[0] || null;
+            // V2 解析是逐题结构化数据（含 locating 等字段），不管题型都应逐题渲染到题目下方
+            const structured = matchedSections.some((section) => Array.isArray(section?.items)
+                && section.items.some(isStructuredExplanation));
 
-            if (splitMode) {
-                const section = pickSectionForGroup(questionNumbers, 'per_question')
-                    || pickSectionForGroup(questionNumbers, null);
-                if (section) {
-                    renderPerQuestionExplanations(groupEl, section, questionPairs);
+            if (splitMode || structured) {
+                const preferred = splitMode ? pickSectionsForGroup(questionNumbers, 'per_question') : [];
+                const renderList = (preferred.length ? preferred : matchedSections)
+                    .filter((section) => Array.isArray(section?.items) && section.items.length);
+                renderList.forEach((section) => {
+                    const pairs = questionPairs.filter((pair) => sectionOverlap(section, [pair.number]) > 0);
+                    if (!pairs.length) return;
+                    renderPerQuestionExplanations(groupEl, section, pairs);
+                });
+                if (renderList.length) {
+                    return;
+                }
+                if (anySection) {
+                    renderGroupExplanation(groupEl, anySection, questionNumbers);
                 }
                 return;
             }
 
-            const section = pickSectionForGroup(questionNumbers, 'group')
-                || pickSectionForGroup(questionNumbers, null);
+            const section = pickSectionForGroup(questionNumbers, 'group') || anySection;
             if (section) {
                 renderGroupExplanation(groupEl, section, questionNumbers);
             }
@@ -1441,6 +2188,9 @@
         }
         renderPassageExplanations();
         renderQuestionExplanations();
+        // 原文定位句标记（带题号角标，点击跳题）＋ 解析卡片回原文链接
+        bindExplanationNavigation();
+        decorateLocatingSentences();
     }
 
     function getDropzones() {
@@ -2672,8 +3422,24 @@
         if (reviewSuiteSummary) {
             configureHistorySuiteReview(reviewSuiteSummary);
             renderSuiteResults(reviewSuiteSummary);
+            const band = suiteBandLabel(reviewSuiteSummary.correct, reviewSuiteSummary.total);
+            renderScoreBanner({
+                title: '套题结果',
+                correct: reviewSuiteSummary.correct,
+                total: reviewSuiteSummary.total,
+                percentage: reviewSuiteSummary.percentage,
+                bandLabel: band && band.bandLabel ? band.bandLabel : '',
+                estimated: !!(band && band.estimated)
+            });
         } else {
             renderResults(replayResults);
+            const info = replayResults.scoreInfo || {};
+            renderScoreBanner({
+                title: '本次答题',
+                correct: info.correct,
+                total: info.totalQuestions,
+                percentage: info.percentage
+            });
         }
         await renderExplanations();
         updateNavStatuses(replayResults);
@@ -3887,8 +4653,23 @@
             renderSuiteResults(suiteSummary);
             // 交卷后留在本页：题号导航可就地切换三篇，回看文章、题目与作答
             enterLocalSuiteReview(suiteSummary);
+            const band = suiteBandLabel(suiteSummary.correct, suiteSummary.total);
+            renderScoreBanner({
+                title: '套题结果',
+                correct: suiteSummary.correct,
+                total: suiteSummary.total,
+                percentage: suiteSummary.percentage,
+                bandLabel: band && band.bandLabel ? band.bandLabel : '',
+                estimated: !!(band && band.estimated)
+            });
         } else {
             renderResults(results);
+            renderScoreBanner({
+                title: '本次答题',
+                correct: results.scoreInfo.correct,
+                total: results.scoreInfo.totalQuestions,
+                percentage: results.scoreInfo.percentage
+            });
         }
         await renderExplanations();
         updateNavStatuses(results);
@@ -3980,6 +4761,7 @@
         }
         state.reviewMode = false;
         document.body.classList.remove('practice-completed-mode', 'single-submitted-mode');
+        hideScoreBanner();
         resetToAnsweringPresentation();
         setReadOnlyMode(false);
         document.querySelectorAll('input[type="radio"], input[type="checkbox"]').forEach((input) => {
@@ -4109,12 +4891,86 @@
         });
     }
 
-    function buildAnnotatedPassageHtml(dataset, section) {
+    // 套题 PDF 用：任意解析数据取出逐题条目（collectExplanationItems 只认当前页的 state.explanation）
+    function collectExplanationItemsFromPayload(payload) {
+        const sections = Array.isArray(payload?.questionExplanations) ? payload.questionExplanations : [];
+        const items = [];
+        sections.forEach((section) => {
+            (Array.isArray(section?.items) ? section.items : []).forEach((item) => {
+                if (item && (item.questionId || Number.isFinite(Number(item.questionNumber)))) items.push(item);
+            });
+        });
+        return items;
+    }
+
+    // 套题 PDF 用：把解析里的原文定位句在文章里标出来（高亮 + 题号角标），与页面上的一致
+    function applyLocatingMarksToPrintRoot(root, payload) {
+        if (!root || !payload) return 0;
+        const items = collectExplanationItemsFromPayload(payload);
+        let marked = 0;
+        items.forEach((item) => {
+            const quote = item && item.locating && item.locating.quote;
+            if (!quote) return;
+            const questionId = String(item.questionId || '');
+            if (!questionId) return;
+            const badge = explanationBadgeNumber(item.questionNumber != null ? item.questionNumber : item.displayNumber);
+            if (wrapQuoteInElement(root, quote, questionId, badge)) marked += 1;
+        });
+        return marked;
+    }
+
+    const SUITE_PRINT_LOCATING_STYLE_ID = 'suite-print-locating-style';
+
+    // 打印时背景色默认被丢弃，这里显式声明 print-color-adjust，并把角标做成可打印的小圆点
+    function ensureSuitePrintLocatingStyles() {
+        if (document.getElementById(SUITE_PRINT_LOCATING_STYLE_ID)) return;
+        const style = document.createElement('style');
+        style.id = SUITE_PRINT_LOCATING_STYLE_ID;
+        style.textContent = `
+            #suite-print-root .suite-print__article-legend {
+                margin: 0 0 8px;
+                font-size: 9pt;
+                color: #92400e;
+            }
+            #suite-print-root .locating-mark {
+                background: #fff3b0 !important;
+                border-bottom: 1px solid #c2410c;
+                padding: 0 1px;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            #suite-print-root .locating-badge {
+                display: inline-block;
+                min-width: 13px;
+                margin: 0 2px 0 1px;
+                padding: 0 3px;
+                border-radius: 7px;
+                background: #c2410c !important;
+                color: #fff !important;
+                font-size: 8pt;
+                line-height: 13px;
+                text-align: center;
+                vertical-align: super;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+        `;
+        document.head.appendChild(style);
+    }
+
+    function buildAnnotatedPassageHtml(dataset, section, payload) {
         const root = document.createElement('div');
         root.innerHTML = (dataset?.passage?.blocks || [])
             .map((block) => block?.bodyHtml || block?.html || '')
             .join('\n');
         applyPrintAnnotations(root, section?.highlights || [], section?.notes || [], 'left');
+        const locatingCount = applyLocatingMarksToPrintRoot(root, payload);
+        if (locatingCount > 0) {
+            const legend = document.createElement('p');
+            legend.className = 'suite-print__article-legend';
+            legend.textContent = `底色标注为各题原文定位句，角标为题号（共 ${locatingCount} 处）。`;
+            root.insertBefore(legend, root.firstChild);
+        }
         return root.innerHTML;
     }
 
@@ -4173,9 +5029,26 @@
             if (!dataset) throw new Error(`套题 PDF 缺少 ${passage.examId} 的题目数据`);
             const section = summary.sections.find((s) => String(s.examId) === String(passage.examId));
             if (!section) throw new Error(`套题 PDF 缺少 ${passage.examId} 的练习记录`);
-            const passageHtml = buildAnnotatedPassageHtml(dataset, section);
+            // 新版解析：套题 PDF 也带上逐题解析（含考生作答与对错判定）；
+            // 同一个 payload 还要给文章标原文定位句，所以先取数据再渲染文章。
+            ensureSuitePrintLocatingStyles();
+            let explanationPayload = null;
+            try {
+                explanationPayload = await loadExplanationPayloadFor(passage.examId, passage.examId);
+            } catch (explainError) {
+                console.error('[UnifiedReadingPage] 套题 PDF 解析渲染失败:', explainError);
+            }
+            const passageHtml = buildAnnotatedPassageHtml(dataset, section, explanationPayload);
             // 完整题目：与单篇导出一致，按题组渲染全部题目（题干、选项、填空原样呈现）
             const questionsHtml = buildAnnotatedQuestionHtml(dataset, section);
+            let explanationHtml = '';
+            if (explanationPayload) {
+                try {
+                    explanationHtml = buildPrintExplanationHtml(explanationPayload, dataset, section);
+                } catch (explainError) {
+                    console.error('[UnifiedReadingPage] 套题 PDF 解析渲染失败:', explainError);
+                }
+            }
 
             const block = document.createElement('section');
             block.className = 'suite-print__passage';
@@ -4197,6 +5070,7 @@
                         <tbody>${suiteResultRowsHtml(section.rows, section.markedQuestions)}</tbody>
                     </table>
                 </div>` : ''}
+                ${explanationHtml}
             `;
             container.appendChild(block);
         }
@@ -4333,7 +5207,7 @@
                 return;
             }
             if (printWindow && !printWindow.closed) {
-                const styleMarkup = Array.from(document.head.querySelectorAll('style'))
+                const styleMarkup = Array.from(document.head.querySelectorAll('style, link[rel="stylesheet"]'))
                     .map((node) => node.outerHTML)
                     .join('\n');
                 printWindow.document.open();

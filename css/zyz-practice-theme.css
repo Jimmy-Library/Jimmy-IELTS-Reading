@@ -888,6 +888,94 @@ body .reading-question-explanation-list,
     box-shadow: none;
 }
 
+/* ===== 解析卡片排版：统一字号梯度 17 / 16 / 14 / 11 =====
+   正文 16px 为基准（试卷正文 18px 的下一级），行高一律 1.75；
+   卡片标题 17px、行标签 14px、角标 11px，靠字重与颜色分层。
+   说明：#left li/#right li 的 18px 由运行时样式的 :is() 规则压住。 */
+body .reading-explanation-card {
+    font-size: 16px;
+    line-height: 1.75;
+}
+
+body .reading-explanation-card__label {
+    padding-bottom: 7px;
+    border-bottom: 1px dashed #c9c9c5;
+    font-size: 17px;
+    line-height: 1.4;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    color: #1c5f8c;
+}
+
+body .reading-explanation-card__text {
+    font-size: 16px;
+    line-height: 1.75;
+}
+
+body .reading-explanation-card__row {
+    display: flex;
+    align-items: baseline;
+    margin-top: 8px;
+    font-size: 16px;
+    line-height: 1.75;
+}
+
+body .reading-explanation-card__row:first-child {
+    margin-top: 0;
+}
+
+body .reading-explanation-card__key {
+    flex: 0 0 5.4em;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 2;
+    color: #1c5f8c;
+    white-space: nowrap;
+}
+
+body .reading-explanation-card__row > *:not(.reading-explanation-card__key) {
+    flex: 1 1 auto;
+    min-width: 0;
+    max-width: 100%;
+}
+
+body .reading-explanation-card__row--answer .reading-explanation-card__key {
+    color: #14603f;
+}
+
+body .reading-explanation-card__row--answer > *:not(.reading-explanation-card__key) {
+    font-weight: 700;
+    color: #14532d;
+}
+
+body .reading-explanation-card__quote {
+    color: #333;
+    font-style: italic;
+}
+
+body .reading-explanation-card .reading-explanation-list {
+    margin: 0;
+    padding-left: 1.35em;
+    font-size: 16px;
+}
+
+body .reading-explanation-card .reading-explanation-list li {
+    margin-top: 3px;
+    font-size: 16px;
+    line-height: 1.75;
+}
+
+body .reading-explanation-link {
+    margin-top: 10px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+body .reading-question-explanation-list h5 {
+    font-size: 17px;
+    line-height: 1.45;
+}
+
 body.dark-mode {
     color: #f4f4f2;
     background: #181818;

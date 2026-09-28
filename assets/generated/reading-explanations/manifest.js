@@ -107,7 +107,7 @@
     "examId": "p1-high-216",
     "dataKey": "p1-high-216",
     "script": "../reading-explanations/p1-high-216.js",
-    "title": "Australia’s cane toad problem 澳洲蟾蜍"
+    "title": "Australia’s cane toad problem 澳洲蟾蜍【高】"
   },
   "p1-high-227": {
     "examId": "p1-high-227",
@@ -119,19 +119,19 @@
     "examId": "p1-high-229",
     "dataKey": "p1-high-229",
     "script": "../reading-explanations/p1-high-229.js",
-    "title": "New Understanding of Giraffes in the Wild 野生长颈鹿"
+    "title": "New Understanding of Giraffes in the Wild 野生长颈鹿【2026.6新增】"
   },
   "p1-high-230": {
     "examId": "p1-high-230",
     "dataKey": "p1-high-230",
     "script": "../reading-explanations/p1-high-230.js",
-    "title": "The History of the Pencil 铅笔的历史"
+    "title": "The History of the Pencil 铅笔的历史【2026.6新增】"
   },
   "p1-high-231": {
     "examId": "p1-high-231",
     "dataKey": "p1-high-231",
     "script": "../reading-explanations/p1-high-231.js",
-    "title": "The History of the Pencil 铅笔的历史（流程图版）"
+    "title": "The History of the Pencil 铅笔的历史（流程图版）【2026.6新增】"
   },
   "p1-high-240": {
     "examId": "p1-high-240",
@@ -587,37 +587,37 @@
     "examId": "p2-high-232",
     "dataKey": "p2-high-232",
     "script": "../reading-explanations/p2-high-232.js",
-    "title": "The origin and development of applause 掌声的历史"
+    "title": "The origin and development of applause 掌声的历史【2026.6新增】"
   },
   "p2-high-233": {
     "examId": "p2-high-233",
     "dataKey": "p2-high-233",
     "script": "../reading-explanations/p2-high-233.js",
-    "title": "Why don’t we sleep 失眠的原因"
+    "title": "Why don't we sleep 失眠的原因【2026.6新增】"
   },
   "p2-high-234": {
     "examId": "p2-high-234",
     "dataKey": "p2-high-234",
     "script": "../reading-explanations/p2-high-234.js",
-    "title": "How do plants talk to each other 植物交流"
+    "title": "How do plants talk to each other 植物交流【2026.6新增】"
   },
   "p2-high-235": {
     "examId": "p2-high-235",
     "dataKey": "p2-high-235",
     "script": "../reading-explanations/p2-high-235.js",
-    "title": "The return of the black-footed ferret 黑足鼬"
+    "title": "The return of the black-footed ferret 黑足鼬【2026.6新增】"
   },
   "p2-high-236": {
     "examId": "p2-high-236",
     "dataKey": "p2-high-236",
     "script": "../reading-explanations/p2-high-236.js",
-    "title": "War of the Plants"
+    "title": "War of the Plants【2026.6新增】"
   },
   "p2-high-239": {
     "examId": "p2-high-239",
     "dataKey": "p2-high-239",
     "script": "../reading-explanations/p2-high-239.js",
-    "title": "Nanotechnology: the science of the very small 纳米科技"
+    "title": "Nanotechnology: the science of the very small 纳米科技【2026.6新增】"
   },
   "p2-high-1015": {
     "examId": "p2-high-1015",
@@ -719,7 +719,7 @@
     "examId": "p2-low-87",
     "dataKey": "p2-low-87",
     "script": "../reading-explanations/p2-low-87.js",
-    "title": "Speaking of Nothing 闲聊的意义"
+    "title": "1025纸笔Speaking of Nothing [Pretest] 闲聊的意义"
   },
   "p2-low-94": {
     "examId": "p2-low-94",
@@ -731,7 +731,7 @@
     "examId": "p2-low-96",
     "dataKey": "p2-low-96",
     "script": "../reading-explanations/p2-low-96.js",
-    "title": "Why Do We Need Sleep 睡眠的目的"
+    "title": "[Pretest] Why Do We Need Sleep 睡眠的目的"
   },
   "p2-low-102": {
     "examId": "p2-low-102",
@@ -833,7 +833,7 @@
     "examId": "p2-medium-058",
     "dataKey": "p2-medium-058",
     "script": "../reading-explanations/p2-medium-058.js",
-    "title": "Who wrote Shakespeare's plays 莎士比亚【次】"
+    "title": "Who wrote Shakespeare's plays 莎士比亚"
   },
   "p2-medium-58": {
     "examId": "p2-medium-58",
@@ -905,7 +905,7 @@
     "examId": "p2-medium-243",
     "dataKey": "p2-medium-243",
     "script": "../reading-explanations/p2-medium-243.js",
-    "title": "The internal body clock"
+    "title": "The internal body clock 人体内部生物钟"
   },
   "p3-high-03": {
     "examId": "p3-high-03",
@@ -1049,19 +1049,19 @@
     "examId": "p3-high-212",
     "dataKey": "p3-high-212",
     "script": "../reading-explanations/p3-high-212.js",
-    "title": "Children's literature studies today 儿童文学"
+    "title": "Children’s literature studies today 儿童文学【高】"
   },
   "p3-high-218": {
     "examId": "p3-high-218",
     "dataKey": "p3-high-218",
     "script": "../reading-explanations/p3-high-218.js",
-    "title": "The Causes of Linguistic Change 语音的演变"
+    "title": "The Causes of Linguistic Change 语音的演变【高】"
   },
   "p3-high-221": {
     "examId": "p3-high-221",
     "dataKey": "p3-high-221",
     "script": "../reading-explanations/p3-high-221.js",
-    "title": "The Animal Connection 动物联结"
+    "title": "The Animal Connection 动物联结【2026.6新增】"
   },
   "p3-high-228": {
     "examId": "p3-high-228",
@@ -1073,7 +1073,7 @@
     "examId": "p3-high-229",
     "dataKey": "p3-high-229",
     "script": "../reading-explanations/p3-high-229.js",
-    "title": "All in the family 兄弟姐妹的影响"
+    "title": "All in the family 兄弟姐妹的影响【2026.6新增】"
   },
   "p3-high-1591": {
     "examId": "p3-high-1591",
@@ -1109,7 +1109,7 @@
     "examId": "p3-low-36",
     "dataKey": "p3-low-36",
     "script": "../reading-explanations/p3-low-36.js",
-    "title": "Tasmania's Museum of Old and New Art 塔斯马尼亚古今艺术博物馆 MONA"
+    "title": "Tasmania’s Museum of Old and New Art 塔斯马尼亚古今艺术博物馆 MONA"
   },
   "p3-low-38": {
     "examId": "p3-low-38",
@@ -1181,7 +1181,7 @@
     "examId": "p3-low-078",
     "dataKey": "p3-low-078",
     "script": "../reading-explanations/p3-low-078.js",
-    "title": "P3 - Music Language We All Speak 音乐语言"
+    "title": "P3 (ds做出来的) - Music Language We All Speak 音乐语言"
   },
   "p3-low-78": {
     "examId": "p3-low-78",
@@ -1301,7 +1301,7 @@
     "examId": "p3-low-198",
     "dataKey": "p3-low-198",
     "script": "../reading-explanations/p3-low-198.js",
-    "title": "Child's Play in Medieval England 中世纪的游戏"
+    "title": "Child’s Play in Medieval England 中世纪的游戏"
   },
   "p3-low-219": {
     "examId": "p3-low-219",
@@ -1313,7 +1313,7 @@
     "examId": "p3-low-999",
     "dataKey": "p3-low-999",
     "script": "../reading-explanations/p3-low-999.js",
-    "title": "Risk taking"
+    "title": "Risk taking 冒险"
   },
   "p3-medium-18": {
     "examId": "p3-medium-18",
@@ -1349,7 +1349,7 @@
     "examId": "p3-medium-155",
     "dataKey": "p3-medium-155",
     "script": "../reading-explanations/p3-medium-155.js",
-    "title": "Does Class Size Matter? 课堂规模"
+    "title": "Does class size matter 课堂规模"
   },
   "p3-medium-162": {
     "examId": "p3-medium-162",
@@ -1415,7 +1415,7 @@
     "examId": "p3-medium-197",
     "dataKey": "p3-medium-197",
     "script": "../reading-explanations/p3-medium-197.js",
-    "title": "Australia's Megafauna Controversy 巨兽灭绝"
+    "title": "Australia’s Megafauna Controversy 巨兽灭绝【次】"
   },
   "p3-medium-241": {
     "examId": "p3-medium-241",
@@ -1428,6 +1428,414 @@
     "dataKey": "p3-medium-244",
     "script": "../reading-explanations/p3-medium-244.js",
     "title": "Look who was talking"
+  },
+  "p1-high-1073": {
+    "examId": "p1-high-1073",
+    "dataKey": "p1-high-1073",
+    "script": "../reading-explanations/p1-high-1073.js",
+    "title": "Bioluminescence 生物发光"
+  },
+  "p1-high-1931": {
+    "examId": "p1-high-1931",
+    "dataKey": "p1-high-1931",
+    "script": "../reading-explanations/p1-high-1931.js",
+    "title": "Wooden Buildings 木制建筑"
+  },
+  "p1-medium-1045": {
+    "examId": "p1-medium-1045",
+    "dataKey": "p1-medium-1045",
+    "script": "../reading-explanations/p1-medium-1045.js",
+    "title": "Burying greenhouse gases to slow global warming 掩埋温室气体以减缓全球变暖"
+  },
+  "p1-medium-1583": {
+    "examId": "p1-medium-1583",
+    "dataKey": "p1-medium-1583",
+    "script": "../reading-explanations/p1-medium-1583.js",
+    "title": "Psychology of new product adoption 新产品采纳心理学"
+  },
+  "p1-medium-1923": {
+    "examId": "p1-medium-1923",
+    "dataKey": "p1-medium-1923",
+    "script": "../reading-explanations/p1-medium-1923.js",
+    "title": "Why Risks Can Go Wrong 风险为何会出错"
+  },
+  "p1-medium-1938": {
+    "examId": "p1-medium-1938",
+    "dataKey": "p1-medium-1938",
+    "script": "../reading-explanations/p1-medium-1938.js",
+    "title": "A Brief History of Glassmaking 玻璃制造简史"
+  },
+  "p3-high-1012": {
+    "examId": "p3-high-1012",
+    "dataKey": "p3-high-1012",
+    "script": "../reading-explanations/p3-high-1012.js",
+    "title": "A focal point of academic inquiry 学术探究的焦点"
+  },
+  "p1-high-1008": {
+    "examId": "p1-high-1008",
+    "dataKey": "p1-high-1008",
+    "script": "../reading-explanations/p1-high-1008.js",
+    "title": "A Brief Introduction to Pepper 胡椒简介"
+  },
+  "p1-high-1016": {
+    "examId": "p1-high-1016",
+    "dataKey": "p1-high-1016",
+    "script": "../reading-explanations/p1-high-1016.js",
+    "title": "A new stage in the study and teaching of history 历史研究与教学的新阶段"
+  },
+  "p1-high-1021": {
+    "examId": "p1-high-1021",
+    "dataKey": "p1-high-1021",
+    "script": "../reading-explanations/p1-high-1021.js",
+    "title": "A river reveals its Roman past 一条河流显露罗马往事"
+  },
+  "p1-high-1028": {
+    "examId": "p1-high-1028",
+    "dataKey": "p1-high-1028",
+    "script": "../reading-explanations/p1-high-1028.js",
+    "title": "A Wonder Plant - Bamboo Furniture 神奇植物——竹制家具"
+  },
+  "p1-high-1030": {
+    "examId": "p1-high-1030",
+    "dataKey": "p1-high-1030",
+    "script": "../reading-explanations/p1-high-1030.js",
+    "title": "ADAM'S WINE 亚当之酒"
+  },
+  "p1-high-1031": {
+    "examId": "p1-high-1031",
+    "dataKey": "p1-high-1031",
+    "script": "../reading-explanations/p1-high-1031.js",
+    "title": "Advertising Needs Attention 广告需要关注"
+  },
+  "p1-high-1046": {
+    "examId": "p1-high-1046",
+    "dataKey": "p1-high-1046",
+    "script": "../reading-explanations/p1-high-1046.js",
+    "title": "Antarctica – in from the cold? 南极洲——走出寒冷？"
+  },
+  "p1-high-1048": {
+    "examId": "p1-high-1048",
+    "dataKey": "p1-high-1048",
+    "script": "../reading-explanations/p1-high-1048.js",
+    "title": "Antonio Stradivari - violin maker supreme 小提琴制作大师安东尼奥·斯特拉迪瓦里"
+  },
+  "p1-high-1049": {
+    "examId": "p1-high-1049",
+    "dataKey": "p1-high-1049",
+    "script": "../reading-explanations/p1-high-1049.js",
+    "title": "Archaeologists discover evidence of prehistoric island settlers 考古学家发现史前岛民定居的证据"
+  },
+  "p1-high-1052": {
+    "examId": "p1-high-1052",
+    "dataKey": "p1-high-1052",
+    "script": "../reading-explanations/p1-high-1052.js",
+    "title": "Art in Iron and Steel 钢铁艺术"
+  },
+  "p1-high-1067": {
+    "examId": "p1-high-1067",
+    "dataKey": "p1-high-1067",
+    "script": "../reading-explanations/p1-high-1067.js",
+    "title": "Back to Wild 重返荒野"
+  },
+  "p1-high-1071": {
+    "examId": "p1-high-1071",
+    "dataKey": "p1-high-1071",
+    "script": "../reading-explanations/p1-high-1071.js",
+    "title": "Biodiversity 生物多样性"
+  },
+  "p1-high-1102": {
+    "examId": "p1-high-1102",
+    "dataKey": "p1-high-1102",
+    "script": "../reading-explanations/p1-high-1102.js",
+    "title": "Cathy Freeman – Australia's track queen 澳大利亚田径女王凯西·弗里曼"
+  },
+  "p1-high-1783": {
+    "examId": "p1-high-1783",
+    "dataKey": "p1-high-1783",
+    "script": "../reading-explanations/p1-high-1783.js",
+    "title": "Thomas Young - The Last True know-it-all 托马斯·杨——最后的真通才"
+  },
+  "p1-high-1805": {
+    "examId": "p1-high-1805",
+    "dataKey": "p1-high-1805",
+    "script": "../reading-explanations/p1-high-1805.js",
+    "title": "The origins of cinema 电影的起源"
+  },
+  "p1-high-1928": {
+    "examId": "p1-high-1928",
+    "dataKey": "p1-high-1928",
+    "script": "../reading-explanations/p1-high-1928.js",
+    "title": "Willpower 意志力"
+  },
+  "p1-high-1934": {
+    "examId": "p1-high-1934",
+    "dataKey": "p1-high-1934",
+    "script": "../reading-explanations/p1-high-1934.js",
+    "title": "The Can – A Brief History Lesson 罐头简史"
+  },
+  "p1-low-1009": {
+    "examId": "p1-low-1009",
+    "dataKey": "p1-low-1009",
+    "script": "../reading-explanations/p1-low-1009.js",
+    "title": "A brome lives on: How a British grass escaped extinction 雀麦草的重生：一种英国草如何免于灭绝"
+  },
+  "p1-low-1011": {
+    "examId": "p1-low-1011",
+    "dataKey": "p1-low-1011",
+    "script": "../reading-explanations/p1-low-1011.js",
+    "title": "A Decibel Hell (The Effects of Living in a Noisy World) 分贝地狱（嘈杂世界的影响）"
+  },
+  "p1-low-1014": {
+    "examId": "p1-low-1014",
+    "dataKey": "p1-low-1014",
+    "script": "../reading-explanations/p1-low-1014.js",
+    "title": "A much-travelled vegetable 旅行万里的蔬菜"
+  },
+  "p1-low-1029": {
+    "examId": "p1-low-1029",
+    "dataKey": "p1-low-1029",
+    "script": "../reading-explanations/p1-low-1029.js",
+    "title": "Achieving a Work–life Balance 实现工作与生活的平衡"
+  },
+  "p1-low-1032": {
+    "examId": "p1-low-1032",
+    "dataKey": "p1-low-1032",
+    "script": "../reading-explanations/p1-low-1032.js",
+    "title": "Agriculture and Tourism 农业与旅游"
+  },
+  "p1-low-1038": {
+    "examId": "p1-low-1038",
+    "dataKey": "p1-low-1038",
+    "script": "../reading-explanations/p1-low-1038.js",
+    "title": "An early cultural tourist 早期的文化旅游者"
+  },
+  "p1-low-1056": {
+    "examId": "p1-low-1056",
+    "dataKey": "p1-low-1056",
+    "script": "../reading-explanations/p1-low-1056.js",
+    "title": "Assessing the risk 风险评估"
+  },
+  "p1-low-1930": {
+    "examId": "p1-low-1930",
+    "dataKey": "p1-low-1930",
+    "script": "../reading-explanations/p1-low-1930.js",
+    "title": "Wood: a valuable resource in New Zealand's economy 木材：新西兰经济的重要资源"
+  },
+  "p1-medium-1003": {
+    "examId": "p1-medium-1003",
+    "dataKey": "p1-medium-1003",
+    "script": "../reading-explanations/p1-medium-1003.js",
+    "title": "A Bar at the Folies 欢乐酒吧"
+  },
+  "p1-medium-1005": {
+    "examId": "p1-medium-1005",
+    "dataKey": "p1-medium-1005",
+    "script": "../reading-explanations/p1-medium-1005.js",
+    "title": "A Brief History of Ballet 芭蕾舞简史"
+  },
+  "p1-medium-1007": {
+    "examId": "p1-medium-1007",
+    "dataKey": "p1-medium-1007",
+    "script": "../reading-explanations/p1-medium-1007.js",
+    "title": "A Brief History of Poetry 诗歌简史"
+  },
+  "p1-medium-1019": {
+    "examId": "p1-medium-1019",
+    "dataKey": "p1-medium-1019",
+    "script": "../reading-explanations/p1-medium-1019.js",
+    "title": "A review of Nigel Townson's The British at Play 奈杰尔·汤森《玩耍的英国人》书评"
+  },
+  "p1-medium-1041": {
+    "examId": "p1-medium-1041",
+    "dataKey": "p1-medium-1041",
+    "script": "../reading-explanations/p1-medium-1041.js",
+    "title": "Ancient Chinese Chariots 中国古代战车"
+  },
+  "p1-medium-1042": {
+    "examId": "p1-medium-1042",
+    "dataKey": "p1-medium-1042",
+    "script": "../reading-explanations/p1-medium-1042.js",
+    "title": "Ancient Storytelling 古代说书"
+  },
+  "p1-medium-1043": {
+    "examId": "p1-medium-1043",
+    "dataKey": "p1-medium-1043",
+    "script": "../reading-explanations/p1-medium-1043.js",
+    "title": "Andrea Palladio, Italian Architect 意大利建筑师安德烈亚·帕拉迪奥"
+  },
+  "p1-medium-1054": {
+    "examId": "p1-medium-1054",
+    "dataKey": "p1-medium-1054",
+    "script": "../reading-explanations/p1-medium-1054.js",
+    "title": "Artificial Intelligence in Sport 体育中的人工智能"
+  },
+  "p1-medium-1063": {
+    "examId": "p1-medium-1063",
+    "dataKey": "p1-medium-1063",
+    "script": "../reading-explanations/p1-medium-1063.js",
+    "title": "Australian Culture and Culture Shock 澳大利亚文化与文化冲击"
+  },
+  "p1-medium-1064": {
+    "examId": "p1-medium-1064",
+    "dataKey": "p1-medium-1064",
+    "script": "../reading-explanations/p1-medium-1064.js",
+    "title": "Australian parrots and their adaptation to habitat change 澳大利亚鹦鹉及其对栖息地变化的适应"
+  },
+  "p1-medium-1068": {
+    "examId": "p1-medium-1068",
+    "dataKey": "p1-medium-1068",
+    "script": "../reading-explanations/p1-medium-1068.js",
+    "title": "Becoming an Expert 成为专家"
+  },
+  "p1-medium-1227": {
+    "examId": "p1-medium-1227",
+    "dataKey": "p1-medium-1227",
+    "script": "../reading-explanations/p1-medium-1227.js",
+    "title": "New Zealand Seaweed 新西兰海藻"
+  },
+  "p1-medium-1255": {
+    "examId": "p1-medium-1255",
+    "dataKey": "p1-medium-1255",
+    "script": "../reading-explanations/p1-medium-1255.js",
+    "title": "The history of cakes at weddings 婚礼蛋糕的历史"
+  },
+  "p1-medium-1389": {
+    "examId": "p1-medium-1389",
+    "dataKey": "p1-medium-1389",
+    "script": "../reading-explanations/p1-medium-1389.js",
+    "title": "Foot Pedal Irrigation 脚踏水泵灌溉"
+  },
+  "p1-medium-1471": {
+    "examId": "p1-medium-1471",
+    "dataKey": "p1-medium-1471",
+    "script": "../reading-explanations/p1-medium-1471.js",
+    "title": "Keep a Watchful Eye on the Bridges 留心桥梁"
+  },
+  "p1-medium-1486": {
+    "examId": "p1-medium-1486",
+    "dataKey": "p1-medium-1486",
+    "script": "../reading-explanations/p1-medium-1486.js",
+    "title": "Lever Brothers' Sunlight Soap: A Revolution in Hygiene and Industry 利华兄弟的阳光香皂：卫生与工业革命"
+  },
+  "p2-high-1935": {
+    "examId": "p2-high-1935",
+    "dataKey": "p2-high-1935",
+    "script": "../reading-explanations/p2-high-1935.js",
+    "title": "Photovoltaics 光伏发电"
+  },
+  "p2-high-1936": {
+    "examId": "p2-high-1936",
+    "dataKey": "p2-high-1936",
+    "script": "../reading-explanations/p2-high-1936.js",
+    "title": "Bristlecone Pines 刺果松"
+  },
+  "p2-low-1072": {
+    "examId": "p2-low-1072",
+    "dataKey": "p2-low-1072",
+    "script": "../reading-explanations/p2-low-1072.js",
+    "title": "Biology of Bitterness 苦味生物学"
+  },
+  "p2-medium-1394": {
+    "examId": "p2-medium-1394",
+    "dataKey": "p2-medium-1394",
+    "script": "../reading-explanations/p2-medium-1394.js",
+    "title": "From princes to paupers: how Goya's portraits tell the story of Spain 从王子到贫民：戈雅肖像如何讲述西班牙的故事"
+  },
+  "p2-medium-1764": {
+    "examId": "p2-medium-1764",
+    "dataKey": "p2-medium-1764",
+    "script": "../reading-explanations/p2-medium-1764.js",
+    "title": "The history of the Celtic language 凯尔特语的历史"
+  },
+  "p2-medium-1925": {
+    "examId": "p2-medium-1925",
+    "dataKey": "p2-medium-1925",
+    "script": "../reading-explanations/p2-medium-1925.js",
+    "title": "Why was he so smart? 他为什么那么聪明？"
+  },
+  "p3-high-1051": {
+    "examId": "p3-high-1051",
+    "dataKey": "p3-high-1051",
+    "script": "../reading-explanations/p3-high-1051.js",
+    "title": "Art-based training for engineers 面向工程师的艺术培训"
+  },
+  "p3-high-1133": {
+    "examId": "p3-high-1133",
+    "dataKey": "p3-high-1133",
+    "script": "../reading-explanations/p3-high-1133.js",
+    "title": "Cosmic Black Holes 宇宙黑洞"
+  },
+  "p3-high-1458": {
+    "examId": "p3-high-1458",
+    "dataKey": "p3-high-1458",
+    "script": "../reading-explanations/p3-high-1458.js",
+    "title": "Is Graffiti Art or Crime? 涂鸦是艺术还是犯罪？"
+  },
+  "p3-high-1900": {
+    "examId": "p3-high-1900",
+    "dataKey": "p3-high-1900",
+    "script": "../reading-explanations/p3-high-1900.js",
+    "title": "What Are the 1,000 Foods to Eat Before You Die? 死前必吃的1000种食物是什么？"
+  },
+  "p3-low-1061": {
+    "examId": "p3-low-1061",
+    "dataKey": "p3-low-1061",
+    "script": "../reading-explanations/p3-low-1061.js",
+    "title": "Australia's Megafauna Controversy 澳大利亚巨型动物群之争"
+  },
+  "p3-low-1256": {
+    "examId": "p3-low-1256",
+    "dataKey": "p3-low-1256",
+    "script": "../reading-explanations/p3-low-1256.js",
+    "title": "Stealth Forces in Weight Loss 减肥的隐秘力量"
+  },
+  "p3-low-1933": {
+    "examId": "p3-low-1933",
+    "dataKey": "p3-low-1933",
+    "script": "../reading-explanations/p3-low-1933.js",
+    "title": "Memory and Age 记忆与年龄"
+  },
+  "p3-low-1937": {
+    "examId": "p3-low-1937",
+    "dataKey": "p3-low-1937",
+    "script": "../reading-explanations/p3-low-1937.js",
+    "title": "Loss of Rare Languages 稀有语言的消亡"
+  },
+  "p3-low-240": {
+    "examId": "p3-low-240",
+    "dataKey": "p3-low-240",
+    "script": "../reading-explanations/p3-low-240.js",
+    "title": "How a prehistoric predator took to the skies 翼龙飞行"
+  },
+  "p3-medium-1018": {
+    "examId": "p3-medium-1018",
+    "dataKey": "p3-medium-1018",
+    "script": "../reading-explanations/p3-medium-1018.js",
+    "title": "A Review of Helen Thomson's Book, Unthinkable: An Extraordinary Journey Through the World's Strangest Brains 海伦·汤姆森《不可思议》书评"
+  },
+  "p3-medium-1693": {
+    "examId": "p3-medium-1693",
+    "dataKey": "p3-medium-1693",
+    "script": "../reading-explanations/p3-medium-1693.js",
+    "title": "The communication of science 科学的传播"
+  },
+  "p3-medium-1827": {
+    "examId": "p3-medium-1827",
+    "dataKey": "p3-medium-1827",
+    "script": "../reading-explanations/p3-medium-1827.js",
+    "title": "The Rise of Big Data 大数据的崛起"
+  },
+  "p3-medium-1929": {
+    "examId": "p3-medium-1929",
+    "dataKey": "p3-medium-1929",
+    "script": "../reading-explanations/p3-medium-1929.js",
+    "title": "Women and the vision thing 女性与愿景那回事"
+  },
+  "p3-medium-1939": {
+    "examId": "p3-medium-1939",
+    "dataKey": "p3-medium-1939",
+    "script": "../reading-explanations/p3-medium-1939.js",
+    "title": "Rights for apes 猿类的权利"
   }
 };
 })(typeof window !== "undefined" ? window : globalThis);
