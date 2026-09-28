@@ -5,8 +5,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>IELTS 阅读练习</title>
-    <link rel="stylesheet" href="../../../css/vocabulary-notebook.css">
-    <link rel="stylesheet" href="../../../css/vocabulary-notebook-v2.css">
     <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
@@ -85,6 +83,15 @@
             flex-direction: column;
             gap: 4px;
             min-width: 0;
+        }
+
+        .practice-brand-logo {
+            display: block;
+            flex: 0 0 76px;
+            width: 76px;
+            height: 52px;
+            object-fit: contain;
+            margin-right: 4px;
         }
 
         .header-controls {
@@ -270,6 +277,8 @@
             display: flex;
             gap: 8px;
             flex-wrap: wrap;
+            flex: 1 1 0;
+            min-width: 0;
         }
 
         .q-item,
@@ -377,8 +386,12 @@
         .practice-nav .controls {
             margin-left: auto;
             display: flex;
+            flex: 0 0 auto;
+            min-width: max-content;
             gap: 8px;
         }
+
+        .practice-nav .controls button { flex: 0 0 auto; white-space: nowrap; }
 
         /* ---- 导出 PDF：整页打印（文章 + 题目 + 作答 + 高亮 + 详情）---- */
         /* 套题合并打印：屏幕上不显示，仅打印时启用 */
@@ -817,8 +830,10 @@
             .practice-nav .controls {
                 margin-left: 0;
                 width: 100%;
+                min-width: 0;
                 justify-content: flex-end;
             }
+            .practice-brand-logo { flex-basis: 62px; width: 62px; height: 46px; }
         }
 
         /* ---------------- Phase 2 Aesthetics ---------------- */
@@ -1524,6 +1539,7 @@
 
 <body>
     <header class="header">
+        <img class="practice-brand-logo" src="../../../Jimmy's logo.png" alt="Jimmy">
         <div class="header-content">
             <div class="jimmy-practice-brand" aria-label="Jimmy">
                 <img src="../../../Jimmy's logo.png" alt="Jimmy Logo" decoding="async">
@@ -1568,13 +1584,6 @@
                 <button class="settings-option active" data-size="normal">A</button>
                 <button class="settings-option" data-size="large" style="font-size: 1.1rem;">A</button>
                 <button class="settings-option" data-size="xlarge" style="font-size: 1.25rem;">A</button>
-            </div>
-        </div>
-        <div class="settings-section">
-            <h3 class="settings-title">背景颜色</h3>
-            <div class="settings-options">
-                <button class="settings-option active" data-mode="light">浅色</button>
-                <button class="settings-option" data-mode="dark">深色</button>
             </div>
         </div>
         <div class="settings-section" id="suite-flow-mode-section" style="display: none;">
@@ -1629,9 +1638,6 @@
         <button type="button" id="btnHL" data-role="highlight">Highlight</button>
         <button type="button" id="btnUH" data-role="remove-highlight">Remove</button>
         <button type="button" id="btnNote" data-role="note">Note</button>
-        <button type="button" id="btnDictionary" data-role="dictionary">查词</button>
-        <button type="button" id="btnTranslate" data-role="translate">翻译</button>
-        <button type="button" id="btnAddVocabulary" data-role="add-vocabulary">加入单词本</button>
     </div>
 
     <div class="practice-nav">
@@ -1650,7 +1656,6 @@
     <script src="./manifest.js"></script>
     <script src="../../../js/runtime/suiteResources.js"></script>
     <script src="../../../js/utils/answerMatchCore.js"></script>
-    <script src="../../../js/components/vocabularyNotebook.js"></script>
     <script src="../../../js/practice-page-ui.js"></script>
     <!-- 套题交卷后按雅思分数表换算三篇合计成绩 -->
     <script src="../../../js/utils/ieltsBandScore.js"></script>

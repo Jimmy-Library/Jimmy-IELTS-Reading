@@ -291,6 +291,39 @@
             + '</section>';
     }
 
+    function customSuiteBuilderHtml() {
+        return ''
+            + '<section class="custom-suite-builder suite-mode-landscape-card" data-custom-suite-builder aria-label="自选三篇组成套题">'
+            +   '<div>'
+            +     '<div class="custom-suite-builder__eyebrow">CUSTOM PRACTICE · 自主组题</div>'
+            +     '<h3>自选三篇组成套题</h3>'
+            +     '<p>依次从 P1、P2、P3 各选一篇，组成 60 分钟模考套题；搜索结果也可加入当前篇章。</p>'
+            +     '<div class="custom-suite-builder__parts"><span>P1</span><span>P2</span><span>P3</span></div>'
+            +   '</div>'
+            +   '<button class="custom-suite-builder__button" type="button" data-custom-suite-start>开始自选组题</button>'
+            + '</section>';
+    }
+
+    function startCustomSuiteSelection(button) {
+        if (button) button.disabled = true;
+        const ready = global.AppEntry && typeof global.AppEntry.ensureSessionSuiteReady === 'function'
+            ? global.AppEntry.ensureSessionSuiteReady()
+            : Promise.resolve();
+        Promise.resolve(ready).then(() => {
+            const app = global.app;
+            if (!app || typeof app.startSuitePractice !== 'function') {
+                global.showMessage && global.showMessage('自主组题暂不可用，请刷新页面后重试。', 'error');
+                return;
+            }
+            return app.startSuitePractice({ flowMode: 'simulation', frequencyScope: 'custom' });
+        }).catch((error) => {
+            console.error('[SuiteModeView] 打开自主组题失败:', error);
+            global.showMessage && global.showMessage('自主组题打开失败，请稍后重试。', 'error');
+        }).finally(() => {
+            if (button && button.isConnected) button.disabled = false;
+        });
+    }
+
     /** 读取本地缓存中所有「未完成」的套题进度，按最近保存时间倒序 */
     function readUnfinishedSuiteProgress() {
         const list = [];
@@ -350,7 +383,8 @@
 
         const catalog = getCatalog();
         if (!catalog.length) {
-            listEl.innerHTML = '<p class="suite-empty">题库尚未就绪，无法生成套题。请稍后重试。</p>';
+            listEl.innerHTML = customSuiteBuilderHtml()
+                + '<p class="suite-empty">题库尚未就绪，正在准备固定套题目录…</p>';
             return;
         }
 
@@ -361,7 +395,7 @@
         const dailyHtml = dailyRecommendation
             ? dailyRecommendationCardHtml(dailyRecommendation, best[dailyRecommendation.id])
             : '';
-        listEl.innerHTML = bannerHtml + dailyHtml + catalog.map((s) => suiteCardHtml(s, best[s.id])).join('');
+        listEl.innerHTML = customSuiteBuilderHtml() + bannerHtml + dailyHtml + catalog.map((s) => suiteCardHtml(s, best[s.id])).join('');
         rendered = true;
     }
 
@@ -572,6 +606,11 @@
         listEl.addEventListener('click', (event) => {
             const target = event.target instanceof HTMLElement ? event.target : null;
             if (!target) return;
+            const customStart = target.closest('[data-custom-suite-start]');
+            if (customStart) {
+                startCustomSuiteSelection(customStart);
+                return;
+            }
             // 未完成套题提示条：继续 / 重新做题 / 删除
             const resumeBtn = target.closest('[data-suite-resume-action]');
             if (resumeBtn) {
@@ -589,6 +628,7 @@
     /** 视图激活入口：题库数据与每日推荐就绪后再渲染 */
     function initialize() {
         bindListOnce();
+        render();
         const needsData = !global.completeExamIndex || !global.completeExamIndex.length;
         const dataReady = needsData && typeof global.ensureExamDataScripts === 'function'
             ? Promise.resolve(global.ensureExamDataScripts())

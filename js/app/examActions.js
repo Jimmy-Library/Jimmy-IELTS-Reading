@@ -461,6 +461,8 @@
         const pendingMarkup = pendingRows.length
             ? pendingRows.map((row) => rowMarkup(row, false)).join('')
             : '';
+        const existingSearch = portal.querySelector('[data-suite-custom-search]');
+        const searchValue = existingSearch ? existingSearch.value : '';
 
         portal.innerHTML = [
             '<div class="suite-custom-selection__backdrop" aria-hidden="true"></div>',
@@ -473,6 +475,7 @@
             '<div class="suite-custom-selection__progress">' + selectedCount + ' / ' + categories.length + '</div>',
             '</header>',
             '<div class="suite-custom-selection__body">',
+            '<div class="suite-custom-inline-search"><input type="search" data-suite-custom-search placeholder="搜索当前篇章题目…" aria-label="搜索当前篇章题目"></div>',
             '<div class="suite-custom-selection__group">',
             '<div class="suite-custom-selection__group-title">已选</div>', 
             selectedMarkup,
@@ -487,6 +490,15 @@
             '</footer>',
             '</section>'
         ].join('');
+        const searchInput = portal.querySelector('[data-suite-custom-search]');
+        if (searchInput) {
+            searchInput.value = searchValue;
+            searchInput.addEventListener('input', () => {
+                const mainSearch = document.getElementById('exam-search-input');
+                if (mainSearch) mainSearch.value = searchInput.value;
+                if (typeof global.searchExams === 'function') global.searchExams(searchInput.value);
+            });
+        }
         setupCustomSuitePanelDrag(portal);
         applyCustomSuitePanelFloatingState(portal);
     }
@@ -940,11 +952,11 @@
         const startBtn = document.createElement('button');
         startBtn.className = 'btn exam-item-action-btn';
         startBtn.type = 'button';
-        startBtn.dataset.action = 'start';
+        startBtn.dataset.action = isSelecting ? 'suite-custom-select' : 'start';
         if (exam.id) {
             startBtn.dataset.examId = exam.id;
         }
-        startBtn.textContent = '开始练习';
+        startBtn.textContent = isSelecting ? '添加至 ' + currentCategory : '开始练习';
         if (isSelecting) {
             startBtn.disabled = false;
             startBtn.removeAttribute('aria-disabled');

@@ -5236,6 +5236,26 @@
     }
 
     function attachActionListeners() {
+        document.addEventListener('click', (event) => {
+            const target = event.target instanceof Element ? event.target.closest('#submit-btn, #reset-btn') : null;
+            if (!target) return;
+            if (target.id === 'submit-btn') {
+                if (state.simulationMode && state.simulationCtx && !state.simulationCtx.isLast) return;
+                const prompt = state.simulationMode
+                    ? 'Are you sure you want to submit the full practice test? You will not be able to change your answers afterward.'
+                    : 'Are you sure you want to submit your answers? You will not be able to change them afterward.';
+                if (!global.confirm(prompt)) {
+                    event.preventDefault();
+                    event.stopImmediatePropagation();
+                }
+                return;
+            }
+            if (state.simulationMode && state.simulationCtx) return;
+            if (!global.confirm('Are you sure you want to reset this practice? All answers on this page will be cleared.')) {
+                event.preventDefault();
+                event.stopImmediatePropagation();
+            }
+        }, true);
         dom.submitBtn?.addEventListener('click', handlePrimaryAction);
         dom.resetBtn?.addEventListener('click', handleReset);
         const exportBtn = document.getElementById('export-pdf-btn');

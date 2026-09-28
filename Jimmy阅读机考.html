@@ -7,6 +7,7 @@
     <title>IELTS 阅读机考练习系统</title>
     <link rel="icon" type="image/svg+xml" href="assets/images/favicon.svg">
     <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/suite-custom-builder.css">
     <link rel="stylesheet" href="css/heroui-bridge.css">
     <link rel="stylesheet" href="css/image-skins.css">
     <link rel="stylesheet" href="css/image-skins-premium.css">
@@ -20,8 +21,6 @@
     <link rel="stylesheet" href="css/image-skins-boot-transparency.css">
     <link rel="stylesheet" href="css/custom-image-skin.css">
     <link rel="stylesheet" href="css/pointer-skins.css">
-    <link rel="stylesheet" href="css/vocabulary-notebook.css">
-    <link rel="stylesheet" href="css/vocabulary-notebook-v2.css">
     <script>
         (function () {
             try {
@@ -495,7 +494,6 @@
             <button class="nav-btn hero-nav__btn" type="button" data-view="suite">🎯 套题模式</button>
             <button class="nav-btn hero-nav__btn" type="button" data-view="browse">📚 题库浏览</button>
             <button class="nav-btn hero-nav__btn" type="button" data-view="practice">📝 练习记录</button>
-            <button class="nav-btn hero-nav__btn" type="button" data-view="vocab">📘 单词本</button>
             <a class="nav-btn hero-nav__btn" href="https://jimmy-grammar.netlify.app/#/vocab" target="_blank" rel="noopener noreferrer">📖 单词背诵</a>
             <button class="nav-btn hero-nav__btn" type="button" data-view="settings">⚙️ 设置</button>
         </nav>
@@ -722,9 +720,6 @@
             </div>
         </div>
 
-        <section id="vocab-view" class="view" data-view="vocab">
-            <div class="vocab-view-shell" data-vocab-role="root"></div>
-        </section>
     </div>
 
     <div id="fullscreen-clock-overlay" class="clock-overlay is-hidden" role="dialog" aria-modal="true"
@@ -1058,7 +1053,6 @@
     <script src="js/app/fallbackMixin.js"></script>
     <script src="js/app.js"></script>
 
-    <script src="js/components/vocabularyNotebook.js"></script>
 
     <!-- 题型筛选下拉框：从题型分类数据填充选项 -->
     <script>
