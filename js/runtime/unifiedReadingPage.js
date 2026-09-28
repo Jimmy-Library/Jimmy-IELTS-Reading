@@ -1885,31 +1885,35 @@
 
     function buildQuestionNav() {
         if (!dom.nav) return;
+        const practiceNav = dom.nav.closest('.practice-nav');
 
-        // 套题模式：渲染全部小节的题目（一次看到约 40 题），支持跨篇跳转
+        // 套题模式：当前篇展开题号，其他篇显示完成进度并支持跨篇跳转。
         const blueprint = state.suiteBlueprint;
         if ((state.simulationMode || state.suiteLocalReview || state.suiteReviewMode)
             && blueprint && Array.isArray(blueprint.passages) && blueprint.passages.length > 1) {
             dom.nav.classList.add('question-nav--suite');
+            if (practiceNav) practiceNav.classList.add('practice-nav--suite-active');
             dom.nav.innerHTML = blueprint.passages.map((passage) => {
+                const partLabel = /^P([1-3])$/i.test(String(passage.label || ''))
+                    ? `Part ${String(passage.label).match(/\d/)[0]}`
+                    : String(passage.label || 'Part');
+                if (!passage.isCurrent) {
+                    const answeredCount = passage.answeredSet && typeof passage.answeredSet.size === 'number'
+                        ? passage.answeredSet.size
+                        : 0;
+                    return `<div class="q-passage q-passage--summary"><button class="q-passage__label q-passage__label--btn" data-passage-index="${passage.index}" type="button">${partLabel}</button><span class="q-passage__progress">${answeredCount} of ${passage.questions.length}</span></div>`;
+                }
                 const items = passage.questions.map((q) => {
-                    if (passage.isCurrent) {
-                        const status = navStatus.get(q.localQuestionId) || '';
-                        return `<button class="q-item ${status}" data-question-id="${q.localQuestionId}" type="button">${q.label}</button>`;
-                    }
-                    const answered = passage.answeredSet && passage.answeredSet.has(q.localQuestionId) ? 'answered' : '';
-                    return `<button class="q-item ${answered}" data-passage-index="${passage.index}" type="button">${q.label}</button>`;
+                    const status = navStatus.get(q.localQuestionId) || '';
+                    return `<button class="q-item ${status}" data-question-id="${q.localQuestionId}" type="button">${q.label}</button>`;
                 }).join('');
-                const currentCls = passage.isCurrent ? ' is-current' : '';
-                const labelTag = passage.isCurrent
-                    ? `<span class="q-passage__label">${passage.label}</span>`
-                    : `<button class="q-passage__label q-passage__label--btn" data-passage-index="${passage.index}" type="button">${passage.label}</button>`;
-                return `<div class="q-passage${currentCls}">${labelTag}<div class="q-passage__items">${items}</div></div>`;
+                return `<div class="q-passage is-current"><span class="q-passage__label">${partLabel}</span><div class="q-passage__items">${items}</div></div>`;
             }).join('');
             return;
         }
 
         dom.nav.classList.remove('question-nav--suite');
+        if (practiceNav) practiceNav.classList.remove('practice-nav--suite-active');
         const order = Array.isArray(state.dataset?.questionOrder) ? state.dataset.questionOrder : [];
         dom.nav.innerHTML = order.map((questionId) => {
             const status = navStatus.get(questionId) || '';

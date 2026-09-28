@@ -1,0 +1,146 @@
+/* Compact IELTS-style suite navigation: inactive parts show progress, current part shows question numbers. */
+.practice-nav.practice-nav--suite-active {
+    height: 58px;
+    min-height: 58px;
+    padding: 0 18px;
+    gap: 12px;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    overflow: hidden;
+}
+
+.practice-nav--suite-active .question-nav--suite {
+    display: flex;
+    flex: 1 1 auto;
+    align-items: center;
+    justify-content: space-between;
+    gap: clamp(16px, 2.2vw, 38px);
+    min-width: 0;
+    max-height: none;
+    padding: 0 4px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: thin;
+}
+
+.practice-nav--suite-active .q-passage {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    min-width: max-content;
+}
+
+.practice-nav--suite-active .q-passage.is-current {
+    flex: 1 1 auto;
+}
+
+.practice-nav--suite-active .q-passage__label,
+.practice-nav--suite-active .q-passage.is-current .q-passage__label {
+    min-width: auto;
+    padding: 0;
+    color: #111;
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    font-size: 17px;
+    font-weight: 700;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+.practice-nav--suite-active button.q-passage__label {
+    cursor: pointer;
+}
+
+.practice-nav--suite-active button.q-passage__label:hover {
+    color: var(--test-blue, #1778d1);
+    background: transparent;
+}
+
+.practice-nav--suite-active .q-passage__progress {
+    color: #6b7280;
+    font-size: 14px;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+.practice-nav--suite-active .q-passage__items {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 1px;
+}
+
+.practice-nav--suite-active .question-nav--suite .q-item {
+    width: 28px;
+    min-width: 28px;
+    height: 34px;
+    min-height: 34px;
+    padding: 0 2px;
+    border-width: 1px;
+    border-color: transparent;
+    border-radius: 2px;
+    font-size: 14px;
+    line-height: 1;
+}
+
+.practice-nav--suite-active .question-nav--suite .q-item.active {
+    border-width: 2px;
+    border-color: #4b98d6;
+    background: #fff;
+}
+
+.practice-nav--suite-active .controls {
+    width: auto !important;
+    min-width: max-content !important;
+    margin-left: auto !important;
+    gap: 5px;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+.practice-nav--suite-active .controls button {
+    width: auto;
+    min-width: 46px;
+    height: 38px;
+    min-height: 38px;
+    padding: 0 9px;
+    font-size: 13px;
+    line-height: 1.1;
+}
+
+@media (max-width: 980px) {
+    .practice-nav.practice-nav--suite-active {
+        padding-inline: 10px;
+    }
+
+    .practice-nav--suite-active .question-nav--suite {
+        justify-content: flex-start;
+        gap: 18px;
+    }
+}
+
+@media (max-width: 720px) {
+    .practice-nav.practice-nav--suite-active {
+        height: 54px;
+        min-height: 54px;
+        gap: 7px;
+    }
+
+    .practice-nav--suite-active .q-passage__label,
+    .practice-nav--suite-active .q-passage.is-current .q-passage__label {
+        font-size: 15px;
+    }
+
+    .practice-nav--suite-active .q-passage__progress {
+        font-size: 12px;
+    }
+
+    .practice-nav--suite-active .controls button {
+        min-width: 40px;
+        padding-inline: 6px;
+        font-size: 12px;
+    }
+}
