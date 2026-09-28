@@ -2803,9 +2803,9 @@ function resetBrowseViewToAll() {
     }
 }
 
-function displayExams(exams) {
+function displayExams(exams, options = {}) {
     if (window.ExamActions && typeof window.ExamActions.displayExams === 'function') {
-        return window.ExamActions.displayExams(exams);
+        return window.ExamActions.displayExams(exams, options);
     }
     console.warn('[main.js] ExamActions.displayExams 未就绪，使用降级渲染');
     
@@ -2828,15 +2828,28 @@ function displayExams(exams) {
         
         const list = document.createElement('div');
         list.className = 'exam-list';
+        const draft = options.customSuiteDraft || null;
+        const categories = draft && Array.isArray(draft.categories) && draft.categories.length
+            ? draft.categories
+            : ['P1', 'P2', 'P3'];
+        const stageIndex = draft && Number.isInteger(draft.stageIndex) ? draft.stageIndex : 0;
+        const currentCategory = draft && draft.status !== 'ready' && stageIndex < categories.length
+            ? categories[stageIndex]
+            : '';
+        const isSelecting = options.selectionMode === 'custom-suite' && !!currentCategory;
         normalizedExams.forEach(function (exam) {
             if (!exam) return;
             const item = document.createElement('div');
             item.className = 'exam-item';
+            item.dataset.examId = exam.id || '';
+            if (isSelecting) item.dataset.action = 'suite-custom-select';
             item.dataset.frequency = String(exam.frequency || 'unknown').trim().toLowerCase() || 'unknown';
             item.innerHTML = '<div class="exam-info"><h4>' + (exam.title || '') + '</h4>' +
                 '<div class="exam-meta">' + (exam.category || '') + ' | ' + (exam.type || '') + '</div></div>' +
                 '<div class="exam-actions">' +
-                '<button class="btn" onclick="window.openExam(\'' + (exam.id || '') + '\')">开始练习</button>' +
+                (isSelecting
+                    ? '<button class="btn suite-custom-add-button" type="button" data-action="suite-custom-select" data-exam-id="' + (exam.id || '') + '">添加至 ' + currentCategory + '</button>'
+                    : '<button class="btn" onclick="window.openExam(\'' + (exam.id || '') + '\')">开始练习</button>') +
                 '</div>';
             list.appendChild(item);
         });
