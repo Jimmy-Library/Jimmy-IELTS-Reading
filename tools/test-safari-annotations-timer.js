@@ -98,7 +98,7 @@ async function runIn(engineName, browserType, launchOptions = {}) {
         if (await page.locator('#close-note').isVisible()) await page.locator('#close-note').click();
         await page.locator('#submit-btn').click();
         await page.waitForFunction((id) => new URL(location.href).searchParams.get('examId') === id, ids[1]);
-        await page.locator('#reset-btn').click();
+        await page.locator('#suite-prev-btn').click();
         await page.waitForFunction((id) => new URL(location.href).searchParams.get('examId') === id, ids[0]);
         assert.ok(await page.locator('#left .hl').count() >= 2);
         assert.equal(await page.evaluate(() => window.getPracticeNotes()[0].comment), 'Safari note persistence test');

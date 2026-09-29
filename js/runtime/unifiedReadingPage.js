@@ -62,6 +62,7 @@
         suiteTimerLimitSeconds: null,
         ready: false,
         submitted: false,
+        submitting: false,
         initTimer: null,
         manifestLoaded: false,
         dataset: null,
@@ -78,7 +79,9 @@
         suiteBooting: true,
         suiteRestoreDone: false,
         suiteDatasets: null,
+        suiteDrafts: new Map(),
         suiteNavigating: false,
+        restoringDraft: false,
         // 交卷后的本地三篇回顾：{ summary, answersByExam }
         suiteLocalReview: null,
         localReviewRenderToken: 0,
@@ -99,7 +102,7 @@
         results: null,
         nav: null,
         submitBtn: null,
-        resetBtn: null
+        prevBtn: null
     };
 
     function getPracticeTimerBridge() {
@@ -242,7 +245,7 @@
         dom.results = document.getElementById('results');
         dom.nav = document.getElementById('question-nav');
         dom.submitBtn = document.getElementById('submit-btn');
-        dom.resetBtn = document.getElementById('reset-btn');
+        dom.prevBtn = document.getElementById('suite-prev-btn');
     }
 
     function loadScript(url) {
@@ -360,52 +363,7 @@
         if (!suiteSessionId || !targetExamId) {
             return {};
         }
-        try {
-            const sessionRaw = global.sessionStorage
-                ? global.sessionStorage.getItem('ielts_sim_draft::' + suiteSessionId + '::' + targetExamId)
-                : null;
-            const localRaw = global.localStorage
-                ? global.localStorage.getItem('ielts_suite_draft::' + suiteSessionId + '::' + targetExamId)
-                : null;
-            const sessionSaved = JSON.parse(sessionRaw || 'null');
-            const localSaved = JSON.parse(localRaw || 'null');
-            const progress = readSuiteProgress();
-            const progressDraft = progress?.draftsByExam?.[targetExamId];
-            const candidates = [
-                { draft: sessionSaved?.draft, savedAt: Number(sessionSaved?.updatedAt) || 0 },
-                { draft: localSaved?.draft, savedAt: Number(localSaved?.savedAt) || 0 },
-                {
-                    draft: progressDraft,
-                    savedAt: Number(progress?.draftSavedAtByExam?.[targetExamId])
-                        || Number(progress?.updatedAt)
-                        || 0
-                }
-            ].filter((entry) => entry.draft && typeof entry.draft === 'object');
-            const contentful = candidates.filter((entry) => draftHasContent(entry.draft));
-            const pool = contentful.length ? contentful : candidates;
-            pool.sort((left, right) => right.savedAt - left.savedAt);
-            const mergedDraft = Object.assign({}, pool[0]?.draft || {});
-
-            // The answer mirrors are written at different moments. A newer
-            // answer-only snapshot can contain empty annotation arrays and
-            // must not erase a previous passage's saved highlights or Notes.
-            ['highlights', 'notes', 'markedQuestions'].forEach((field) => {
-                const best = candidates.reduce((selected, entry) => {
-                    const value = entry?.draft?.[field];
-                    if (!Array.isArray(value)) return selected;
-                    if (!Array.isArray(selected) || value.length > selected.length) {
-                        return value;
-                    }
-                    return selected;
-                }, Array.isArray(mergedDraft[field]) ? mergedDraft[field] : []);
-                mergedDraft[field] = best.map((item) => (
-                    item && typeof item === 'object' ? Object.assign({}, item) : item
-                ));
-            });
-            return mergedDraft;
-        } catch (_) {
-            return {};
-        }
+        return cloneDraftSafely(readSuiteSavedEntry(targetExamId)?.draft) || {};
     }
 
     /**
@@ -434,8 +392,9 @@
             const passageDraft = getDraftForExam(passage.examId);
             const isVisiblePassage = String(passage.examId || '') === String(state.examId || '');
             if (isVisiblePassage) {
-                // Prefer the live editor state for the visible passage so a
-                // just-typed Note is included even before the next autosave.
+                // The editor can still hold a just-typed Note when Submit is
+                // clicked. Prefer the live annotation state for the visible
+                // passage instead of relying only on the last autosave tick.
                 if (typeof global.getPracticeHighlights === 'function') {
                     passageDraft.highlights = global.getPracticeHighlights();
                 }
@@ -680,6 +639,7 @@
 
     /** 就地切换到套题中的某一篇（仅交卷后的本地回顾使用） */
     async function renderSuitePassageLocally(targetIndex) {
+        if (state.submitting) return;
         const blueprint = state.suiteBlueprint;
         const local = state.suiteLocalReview;
         if (!blueprint || !local || !Array.isArray(blueprint.passages)) return;
@@ -3210,8 +3170,8 @@
                 dom.submitBtn.textContent = dom.submitBtn.dataset.defaultLabel;
             }
         }
-        if (dom.resetBtn) {
-            dom.resetBtn.disabled = state.readOnly;
+        if (dom.prevBtn) {
+            dom.prevBtn.disabled = state.readOnly;
         }
         const controls = document.querySelectorAll('input, textarea, select');
         controls.forEach((control) => {
@@ -3239,12 +3199,6 @@
         if (dom.submitBtn && !dom.submitBtn.dataset.defaultType) {
             dom.submitBtn.dataset.defaultType = dom.submitBtn.getAttribute('type') || '';
         }
-        if (dom.resetBtn && !dom.resetBtn.dataset.defaultLabel) {
-            dom.resetBtn.dataset.defaultLabel = dom.resetBtn.textContent || 'Reset';
-        }
-        if (dom.resetBtn && !dom.resetBtn.dataset.defaultType) {
-            dom.resetBtn.dataset.defaultType = dom.resetBtn.getAttribute('type') || '';
-        }
         const ctx = state.simulationCtx && typeof state.simulationCtx === 'object' ? state.simulationCtx : null;
         const simulationEnabled = Boolean(state.simulationMode && ctx);
         syncSimulationRuntimeFlags();
@@ -3259,23 +3213,14 @@
                     dom.submitBtn.textContent = dom.submitBtn.dataset.defaultLabel || 'Submit';
                 }
             }
-            if (dom.resetBtn) {
-                dom.resetBtn.style.display = '';
-                if (dom.resetBtn.dataset.defaultType) {
-                    dom.resetBtn.setAttribute('type', dom.resetBtn.dataset.defaultType);
-                }
-                if (!state.readOnly) {
-                    dom.resetBtn.textContent = dom.resetBtn.dataset.defaultLabel || 'Reset';
-                }
-                dom.resetBtn.disabled = state.readOnly;
-            }
+            if (dom.prevBtn) dom.prevBtn.hidden = true;
             return;
         }
-        if (dom.resetBtn) {
-            dom.resetBtn.style.display = '';
-            dom.resetBtn.setAttribute('type', 'button');
-            dom.resetBtn.textContent = '上一题';
-            dom.resetBtn.disabled = state.readOnly || !ctx.canPrev;
+        if (dom.prevBtn) {
+            dom.prevBtn.hidden = state.readOnly;
+            dom.prevBtn.setAttribute('type', 'button');
+            dom.prevBtn.textContent = '上一题';
+            dom.prevBtn.disabled = state.readOnly || !ctx.canPrev;
         }
         if (dom.submitBtn) {
             dom.submitBtn.style.display = '';
@@ -3404,6 +3349,8 @@
     }
 
     function resolveReplayArray(data, entry, field) {
+        if (Array.isArray(data?.[field])) return data[field].slice();
+        if (Array.isArray(entry?.[field])) return entry[field].slice();
         const candidates = [
             data && data[field],
             entry && entry[field],
@@ -3431,6 +3378,9 @@
             return;
         }
         const replayResults = buildReplayResults(entry);
+        const replayExamId = state.examId;
+        const replayToken = ++state.localReviewRenderToken;
+        state.localReviewRenderSettled = false;
         const replayMarks = resolveReplayArray(data, entry, 'markedQuestions');
         if (data.reviewSessionId) {
             state.reviewSessionId = data.reviewSessionId;
@@ -3458,6 +3408,7 @@
         }
         if (reviewSuiteSummary) {
             configureHistorySuiteReview(reviewSuiteSummary);
+            state.localReviewRenderSettled = false;
             renderSuiteResults(reviewSuiteSummary);
             const band = suiteBandLabel(reviewSuiteSummary.correct, reviewSuiteSummary.total);
             renderScoreBanner({
@@ -3479,12 +3430,16 @@
             });
         }
         await renderExplanations();
+        if (replayToken !== state.localReviewRenderToken || state.examId !== replayExamId) return;
         updateNavStatuses(replayResults);
         setReadOnlyMode(data.readOnly !== false);
         // 回顾模式：计时固定为记录的完成用时并锁定（不再走动、不可点击启停）
         freezeReviewTimer(Number(reviewSuiteSummary?.duration ?? entry.duration ?? data.duration) || 0);
-        // 题目渲染和标记组件可能分属不同脚本；立即恢复并做两次短延迟重试，避免偶发丢标记
+        // Restore once after rendering; delayed retries can overwrite later edits.
         const restoreAnnotations = () => {
+            // A delayed retry belongs to the original passage, never the one
+            // the user has since opened from the three-passage navigation.
+            if (replayToken !== state.localReviewRenderToken || state.examId !== replayExamId) return;
             if (replayHighlights.length && typeof applyHighlights === 'function') {
                 try {
                     applyHighlights(replayHighlights);
@@ -3508,8 +3463,7 @@
             }
         };
         restoreAnnotations();
-        global.setTimeout(restoreAnnotations, 80);
-        global.setTimeout(restoreAnnotations, 240);
+        state.localReviewRenderSettled = true;
     }
 
     function buildEnvelope(type, payload) {
@@ -3642,6 +3596,8 @@
             return {
                 answers: draft.answers && typeof draft.answers === 'object' ? { ...draft.answers } : {},
                 highlights: Array.isArray(draft.highlights) ? draft.highlights.slice() : [],
+                notes: Array.isArray(draft.notes) ? draft.notes.map(note => ({ ...note })) : [],
+                markedQuestions: Array.isArray(draft.markedQuestions) ? draft.markedQuestions.slice() : [],
                 scrollY: Number.isFinite(Number(draft.scrollY)) ? Number(draft.scrollY) : 0
             };
         }
@@ -3660,11 +3616,12 @@
 
     function persistSimulationDraftMirror(draft) {
         const key = getSimulationDraftStorageKey();
-        if (!key || !global.sessionStorage || !draft || !draftHasContent(draft)) {
+        if (!key || !global.sessionStorage || !draft) {
             return;
         }
         try {
             global.sessionStorage.setItem(key, JSON.stringify({
+                version: 2,
                 draft,
                 updatedAt: Date.now()
             }));
@@ -3837,6 +3794,7 @@
         // 经典流程没有页内切篇，宿主按小节重开本页时必须能从这里恢复作答。
         return Boolean(
             !state.suiteBooting
+            && !state.restoringDraft
             && !state.readOnly
             && !state.reviewMode
             && !state.submitted
@@ -3881,7 +3839,7 @@
             progress.draftsByExam = progress.draftsByExam && typeof progress.draftsByExam === 'object'
                 ? progress.draftsByExam
                 : {};
-            if (!draftHasContent(draft)) return;
+            if (!draft) return;
             progress.elapsedByExam = progress.elapsedByExam && typeof progress.elapsedByExam === 'object'
                 ? progress.elapsedByExam
                 : {};
@@ -3912,11 +3870,12 @@
         const key = getSuiteDraftStorageKey();
         if (!key || !global.localStorage) return;
         const draft = cloneDraftSafely(collectCurrentDraft());
-        if (!draft || !draftHasContent(draft)) return;
+        if (!draft) return;
         const savedAt = Date.now();
         const elapsed = getPageElapsedSeconds();
         try {
             global.localStorage.setItem(key, JSON.stringify({
+                version: 2,
                 draft,
                 savedAt,
                 fingerprint: buildDraftFingerprint(draft),
@@ -4188,7 +4147,7 @@
     function syncSimulationDraftSnapshot(reason = 'periodic') {
         // 套题三种流程（模拟/经典/驻足）都要本地保存作答：
         // 经典流程没有页内切篇，宿主重开本小节页时只能靠这份草稿恢复作答。
-        if (state.suiteBooting || state.readOnly || state.submitted || !state.suiteSessionId || !state.examId) {
+        if (state.suiteBooting || state.restoringDraft || state.readOnly || state.submitted || !state.suiteSessionId || !state.examId) {
             return;
         }
         const draft = collectCurrentDraft();
@@ -4198,9 +4157,12 @@
         }
         state.simulationDraftFingerprint = fingerprint;
         const mirroredDraft = cloneDraftSafely(draft);
-        if (!mirroredDraft || !draftHasContent(mirroredDraft)) {
+        if (!mirroredDraft) {
             return;
         }
+        state.suiteDrafts.set(String(state.examId), {
+            version: 2, draft: mirroredDraft, savedAt: Date.now(), elapsed: getPageElapsedSeconds()
+        });
         persistSimulationDraftMirror(mirroredDraft);
         // 额外写一份到 localStorage（套题单篇草稿，关页不丢失）
         saveSuiteDraft(reason);
@@ -4432,24 +4394,41 @@
         return dom.groups;
     }
 
+    // Review inserts explanations and question-number badges into the same
+    // panes. They are not part of the text that annotation offsets address.
+    function annotationTextNodes(root) {
+        const nodes = [];
+        if (!root) return nodes;
+        const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+            acceptNode(node) {
+                return node.parentElement?.closest('.reading-explanation-card, .reading-group-explanation, .reading-question-explanation, .reading-question-explanation-list, .locating-badge')
+                    ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT;
+            }
+        });
+        let node;
+        while ((node = walker.nextNode())) nodes.push(node);
+        return nodes;
+    }
+
     function collectHighlights() {
         const records = [];
         const addScopeHighlights = (scope, root) => {
             if (!root) return;
-            const fullText = String(root.textContent || '');
+            const textNodes = annotationTextNodes(root);
+            const fullText = textNodes.map(node => node.textContent || '').join('');
             Array.from(root.querySelectorAll('.hl')).forEach((node) => {
-                const rawText = String(node.textContent || '');
+                const rawText = textNodes.filter(textNode => node.contains(textNode))
+                    .map(textNode => textNode.textContent || '').join('');
                 const text = rawText.trim();
                 if (!text) return;
-                let hit = -1;
-                try {
-                    const beforeRange = document.createRange();
-                    beforeRange.selectNodeContents(root);
-                    beforeRange.setEndBefore(node);
-                    hit = beforeRange.toString().length + rawText.length - rawText.trimStart().length;
-                } catch (_) {
-                    hit = fullText.indexOf(text);
+                let hit = 0;
+                const firstText = textNodes.find(textNode => node.contains(textNode));
+                if (!firstText) return;
+                for (const textNode of textNodes) {
+                    if (textNode === firstText) break;
+                    hit += (textNode.textContent || '').length;
                 }
+                hit += rawText.length - rawText.trimStart().length;
                 if (hit < 0) return;
                 let occurrence = 0;
                 let occurrenceCursor = 0;
@@ -4480,14 +4459,13 @@
     }
 
     function resolveRangeFromOffsets(root, start, end) {
-        const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null);
-        let node = walker.nextNode();
+        const nodes = annotationTextNodes(root);
         let offset = 0;
         let startNode = null;
         let endNode = null;
         let startOffset = 0;
         let endOffset = 0;
-        while (node) {
+        for (const node of nodes) {
             const text = node.textContent || '';
             const nextOffset = offset + text.length;
             if (!startNode && start >= offset && start <= nextOffset) {
@@ -4502,7 +4480,6 @@
                 break;
             }
             offset = nextOffset;
-            node = walker.nextNode();
         }
         if (!startNode || !endNode) {
             return null;
@@ -4517,7 +4494,7 @@
         if (!record || !record.text) return;
         const root = resolveHighlightRoot(record.scope);
         if (!root) return;
-        const fullText = String(root.textContent || '');
+        const fullText = annotationTextNodes(root).map(node => node.textContent || '').join('');
         if (!fullText) return;
         const highlightKind = record.kind === 'note'
             ? 'note'
@@ -4556,8 +4533,8 @@
         if (hit < 0) {
             return;
         }
-        const expectedBefore = String(record.before || '').trim();
-        const expectedAfter = String(record.after || '').trim();
+        const expectedBefore = String(record.before || '');
+        const expectedAfter = String(record.after || '');
         if (expectedBefore && !fullText.slice(Math.max(0, hit - expectedBefore.length), hit).includes(expectedBefore)) {
             return;
         }
@@ -4580,6 +4557,7 @@
         const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
             acceptNode(node) {
                 if (!node.textContent) return NodeFilter.FILTER_REJECT;
+                if (node.parentElement?.closest('.reading-explanation-card, .reading-group-explanation, .reading-question-explanation, .reading-question-explanation-list, .locating-badge')) return NodeFilter.FILTER_REJECT;
                 try { return range.intersectsNode(node) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT; }
                 catch (_) { return NodeFilter.FILTER_REJECT; }
             }
@@ -4661,191 +4639,137 @@
     }
 
     async function handleSubmit() {
-        if (state.readOnly) {
+        if (state.readOnly || state.submitting || state.suiteNavigating) {
             return;
         }
-        if (state.simulationMode) {
-            syncSimulationDraftSnapshot('submit');
-        }
-        // 在任何异步结算工作开始前固定真实作答时长，并立即停止计时。
-        const timing = resolvePracticeTiming(1);
-        freezeReviewTimer(timing.duration);
-        state.submitted = true;
-        const results = buildResults();
-        state.lastResults = results;
-        document.body.classList.add('practice-completed-mode');
-
-        // 套题：无论当前在哪一篇，交卷即结算整套并呈现三篇合并结果。
-        // 必须赶在下方 clearSimulationDraftMirror 之前算，否则其余篇的作答已被清除。
-        let suiteSummary = null;
-        if (state.simulationMode) {
-            try {
-                suiteSummary = buildSuiteResultSections();
-                if (suiteSummary) suiteSummary.duration = timing.duration;
-            } catch (suiteError) {
-                console.error('[UnifiedReadingPage] 构建套题结果失败:', suiteError);
+        state.submitting = true;
+        try {
+            if (state.simulationMode) {
+                syncSimulationDraftSnapshot('submit');
             }
-        }
-        if (suiteSummary) {
-            renderSuiteResults(suiteSummary);
-            // 交卷后留在本页：题号导航可就地切换三篇，回看文章、题目与作答
-            enterLocalSuiteReview(suiteSummary);
-            const band = suiteBandLabel(suiteSummary.correct, suiteSummary.total);
-            renderScoreBanner({
-                title: '套题结果',
-                correct: suiteSummary.correct,
-                total: suiteSummary.total,
-                percentage: suiteSummary.percentage,
-                bandLabel: band && band.bandLabel ? band.bandLabel : '',
-                estimated: !!(band && band.estimated)
-            });
-        } else {
-            renderResults(results);
-            renderScoreBanner({
-                title: '本次答题',
-                correct: results.scoreInfo.correct,
-                total: results.scoreInfo.totalQuestions,
-                percentage: results.scoreInfo.percentage
-            });
-        }
-        await renderExplanations();
-        updateNavStatuses(results);
-        const messageType = state.simulationMode ? 'SIMULATION_SUBMIT' : 'PRACTICE_COMPLETE';
-        // 套题：随交卷一并上报三篇成绩，主页面据此直接结算整套。
-        // 只有本页持有各篇 answerKey，未访问过的篇章也只能由这里算出成绩。
-        const suitePayload = suiteSummary
-            ? {
-                finalizeSuite: true,
-                suiteSections: suiteSummary.sections.map((section) => ({
-                    examId: section.examId,
-                    title: section.title,
-                    category: section.label,
-                    answers: (suiteSummary.answersByExam && suiteSummary.answersByExam[section.examId]) || {},
-                    answerComparison: section.rows.reduce((map, row) => {
-                        map[row.questionId] = {
-                            questionId: row.questionId,
-                            userAnswer: row.userAnswer,
-                            correctAnswer: row.correctAnswer,
-                            isCorrect: row.isCorrect
-                        };
-                        return map;
-                    }, {}),
-                    scoreInfo: {
-                        correct: section.correct,
-                        total: section.total,
-                        accuracy: section.total > 0 ? section.correct / section.total : 0,
-                        percentage: section.percentage
-                    },
-                    markedQuestions: section.markedQuestions || [],
-                    highlights: section.highlights || [],
-                    notes: section.notes || []
-                }))
-            }
-            : null;
-        postMessage(messageType, Object.assign({
-            duration: timing.duration,
-            startTime: new Date(timing.startTimeMs).toISOString(),
-            endTime: new Date(timing.endTimeMs).toISOString()
-        }, suitePayload || {}, {
-            metadata: {
-                examId: state.examId,
-                examTitle: state.dataset?.meta?.title || '',
-                title: state.dataset?.meta?.title || '',
-                category: state.dataset?.meta?.category || '',
-                frequency: state.dataset?.meta?.frequency || '',
-                type: 'reading',
-                examType: 'reading',
-                practiceMode: state.suiteSessionId ? 'suite' : 'single',
-                renderMode: 'unified-reading',
-                dataKey: state.dataKey,
-                markedQuestions: (typeof global.getPracticeMarkedQuestions === 'function')
-                    ? global.getPracticeMarkedQuestions()
-                    : [],
-                // 保存高亮，供练习记录回看时还原
-                highlights: collectHighlights(),
-                notes: typeof global.getPracticeNotes === 'function' ? global.getPracticeNotes() : []
-            }
-        }, results));
-        if (state.simulationMode && state.simulationCtx && state.simulationCtx.isLast) {
-            stopSimulationDraftSync();
-            clearSimulationDraftMirror();
-            state.simulationDraftFingerprint = '';
-        }
-        // 单篇模式：提交后标记完成并清除本地草稿（不再自动保存）
-        if (!state.simulationMode) {
+            // 在任何异步结算工作开始前固定真实作答时长，并立即停止计时。
+            const timing = resolvePracticeTiming(1);
+            freezeReviewTimer(timing.duration);
             state.submitted = true;
-            document.body.classList.add('single-submitted-mode');
-            if (state.singleDraftSaveTimer) {
-                global.clearTimeout(state.singleDraftSaveTimer);
-                state.singleDraftSaveTimer = null;
+            const results = buildResults();
+            state.lastResults = results;
+            document.body.classList.add('practice-completed-mode');
+
+            // 套题：无论当前在哪一篇，交卷即结算整套并呈现三篇合并结果。
+            // 必须赶在下方 clearSimulationDraftMirror 之前算，否则其余篇的作答已被清除。
+            let suiteSummary = null;
+            if (state.simulationMode) {
+                try {
+                    suiteSummary = buildSuiteResultSections();
+                    if (suiteSummary) suiteSummary.duration = timing.duration;
+                } catch (suiteError) {
+                    console.error('[UnifiedReadingPage] 构建套题结果失败:', suiteError);
+                }
             }
-            clearSingleDraft();
-        } else {
-            // 套题模式：清除当前篇的草稿
-            clearSuiteDraft();
+            if (suiteSummary) {
+                renderSuiteResults(suiteSummary);
+                // 交卷后留在本页：题号导航可就地切换三篇，回看文章、题目与作答
+                enterLocalSuiteReview(suiteSummary);
+                const band = suiteBandLabel(suiteSummary.correct, suiteSummary.total);
+                renderScoreBanner({
+                    title: '套题结果',
+                    correct: suiteSummary.correct,
+                    total: suiteSummary.total,
+                    percentage: suiteSummary.percentage,
+                    bandLabel: band && band.bandLabel ? band.bandLabel : '',
+                    estimated: !!(band && band.estimated)
+                });
+            } else {
+                renderResults(results);
+                renderScoreBanner({
+                    title: '本次答题',
+                    correct: results.scoreInfo.correct,
+                    total: results.scoreInfo.totalQuestions,
+                    percentage: results.scoreInfo.percentage
+                });
+            }
+            await renderExplanations();
+            updateNavStatuses(results);
+            const messageType = state.simulationMode ? 'SIMULATION_SUBMIT' : 'PRACTICE_COMPLETE';
+            // 套题：随交卷一并上报三篇成绩，主页面据此直接结算整套。
+            // 只有本页持有各篇 answerKey，未访问过的篇章也只能由这里算出成绩。
+            const suitePayload = suiteSummary
+                ? {
+                    finalizeSuite: true,
+                    suiteSections: suiteSummary.sections.map((section) => ({
+                        examId: section.examId,
+                        title: section.title,
+                        category: section.label,
+                        answers: (suiteSummary.answersByExam && suiteSummary.answersByExam[section.examId]) || {},
+                        answerComparison: section.rows.reduce((map, row) => {
+                            map[row.questionId] = {
+                                questionId: row.questionId,
+                                userAnswer: row.userAnswer,
+                                correctAnswer: row.correctAnswer,
+                                isCorrect: row.isCorrect
+                            };
+                            return map;
+                        }, {}),
+                        scoreInfo: {
+                            correct: section.correct,
+                            total: section.total,
+                            accuracy: section.total > 0 ? section.correct / section.total : 0,
+                            percentage: section.percentage
+                        },
+                        markedQuestions: section.markedQuestions || [],
+                        highlights: section.highlights || [],
+                        notes: section.notes || []
+                    }))
+                }
+                : null;
+            postMessage(messageType, Object.assign({
+                duration: timing.duration,
+                startTime: new Date(timing.startTimeMs).toISOString(),
+                endTime: new Date(timing.endTimeMs).toISOString()
+            }, suitePayload || {}, {
+                metadata: {
+                    examId: state.examId,
+                    examTitle: state.dataset?.meta?.title || '',
+                    title: state.dataset?.meta?.title || '',
+                    category: state.dataset?.meta?.category || '',
+                    frequency: state.dataset?.meta?.frequency || '',
+                    type: 'reading',
+                    examType: 'reading',
+                    practiceMode: state.suiteSessionId ? 'suite' : 'single',
+                    renderMode: 'unified-reading',
+                    dataKey: state.dataKey,
+                    markedQuestions: (typeof global.getPracticeMarkedQuestions === 'function')
+                        ? global.getPracticeMarkedQuestions()
+                        : [],
+                    // 保存高亮，供练习记录回看时还原
+                    highlights: collectHighlights(),
+                    notes: typeof global.getPracticeNotes === 'function' ? global.getPracticeNotes() : []
+                }
+            }, results));
+            if (state.simulationMode && state.simulationCtx && state.simulationCtx.isLast) {
+                stopSimulationDraftSync();
+                clearSimulationDraftMirror();
+                state.simulationDraftFingerprint = '';
+            }
+            // 单篇模式：提交后标记完成并清除本地草稿（不再自动保存）
+            if (!state.simulationMode) {
+                state.submitted = true;
+                document.body.classList.add('single-submitted-mode');
+                if (state.singleDraftSaveTimer) {
+                    global.clearTimeout(state.singleDraftSaveTimer);
+                    state.singleDraftSaveTimer = null;
+                }
+                clearSingleDraft();
+            } else {
+                // 套题模式：清除当前篇的草稿
+                clearSuiteDraft();
+            }
+        } finally {
+            state.submitting = false;
         }
     }
 
-    function handleReset() {
-        if (state.readOnly) {
-            return;
-        }
-        if (state.simulationMode && state.simulationCtx) {
-            if (state.simulationCtx.canPrev) {
-                dispatchSimulationNavigate('prev');
-            }
-            return;
-        }
-        state.reviewMode = false;
-        document.body.classList.remove('practice-completed-mode', 'single-submitted-mode');
-        hideScoreBanner();
-        resetToAnsweringPresentation();
-        setReadOnlyMode(false);
-        document.querySelectorAll('input[type="radio"], input[type="checkbox"]').forEach((input) => {
-            input.checked = false;
-        });
-        syncAllCheckboxSelectionLimits();
-        document.querySelectorAll('input[type="text"], textarea').forEach((input) => {
-            input.value = '';
-        });
-        document.querySelectorAll('select').forEach((select) => {
-            select.selectedIndex = 0;
-        });
-        getDropzones().forEach((dropzone) => {
-            clearDropzone(dropzone);
-        });
-        if (dom.results) {
-            dom.results.style.display = 'none';
-            dom.results.innerHTML = '';
-        }
-        clearExplanations();
-        applyHighlights([]);
-        if (typeof global.setPracticeMarkedQuestions === 'function') {
-            try {
-                global.setPracticeMarkedQuestions([]);
-            } catch (_) {
-                // ignore
-            }
-        }
-        state.pageStartTime = Date.now();
-        state.pagePausedAtMs = null;
-        state.pagePausedOffsetMs = 0;
-        const timerBridge = global[PRACTICE_TIMER_BRIDGE_KEY];
-        if (timerBridge && typeof timerBridge.setElapsedSeconds === 'function') {
-            try {
-                timerBridge.setElapsedSeconds(0);
-            } catch (_) {
-                // ignore
-            }
-        }
-        clearSingleDraft();
-        updateNavStatuses();
-    }
 
-    /**
-     * 套题：把三篇（文章 + 题目 + 该篇答案对照）拼成一份打印内容。
-     * 不直接打印页面，因为页面同一时刻只渲染一篇。
-     */
     function applyPrintAnnotations(root, highlights, notes, scope = 'left') {
         if (!root) return;
         const noteList = Array.isArray(notes) ? notes.filter(Boolean) : [];
@@ -5274,7 +5198,7 @@
 
     function attachActionListeners() {
         document.addEventListener('click', (event) => {
-            const target = event.target instanceof Element ? event.target.closest('#submit-btn, #reset-btn') : null;
+            const target = event.target instanceof Element ? event.target.closest('#submit-btn') : null;
             if (!target) return;
             if (target.id === 'submit-btn') {
                 if (state.simulationMode && state.simulationCtx && !state.simulationCtx.isLast) return;
@@ -5287,14 +5211,9 @@
                 }
                 return;
             }
-            if (state.simulationMode && state.simulationCtx) return;
-            if (!global.confirm('Are you sure you want to reset this practice? All answers on this page will be cleared.')) {
-                event.preventDefault();
-                event.stopImmediatePropagation();
-            }
         }, true);
         dom.submitBtn?.addEventListener('click', handlePrimaryAction);
-        dom.resetBtn?.addEventListener('click', handleReset);
+        dom.prevBtn?.addEventListener('click', () => dispatchSimulationNavigate('prev'));
         const exportBtn = document.getElementById('export-pdf-btn');
         exportBtn?.addEventListener('click', handleExportPdf);
         document.addEventListener('change', (event) => {
@@ -5540,6 +5459,7 @@
 
     function attachAnnotationPersistenceBridge() {
         const persist = (reason = 'change') => {
+            if (!state.localReviewRenderSettled || state.restoringDraft) return;
             if (!(state.submitted || state.readOnly || document.body.classList.contains('practice-completed-mode'))) {
                 return;
             }
@@ -5753,6 +5673,8 @@
     }
 
     function readSuiteSavedEntry(examId) {
+        const cached = state.suiteDrafts.get(String(examId));
+        if (cached) return cached;
         let directEntry = null;
         try {
             const entry = JSON.parse(global.localStorage.getItem('ielts_suite_draft::' + state.suiteSessionId + '::' + examId) || 'null');
@@ -5760,16 +5682,23 @@
                 directEntry = entry;
             }
         } catch (_) {}
+        let sessionEntry = null;
+        try {
+            sessionEntry = JSON.parse(global.sessionStorage.getItem('ielts_sim_draft::' + state.suiteSessionId + '::' + examId) || 'null');
+        } catch (_) {}
         const progress = readSuiteProgress();
         const progressEntry = progress ? {
             draft: progress.draftsByExam?.[examId],
             elapsed: progress.elapsedByExam?.[examId] || 0,
             savedAt: Number(progress.draftSavedAtByExam?.[examId]) || Number(progress.updatedAt) || 0
         } : null;
-        const candidates = [directEntry, progressEntry]
+        const candidates = [directEntry, sessionEntry, progressEntry]
             .filter((entry) => entry && entry.draft && typeof entry.draft === 'object');
+        // Version 2 is a complete passage snapshot, including intentional
+        // deletions. Never merge by array length or resurrect an older Note.
+        const complete = candidates.filter(entry => entry.version === 2);
         const contentful = candidates.filter((entry) => draftHasContent(entry.draft));
-        const pool = contentful.length ? contentful : candidates;
+        const pool = complete.length ? complete : (contentful.length ? contentful : candidates);
         pool.sort((left, right) => Number(right.savedAt || right.updatedAt || 0) - Number(left.savedAt || left.updatedAt || 0));
         return pool[0] || null;
     }
@@ -5789,6 +5718,7 @@
             ? await showResumePrompt({ elapsed: progress?.elapsed || 0 }, true)
             : 'continue';
         if (choice === 'restart') {
+            state.suiteDrafts.clear();
             state.suiteRestartPending = true;
             clearSuiteDraftsForSession(state.suiteSessionId);
             state.suiteSequenceExamIds.forEach(id => {
@@ -5827,31 +5757,36 @@
         const examId = state.suiteSequenceExamIds[targetIndex];
         const dataset = state.suiteDatasets?.get(examId);
         if (!dataset) throw new Error('suite_dataset_incomplete:' + examId);
-        state.examId = examId;
-        state.dataKey = examId;
-        state.dataset = dataset;
-        state.explanation = null;
-        state.lastResults = null;
-        state.simulationCtx = { currentIndex: targetIndex, total: 3, isLast: targetIndex === 2,
-            canPrev: targetIndex > 0, canNext: targetIndex < 2, flowMode: 'simulation' };
-        state.simulationDraftFingerprint = '';
-        renderDataset(dataset);
-        attachDragDrop();
-        if (typeof global.setPracticeMarkedQuestions === 'function') global.setPracticeMarkedQuestions([]);
-        const saved = readSuiteSavedEntry(examId);
-        applyDraftToDom(saved?.draft || { answers: {}, highlights: [], notes: [], markedQuestions: [] });
-        state.pageStartTime = Date.now() - Math.max(0, Number(saved?.elapsed) || 0) * 1000;
-        state.pagePausedAtMs = null;
-        state.pagePausedOffsetMs = 0;
-        const url = new URL(global.location.href);
-        url.searchParams.set('examId', examId);
-        url.searchParams.set('dataKey', examId);
-        url.searchParams.set('suiteSequenceIndex', String(targetIndex));
-        url.searchParams.set('suiteTimerAnchorMs', String(state.suiteTimerAnchorMs));
-        try { global.history.replaceState(null, '', url.href); } catch (_) {}
-        syncPrimaryActionButtons();
-        syncAllCheckboxSelectionLimits();
-        await ensureSuiteBlueprint();
+        state.restoringDraft = true;
+        try {
+            state.examId = examId;
+            state.dataKey = examId;
+            state.dataset = dataset;
+            state.explanation = null;
+            state.lastResults = null;
+            state.simulationCtx = { currentIndex: targetIndex, total: 3, isLast: targetIndex === 2,
+                canPrev: targetIndex > 0, canNext: targetIndex < 2, flowMode: 'simulation' };
+            state.simulationDraftFingerprint = '';
+            renderDataset(dataset);
+            attachDragDrop();
+            if (typeof global.setPracticeMarkedQuestions === 'function') global.setPracticeMarkedQuestions([]);
+            const saved = readSuiteSavedEntry(examId);
+            applyDraftToDom(saved?.draft || { answers: {}, highlights: [], notes: [], markedQuestions: [] });
+            state.pageStartTime = Date.now() - Math.max(0, Number(saved?.elapsed) || 0) * 1000;
+            state.pagePausedAtMs = null;
+            state.pagePausedOffsetMs = 0;
+            const url = new URL(global.location.href);
+            url.searchParams.set('examId', examId);
+            url.searchParams.set('dataKey', examId);
+            url.searchParams.set('suiteSequenceIndex', String(targetIndex));
+            url.searchParams.set('suiteTimerAnchorMs', String(state.suiteTimerAnchorMs));
+            try { global.history.replaceState(null, '', url.href); } catch (_) {}
+            syncPrimaryActionButtons();
+            syncAllCheckboxSelectionLimits();
+            await ensureSuiteBlueprint();
+        } finally {
+            state.restoringDraft = false;
+        }
     }
 
     async function navigateSuiteLocally(targetIndex) {

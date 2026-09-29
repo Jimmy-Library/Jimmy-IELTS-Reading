@@ -1397,7 +1397,11 @@
                     try {
                         if (examWindow.closed) {
                             clearInterval(checkClosed);
-                            this.handleExamWindowClosed(examId);
+                            // A history window may already have replaced the
+                            // closed practice window for this same passage.
+                            if (this.examWindows?.get(examId)?.window === examWindow) {
+                                this.handleExamWindowClosed(examId);
+                            }
                         }
                     } catch (monitorError) {
                         clearInterval(checkClosed);
@@ -2256,6 +2260,7 @@
 
         // 从多种可能的存储位置解析练习高亮，返回数组
         _resolveReplayHighlights(entry, entryMetadata, record, recordMetadata) {
+            if (Array.isArray(entry?.highlights)) return entry.highlights.slice();
             const candidates = [
                 entry && entry.highlights,
                 entry && entry.realData && entry.realData.highlights,
@@ -2275,6 +2280,7 @@
         },
 
         _resolveReplayNotes(entry, entryMetadata, record, recordMetadata) {
+            if (Array.isArray(entry?.notes)) return entry.notes.map(note => ({ ...note }));
             const candidates = [
                 entry && entry.notes,
                 entry && entry.realData && entry.realData.notes,
@@ -2293,7 +2299,17 @@
             return [];
         },
 
-        async _persistPracticeAnnotations(examId, data = {}) {
+        _persistPracticeAnnotations(examId, data = {}) {
+            // Updates for P1/P2/P3 share one history record. Serialize the
+            // read-modify-write cycle so one passage cannot overwrite another.
+            const snapshot = this._cloneReviewData(data);
+            const previous = this._annotationSaveQueue || Promise.resolve();
+            const next = previous.catch(() => {}).then(() => this._writePracticeAnnotations(examId, snapshot));
+            this._annotationSaveQueue = next;
+            return next;
+        },
+
+        async _writePracticeAnnotations(examId, data = {}) {
             const store = window.PracticeCore && window.PracticeCore.store;
             if (!store || typeof store.listPracticeRecords !== 'function' || typeof store.savePracticeRecord !== 'function') {
                 return false;
@@ -2316,6 +2332,9 @@
                         ? record.suiteEntries.find((entry) => entry && String(entry.examId) === String(examId))
                         : null;
                     const target = targetEntry || record;
+                    const savedAt = Number(data.annotationSavedAt) || Date.now();
+                    if (Number(target.annotationSavedAt) > savedAt) return true;
+                    target.annotationSavedAt = savedAt;
                     target.highlights = highlights;
                     target.notes = notes;
                     target.metadata = Object.assign({}, target.metadata || {}, { highlights, notes });

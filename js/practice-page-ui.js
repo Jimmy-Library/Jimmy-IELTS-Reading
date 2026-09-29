@@ -80,7 +80,8 @@
         const headerControls = document.querySelector('.header-controls');
         const timerEl = document.getElementById('timer');
         const submitBtn = document.getElementById('submit-btn');
-        const resetBtn = document.getElementById('reset-btn');
+        // Legacy generated pages also share this UI; remove their Reset action.
+        document.getElementById('reset-btn')?.remove();
         const suiteFlowModeSection = document.getElementById('suite-flow-mode-section');
         const pageHeader = document.querySelector('.header');
         const practiceNav = document.querySelector('.practice-nav');
@@ -1325,6 +1326,8 @@
 
         // 推断当前选区所属 Part（多篇时按 left 区段序号，单篇默认 Part 1）
         function resolveNotePartLabel() {
+            const currentPart = document.getElementById('exam-part-label')?.textContent?.trim();
+            if (currentPart) return currentPart;
             try {
                 const sel = window.getSelection();
                 let node = sel && sel.rangeCount ? sel.getRangeAt(0).commonAncestorContainer : null;
@@ -1843,9 +1846,6 @@
             if (submitBtn) {
                 submitBtn.disabled = true;
             }
-            if (resetBtn) {
-                resetBtn.disabled = true;
-            }
             const exitBtn = document.getElementById('exit-btn');
             if (exitBtn) {
                 exitBtn.style.display = 'block';
@@ -2351,16 +2351,6 @@
             updateTimerVisualState();
             renderTimerDisplay();
             emitPracticeTimerState('reset');
-        }
-
-        if (resetBtn) {
-            resetBtn.addEventListener('click', () => {
-                const simulationMode = window.__UNIFIED_READING_SIMULATION_MODE__ === true;
-                if (simulationMode) {
-                    return;
-                }
-                resetPracticePage();
-            });
         }
 
         if (submitBtn) {
