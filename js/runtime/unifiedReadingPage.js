@@ -45,6 +45,7 @@
         sessionId: null,
         suiteSessionId: null,
         reviewSessionId: null,
+        reviewSnapshot: null,
         reviewRecordId: null,
         reviewEntryIndex: 0,
         reviewMode: false,
@@ -180,6 +181,7 @@
         if (reviewFlag === '1' || reviewFlag.toLowerCase() === 'true') {
             state.reviewMode = true;
             state.readOnly = true;
+            state.reviewSessionId = decodeParam(params.get('reviewSessionId')) || null;
         }
         // 续做模式：URL 带 resume=1 时，从「未完成」列表进入，直接恢复草稿不再弹窗
         // （sessionStorage 在跨窗口打开时不可靠，URL 参数才是可靠信道）
@@ -3464,6 +3466,35 @@
         };
         restoreAnnotations();
         state.localReviewRenderSettled = true;
+        document.getElementById('review-load-status')?.remove();
+    }
+
+    async function restoreStoredReview() {
+        if (!state.reviewMode || !state.reviewSessionId) return;
+        try {
+            const snapshot = JSON.parse(global.localStorage.getItem('ielts_review_snapshot::' + state.reviewSessionId) || 'null');
+            if (!snapshot || snapshot.reviewSessionId !== state.reviewSessionId || !Array.isArray(snapshot.entries)) throw new Error('missing replay');
+            const index = snapshot.entries.findIndex(entry => entry.examId === state.examId);
+            if (index < 0) throw new Error('missing passage');
+            const payload = {
+                reviewSessionId: state.reviewSessionId,
+                reviewEntryIndex: index,
+                readOnly: true,
+                entry: snapshot.entries[index],
+                suiteReviewEntries: snapshot.entries.map((entry, i) => Object.assign({}, entry, { index: i, isCurrent: i === index }))
+            };
+            state.reviewSnapshot = snapshot;
+            await applyReplayRecord(payload);
+            state.lastReplaySignature = buildReplaySignature(payload);
+        } catch (error) {
+            console.warn('[ReviewReplay] 本地回放未就绪:', error);
+            const status = document.createElement('div');
+            status.id = 'review-load-status';
+            status.setAttribute('role', 'status');
+            status.style.cssText = 'position:fixed;top:125px;left:20px;right:20px;z-index:10000;padding:16px;background:#fff8db;color:#713f12;border:1px solid #d8b45b';
+            status.textContent = '历史作答尚未载入。若稍后仍未显示，请返回练习记录重新打开。';
+            document.body.appendChild(status);
+        }
     }
 
     function buildEnvelope(type, payload) {
@@ -5475,6 +5506,15 @@
                 annotationSavedAt: Date.now(),
                 annotationReason: reason
             };
+            if (state.reviewSnapshot) {
+                const entry = state.reviewSnapshot.entries.find(item => item.examId === state.examId);
+                if (entry) {
+                    entry.highlights = payload.highlights;
+                    entry.notes = payload.notes;
+                    entry.markedQuestions = typeof global.getPracticeMarkedQuestions === 'function' ? global.getPracticeMarkedQuestions() : entry.markedQuestions;
+                    try { global.localStorage.setItem('ielts_review_snapshot::' + state.reviewSnapshot.reviewSessionId, JSON.stringify(state.reviewSnapshot)); } catch (_) {}
+                }
+            }
             try {
                 global.localStorage.setItem(recoveryKey, JSON.stringify(Object.assign({
                     version: 1,
@@ -5612,6 +5652,7 @@
         initDragPools();
 
         attachActionListeners();
+        await restoreStoredReview();
         attachMessageBridge();
         attachPracticeTimerBridge();
         attachAnnotationPersistenceBridge();

@@ -1,7 +1,7 @@
 'use strict';
 
-const CACHE_VERSION = 'jimmy-reading-offline-v34';
-const CACHE_PATCH = 'safari-suite-completion';
+const CACHE_VERSION = 'jimmy-reading-offline-v35';
+const CACHE_PATCH = 'safari-history-replay';
 const CORE_ASSETS = [
   './Jimmy%E9%98%85%E8%AF%BB%E6%9C%BA%E8%80%83.html',
   './js/runtime/offlineReady.js',

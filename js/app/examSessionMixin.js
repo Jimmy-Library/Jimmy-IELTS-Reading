@@ -136,6 +136,7 @@
                 // 回顾模式：在 URL 上标记 review=1，让阅读页加载即知是只读回顾（不弹续做、禁高亮、冻结计时）
                 if (options && options.reviewMode && readingLaunch && readingLaunch.mode === 'unified_html') {
                     examUrl += (examUrl.indexOf('?') >= 0 ? '&' : '?') + 'review=1';
+                    if (options.reviewSessionId) examUrl += '&reviewSessionId=' + encodeURIComponent(options.reviewSessionId);
                 }
                 // 续做模式：从「未完成」列表点「继续做题」进入，标记 resume=1，阅读页直接恢复草稿不再弹窗
                 // （sessionStorage 跨窗口不可靠，URL 参数才是可靠信道）
@@ -2590,8 +2591,10 @@
                 return [];
             }
             const recordMetadata = this._isReplayObject(record.metadata) ? record.metadata : {};
-            const hasSuiteEntries = Array.isArray(record.suiteEntries) && record.suiteEntries.length > 0;
-            const baseEntries = hasSuiteEntries ? record.suiteEntries : [record];
+            const suiteSources = [record.suiteEntries, recordMetadata.suiteEntries, record.realData?.suiteEntries, record.rawData?.suiteEntries];
+            const suiteEntries = suiteSources.find(entries => Array.isArray(entries) && entries.length > 1)
+                || suiteSources.find(entries => Array.isArray(entries) && entries.length);
+            const baseEntries = suiteEntries || [record];
             const isAggregated = baseEntries.length > 1;
             const recordAnswersSource = this._isReplayObject(record.realData?.answers)
                 ? record.realData.answers
@@ -2897,6 +2900,13 @@
         },
 
         async openPracticeRecordReplay(record) {
+            // A history card may still hold an older copy after a Safari review tab
+            // saved annotations without its opener. Replay the current stored record.
+            if (typeof window.recoverPendingPracticeAnnotations === 'function') await window.recoverPendingPracticeAnnotations();
+            if (record?.id && window.PracticeCore?.store?.listPracticeRecords) {
+                const records = await window.PracticeCore.store.listPracticeRecords();
+                record = records.find(item => String(item.id) === String(record.id)) || record;
+            }
             const session = this._buildReviewSession(record);
             if (!session) {
                 throw new Error('该练习记录缺少可回放的题目映射');
@@ -2910,7 +2920,25 @@
                 throw new Error('无法解析首题题目标识');
             }
 
+            // Persist the complete replay before opening the tab. Safari can lose
+            // its opener or block an asynchronous popup and use the same tab.
+            // The destination must be able to restore without postMessage.
+            const prefix = 'ielts_review_snapshot::';
+            const oldSnapshots = Object.keys(window.localStorage).filter(key => key.startsWith(prefix)).sort();
+            while (oldSnapshots.length >= 12) window.localStorage.removeItem(oldSnapshots.shift());
+            window.localStorage.setItem(prefix + session.sessionId, JSON.stringify({
+                version: 1,
+                reviewSessionId: session.sessionId,
+                createdAt: Date.now(),
+                // Normalized fields already contain all answers and annotations;
+                // avoid copying the entire aggregate again inside every metadata.
+                entries: session.entries.map(entry => Object.assign({}, entry, {
+                    metadata: { examId: entry.examId, examTitle: entry.title, category: entry.metadata?.category || '' }
+                }))
+            }));
+
             const openedWindow = await this.openExam(firstEntry.examId, {
+                target: 'tab',
                 reviewMode: true,
                 readOnly: true,
                 reviewSessionId: session.sessionId,

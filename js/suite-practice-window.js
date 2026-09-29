@@ -36,6 +36,14 @@
         // Reserve during the gesture, before lazy loading or preparing three passages.
         var shouldReserve = target.closest('[data-suite-id], [data-daily-action="start"], [data-suite-resume-action="continue"], [data-suite-resume-action="restart"], [data-record-action="resume-draft"], [data-record-action="restart-draft"], [data-confirm-custom-suite], [data-custom-suite-confirm], [data-action="confirm-custom-suite"], [data-action="suite-custom-confirm"]');
         if (!shouldReserve) {
+            var record = target.closest('.history-record-item[data-record-id], .history-item[data-record-id]');
+            var recordAction = target.closest('[data-record-action]');
+            var isReview = target.closest('[data-record-action="details"], .record-summary-replay-trigger, .record-title.practice-record-title')
+                || (record && !record.classList.contains('history-item-selectable')
+                    && !target.closest('button, input, select, [data-record-action]'));
+            if (isReview && (!recordAction || recordAction.dataset.recordAction === 'details')) shouldReserve = true;
+        }
+        if (!shouldReserve) {
             var button = target.closest('button');
             shouldReserve = button && /(确认开始|确认组题|开始套题|开始模考)/.test(button.textContent || '');
         }
