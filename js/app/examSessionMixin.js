@@ -3289,11 +3289,15 @@
             if (shouldDelegateToSuiteHandler && typeof this.handleSuitePracticeComplete === 'function') {
                 try {
                     const handled = await this.handleSuitePracticeComplete(examId, data, sourceWindow);
+                    // A failed full-suite save must remain queued, never be acknowledged
+                    // by a fallback that only contains the currently visible passage.
+                    if (data?.finalizeSuite === true && payloadSuiteSessionId) return handled === true;
                     if (handled) {
                         return true;
                     }
                     suiteHandlerDeclined = true;
                 } catch (suiteError) {
+                    if (data?.finalizeSuite === true && payloadSuiteSessionId) return false;
                     console.error('[SuitePractice] 处理套题结果失败，回退至普通流程:', suiteError);
                     window.showMessage && window.showMessage('套题模式出现异常，记录将以单篇形式保存。', 'warning');
                     suiteHandlerDeclined = true;

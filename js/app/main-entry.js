@@ -445,9 +445,35 @@
             });
     }
 
+    var completionRecoveryLoad = null;
+    function recoverStoredCompletions() {
+        try {
+            if (!JSON.parse(global.localStorage.getItem('ielts_offline_completion_queue_v1') || '[]').length) return;
+        } catch (_) { return; }
+        if (completionRecoveryLoad) return;
+        // The overview normally does not load main.js. A queued submission is
+        // itself a reason to load the record writer, even without opening history.
+        completionRecoveryLoad = Promise.all([ensureBrowseGroup(), ensureSessionSuiteReady()])
+            .then(function () {
+                return global.recoverOfflinePracticeCompletions && global.recoverOfflinePracticeCompletions();
+            })
+            .catch(function (error) { console.warn('[MainEntry] 提交记录等待重试:', error); })
+            .finally(function () { completionRecoveryLoad = null; });
+    }
+
+    global.addEventListener('storage', function (event) {
+        if (event.key === 'ielts_offline_completion_queue_v1' && event.newValue) recoverStoredCompletions();
+    });
+    global.addEventListener('pageshow', recoverStoredCompletions);
+    global.addEventListener('focus', recoverStoredCompletions);
+    document.addEventListener('visibilitychange', function () {
+        if (document.visibilityState === 'visible') recoverStoredCompletions();
+    });
+
     function init() {
         setStorageNamespace();
         initializeNavigationShell();
+        global.setTimeout(recoverStoredCompletions, 600);
 
         if (STRICT_ON_DEMAND) {
             setTimeout(function () {

@@ -272,6 +272,9 @@
             }
         },
         async handleSuitePracticeComplete(examId, data, sourceWindow = null) {
+            if (data && data.finalizeSuite === true && data.suiteSessionId) {
+                return this.saveCompletedSuite(data);
+            }
             // First check whether this is multi-suite mode (detected via suiteId).
             if (data && data.suiteId) {
                 return await this.handleMultiSuitePracticeComplete(examId, data);
@@ -932,12 +935,15 @@
 
         _clearSessionStorage(options = {}) {
             try {
+                const suiteId = options.suiteSessionId || (this.currentSuiteSession && this.currentSuiteSession.id);
                 if (global.sessionStorage) {
-                    global.sessionStorage.removeItem('ielts_sim_session');
+                    let snapshot = null;
+                    try { snapshot = JSON.parse(global.sessionStorage.getItem('ielts_sim_session') || 'null'); } catch (_) {}
+                    if (!suiteId || !snapshot?.id || snapshot.id === suiteId) global.sessionStorage.removeItem('ielts_sim_session');
                 }
                 // 清除 localStorage 中的套题进度（套题完成/中止时）
                 if (global.localStorage && options.preserveLocalProgress !== true) {
-                    let key = this._persistedSuiteProgressKey;
+                    let key = suiteId ? 'ielts_suite_progress::' + suiteId : this._persistedSuiteProgressKey;
                     if (!key && this.currentSuiteSession && this.currentSuiteSession.id) {
                         key = 'ielts_suite_progress::' + this.currentSuiteSession.id;
                     }
@@ -945,7 +951,6 @@
                         global.localStorage.removeItem(key);
                     }
                     // 同时清除所有单篇草稿
-                    const suiteId = this.currentSuiteSession && this.currentSuiteSession.id;
                     if (suiteId) {
                         const prefix = 'ielts_suite_draft::' + suiteId + '::';
                         const toRemove = [];
@@ -955,7 +960,7 @@
                         }
                         toRemove.forEach(k => global.localStorage.removeItem(k));
                     }
-                    this._persistedSuiteProgressKey = null;
+                    if (this._persistedSuiteProgressKey === key) this._persistedSuiteProgressKey = null;
                 }
             } catch (_) { /* ignore */ }
         },
@@ -1828,7 +1833,7 @@
 
         // 将套题会话（完整或部分完成）聚合为「一套题」记录，供完成/中断时统一保存，避免拆成单篇片段
         async _buildSuiteRecord(session) {
-            const completionTime = Date.now();
+            const completionTime = Number(session.completedAtMs) || Date.now();
             const suiteEntries = session.results.map(entry => ({
                 examId: entry.examId,
                 title: entry.title,
@@ -1965,6 +1970,79 @@
                 },
                 sessionId: session.id
             };
+        },
+
+        // Both the live message and a recovered local submission use the same save.
+        // A suspended/closed Safari opener must not be required to finish a suite.
+        saveCompletedSuite(data) {
+            const id = String(data?.suiteSessionId || '');
+            const sections = data?.suiteSections;
+            if (!id || !Array.isArray(sections) || sections.length !== 3
+                || new Set(sections.map(section => section?.examId)).size !== 3
+                || sections.some(section => !section?.examId || !section.answerComparison || !section.scoreInfo)) {
+                return Promise.resolve(false);
+            }
+            if (!this._suiteCompletionSaves) this._suiteCompletionSaves = new Map();
+            if (this._suiteCompletionSaves.has(id)) return this._suiteCompletionSaves.get(id);
+            const save = (async () => {
+                const active = this.currentSuiteSession?.id === id ? this.currentSuiteSession : null;
+                let snapshot = active;
+                if (!snapshot) {
+                    try { snapshot = JSON.parse(global.localStorage.getItem('ielts_suite_progress::' + id) || 'null'); } catch (_) {}
+                }
+                const records = await this._loadSuitePracticeRecordsForFiltering();
+                const existing = records.find(record => (record.id === id || record.metadata?.suiteSessionId === id)
+                    && record.suiteEntries?.length === 3);
+                if (!existing) {
+                    const session = Object.assign({}, snapshot || {}, {
+                        id,
+                        startTime: Date.parse(data.startTime) || snapshot?.startTime || Date.now(),
+                        completedAtMs: Date.parse(data.endTime) || Date.now(),
+                        totalDurationSeconds: Math.max(0, Number(data.duration) || 0),
+                        results: sections.map(section => {
+                            const exam = snapshot?.sequence?.find(item => item.examId === section.examId)?.exam
+                                || { id: section.examId, title: section.title, category: section.category };
+                            return this._normalizeSuiteResult(exam, Object.assign({}, section, {
+                                duration: section.duration ?? snapshot?.elapsedByExam?.[section.examId] ?? 0
+                            }));
+                        })
+                    });
+                    await this._saveSuitePracticeRecord(await this._buildSuiteRecord(session));
+                }
+                // Remove only this attempt, and only after the completed record is saved.
+                if (active) {
+                    active.status = 'completed';
+                    await this._teardownSuiteSession(active, { keepWindow: true });
+                }
+                this._clearSessionStorage({ suiteSessionId: id });
+                sections.forEach(section => this.updateExamStatus && this.updateExamStatus(section.examId, 'completed'));
+                await this._updatePracticeRecordsState();
+                this.refreshOverviewData && this.refreshOverviewData();
+                return true;
+            })().catch(error => {
+                console.error('[SuitePractice] 完整套题保存失败，保留提交等待重试:', error);
+                return false;
+            }).finally(() => this._suiteCompletionSaves.delete(id));
+            this._suiteCompletionSaves.set(id, save);
+            return save;
+        },
+
+        async reconcileCompletedSuiteDrafts() {
+            const records = await this._loadSuitePracticeRecordsForFiltering();
+            let cleared = 0;
+            for (const record of records) {
+                const id = record.metadata?.suiteSessionId;
+                if (!id || record.suiteEntries?.length !== 3) continue;
+                if (this.currentSuiteSession?.id === id && this.currentSuiteSession.status === 'active') continue;
+                const prefix = 'ielts_suite_draft::' + id + '::';
+                const hasDraft = Object.keys(global.localStorage).some(key =>
+                    key === 'ielts_suite_progress::' + id || key.startsWith(prefix));
+                if (hasDraft) {
+                    this._clearSessionStorage({ suiteSessionId: id });
+                    cleared++;
+                }
+            }
+            return cleared;
         },
 
         async finalizeSuiteRecord(session) {
@@ -2888,6 +2966,7 @@
                 this._clearSuiteHandshakes();
             }
             this._clearSessionStorage({
+                suiteSessionId: session.id,
                 preserveLocalProgress: options.preserveLocalProgress === true
             });
         },

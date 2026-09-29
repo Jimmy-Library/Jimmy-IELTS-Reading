@@ -337,7 +337,6 @@ async function initializeLegacyComponents() {
     setupMessageListener(); // Listen for updates from child windows
     setupStorageSyncListener(); // Listen for storage changes from other tabs
     // Recover any completion that was locally queued before its save acknowledgement arrived.
-    window.setTimeout(() => recoverOfflinePracticeCompletions(), 600);
     window.setTimeout(() => recoverPendingPracticeAnnotations(), 900);
 }
 
@@ -811,7 +810,16 @@ function setupMessageListener() {
 }
 
 
-async function recoverOfflinePracticeCompletions() {
+let offlineCompletionRecovery = null;
+function recoverOfflinePracticeCompletions() {
+    if (!offlineCompletionRecovery) {
+        offlineCompletionRecovery = runOfflinePracticeRecovery()
+            .finally(() => { offlineCompletionRecovery = null; });
+    }
+    return offlineCompletionRecovery;
+}
+
+async function runOfflinePracticeRecovery() {
     const offlineReady = window.OfflineReady;
     if (!offlineReady || typeof offlineReady.recoverPendingCompletions !== 'function') {
         return { recovered: 0, pending: 0 };
@@ -826,62 +834,15 @@ async function recoverOfflinePracticeCompletions() {
         const examId = String(data.examId || data.metadata?.examId || '').trim();
         if (!examId) return false;
 
-        // Preserve all three sections when a completed suite has to be recovered after a page restart.
-        if (data.finalizeSuite === true && Array.isArray(data.suiteSections) && data.suiteSections.length) {
-            let total = 0;
-            let correct = 0;
-            const answers = {};
-            const correctAnswers = {};
-            const answerComparison = {};
-            data.suiteEntries = data.suiteSections.map((section) => {
-                const sectionId = String(section.examId || '').trim();
-                const comparison = section.answerComparison && typeof section.answerComparison === 'object'
-                    ? section.answerComparison
-                    : {};
-                Object.keys(comparison).forEach((questionId) => {
-                    const row = comparison[questionId] || {};
-                    const key = sectionId + ':' + questionId;
-                    answers[key] = row.userAnswer ?? '';
-                    correctAnswers[key] = row.correctAnswer ?? '';
-                    answerComparison[key] = Object.assign({}, row, { examId: sectionId, questionId });
-                });
-                const sectionScore = section.scoreInfo || {};
-                total += Math.max(0, Number(sectionScore.total) || Object.keys(comparison).length);
-                correct += Math.max(0, Number(sectionScore.correct) || 0);
-                return {
-                    examId: sectionId,
-                    title: section.title || '',
-                    category: section.category || '',
-                    answers: section.answers || {},
-                    answerComparison: comparison,
-                    scoreInfo: sectionScore,
-                    markedQuestions: section.markedQuestions || [],
-                    highlights: section.highlights || [],
-                    notes: section.notes || []
-                };
-            });
-            data.answers = answers;
-            data.correctAnswers = correctAnswers;
-            data.answerComparison = answerComparison;
-            data.scoreInfo = {
-                correct,
-                total,
-                accuracy: total > 0 ? correct / total : 0,
-                percentage: total > 0 ? Math.round((correct / total) * 100) : 0
-            };
-            data.totalQuestions = total;
-            data.score = correct;
-            data.correctAnswerCount = correct;
-            data.suiteMode = true;
-            data.practiceMode = 'suite';
-            data.frequency = 'suite';
-            data.metadata = Object.assign({}, data.metadata || {}, {
-                suiteEntries: data.suiteEntries,
-                practiceMode: 'suite',
-                frequency: 'suite',
-                allowStandaloneSave: true,
-                offlineRecovered: true
-            });
+        // Recover through the same aggregate save as a live suite submission.
+        if (data.finalizeSuite === true && data.suiteSessionId) {
+            if (typeof window.ensureSessionSuiteReady === 'function') {
+                await window.ensureSessionSuiteReady();
+            }
+            const suiteApp = window.app || app;
+            return suiteApp && typeof suiteApp.saveCompletedSuite === 'function'
+                ? suiteApp.saveCompletedSuite(data)
+                : false;
         }
 
         const appInstance = window.app || app;
@@ -892,16 +853,43 @@ async function recoverOfflinePracticeCompletions() {
         return !!saved;
     });
 
-    if (result.recovered > 0) {
+    // Repair leftovers from earlier versions whose completed record is already saved.
+    let clearedDrafts = 0;
+    if (Object.keys(localStorage).some(key => key.startsWith('ielts_suite_progress::') || key.startsWith('ielts_suite_draft::'))) {
+        if (typeof window.ensureSessionSuiteReady === 'function') await window.ensureSessionSuiteReady();
+        const suiteApp = window.app || app;
+        if (typeof suiteApp?.reconcileCompletedSuiteDrafts === 'function') {
+            clearedDrafts = await suiteApp.reconcileCompletedSuiteDrafts();
+        }
+    }
+    if (result.recovered > 0 || clearedDrafts > 0) {
         try {
             await syncPracticeRecords({ forceRender: true });
-            showMessage('已自动恢复 ' + result.recovered + ' 条离线练习记录', 'success');
+            if (result.recovered > 0) showMessage('已自动恢复 ' + result.recovered + ' 条离线练习记录', 'success');
         } catch (_) {}
     }
     return result;
 }
 
 function setupStorageSyncListener() {
+    if (window.__practiceStorageSyncReady) return;
+    window.__practiceStorageSyncReady = true;
+    let recoveryTimer = null;
+    const scheduleRecovery = () => {
+        window.clearTimeout(recoveryTimer);
+        recoveryTimer = window.setTimeout(() => recoverOfflinePracticeCompletions().catch(console.warn), 600);
+    };
+    // Safari may suspend the opener or restore it from the back/forward cache.
+    window.addEventListener('storage', event => {
+        if (event.key === 'ielts_offline_completion_queue_v1' && event.newValue) scheduleRecovery();
+    });
+    window.addEventListener('pageshow', scheduleRecovery);
+    window.addEventListener('focus', scheduleRecovery);
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') scheduleRecovery();
+    });
+    scheduleRecovery();
+
     window.addEventListener('storage-sync', (event) => {
         console.log('[System] 收到存储同步事件，正在更新练习记录...', event.detail);
         //可以选择性地只更新受影响的key，但为了简单起见，我们直接同步所有记录
@@ -4038,3 +4026,6 @@ function startRandomPractice(category, type = 'reading', filterMode = null, path
 // Phase 4: 清理重复事件绑定
 // setupExamActionHandlers 已在 examActions.js 的 displayExams 中调用，此处移除重复调用
 ensurePracticeSessionSyncListener();
+// main.js is lazy-loaded after the modern app has already initialized.
+// Do not depend on initializeLegacyComponents running a second time.
+setupStorageSyncListener();
