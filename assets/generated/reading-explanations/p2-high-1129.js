@@ -77,7 +77,7 @@
           "wordClass": "",
           "locating": {
             "paragraph": "6",
-            "quote": "The reefs are also degraded by coastal and inland developments and the pollution these products, as well as by the natural impacts of storms and other natural outbreaks. However, perhaps the most significant large-scale cause of reef decline in the longer term is climate change, which threatens to damage large areas of reef worldwide."
+            "quote": "The reefs are also degraded by coastal and inland developments and the pollution these produce, as well as by the natural impacts of storms and other natural outbreaks. However, perhaps the most significant large-scale cause of reef decline in the longer term is climate change, which threatens to damage large areas of reef worldwide."
           },
           "synonyms": [
             "“reef deterioration” 同义替换为原文的 “reef degradation” 与 “reef decline”",
@@ -85,7 +85,7 @@
             "“various” 还体现在原文的递进结构上：先写 One of the principal factors、再用 In addition、also 与 However, perhaps the most significant 层层推进"
           ],
           "locatingTip": "定位：题干的关键词 causes 与 deterioration 指向“原因罗列”。第 6 段（F）开篇即说 “One of the principal factors responsible for declining reef benefits is reef degradation”，随后用 In addition、also、However 层层列举多种致因，并把 climate change 点名为最重大的长期原因，因此选 F。确定答案技巧：段落信息匹配题中，只要某段用 One of … / In addition / also / the most significant cause 这类递进标记密集罗列，就应认定它承担“原因”功能。",
-          "analysis": "第 6 段（F）整段都在解释珊瑚礁为何退化。开篇：“One of the principal factors responsible for declining reef benefits is reef degradation: coral reef ecosystems are extremely sensitive to change, and easily suffer from disturbance.”（导致珊瑚礁效益下降的主要原因之一是珊瑚礁退化：珊瑚礁生态系统对变化极为敏感，很容易受到干扰。）接着列因：“As coastal areas became more populated, increasing numbers of reef stakeholders compete for access to reef benefits. This situation has led to increasing pressure on reef resources, typically resulting in over harvesting and reef decline. In addition, lucrative markets for reef species often drive unsustainable and destructive extraction regimes.”（随着沿海地区人口增多，越来越多的利益相关者争夺珊瑚礁资源，造成压力上升，通常导致过度采捕与珊瑚礁衰退；此外，珊瑚礁物种的暴利市场常常驱使人们采取不可持续、破坏性的采捕方式。）随后继续补充：“The reefs are also degraded by coastal and inland developments and the pollution these products, as well as by the natural impacts of storms and other natural outbreaks. However, perhaps the most significant large-scale cause of reef decline in the longer term is climate change …”（珊瑚礁还因沿海与内陆开发及其污染而退化，也受到风暴等自然因素的影响；然而从长远看，最重大的大规模原因是气候变化。）题干所说的 various causes of reef deterioration，正对应这一段从人口压力、市场驱动到开发污染、自然灾害直至气候变化的多因罗列，故选 F。",
+          "analysis": "第 6 段（F）整段都在解释珊瑚礁为何退化。开篇：“One of the principal factors responsible for declining reef benefits is reef degradation: coral reef ecosystems are extremely sensitive to change, and easily suffer from disturbance.”（导致珊瑚礁效益下降的主要原因之一是珊瑚礁退化：珊瑚礁生态系统对变化极为敏感，很容易受到干扰。）接着列因：“As coastal areas became more populated, increasing numbers of reef stakeholders compete for access to reef benefits. This situation has led to increasing pressure on reef resources, typically resulting in over harvesting and reef decline. In addition, lucrative markets for reef species often drive unsustainable and destructive extraction regimes.”（随着沿海地区人口增多，越来越多的利益相关者争夺珊瑚礁资源，造成压力上升，通常导致过度采捕与珊瑚礁衰退；此外，珊瑚礁物种的暴利市场常常驱使人们采取不可持续、破坏性的采捕方式。）随后继续补充：“The reefs are also degraded by coastal and inland developments and the pollution these produce, as well as by the natural impacts of storms and other natural outbreaks. However, perhaps the most significant large-scale cause of reef decline in the longer term is climate change …”（珊瑚礁还因沿海与内陆开发及其污染而退化，也受到风暴等自然因素的影响；然而从长远看，最重大的大规模原因是气候变化。）题干所说的 various causes of reef deterioration，正对应这一段从人口压力、市场驱动到开发污染、自然灾害直至气候变化的多因罗列，故选 F。",
           "traps": [
             "为什么不选 E（第 5 段）：E 段虽然也提到 “the capacity of coral reefs to buffer risks and provide livelihood stability is eroding as a result of the diminishing availability of resources”，但只把原因笼统归结为资源减少，重点在讲珊瑚礁对贫困者意义的下降，不是“各种原因”的列举段。",
             "为什么不选 G（第 7 段）：G 段讲的是这些变化对贫困者造成的后果（increasing reliance on reefs、poverty is compounded），属于影响而非原因。"
@@ -145,7 +145,7 @@
           "wordClass": "",
           "locating": {
             "paragraph": "5",
-            "quote": "Unlike many other types of fishery, where the excluded from working, coral reefs offer opportunities for women and the elderly, because reef products can be collected on foot."
+            "quote": "Unlike many other types of fishery, where they are excluded from working, coral reefs offer opportunities for women and the elderly, because reef products can be collected on foot."
           },
           "synonyms": [
             "“the ease of physical access to reefs” 同义替换为原文的 “reef products can be collected on foot”，即不必乘船、徒步即可采集",
@@ -153,7 +153,7 @@
             "“Unlike many other types of fishery” 从反面强化了“容易接近”：正是因为走近即可采集，才没有把某些人排除在外"
           ],
           "locatingTip": "定位：题干的关键词是 physical access（身体上接近的难易）。第 5 段（E）明确写出 “reef products can be collected on foot”，并用 “coral reefs offer opportunities for women and the elderly” 说明这种便利带来的结果。确定答案技巧：把题干中的抽象名词 ease（容易）转成原文的副词性提示 on foot（徒步），再把 physical access 对应到身体条件（women and the elderly 也能参与），即可锁定第 5 段（E）。注意第 4 段（D）虽也谈“机会”，但那说的是市场与资源享有（access to a wide range of different markets），是经济意义上的 access，不是体力意义上的接近。",
-          "analysis": "第 5 段（E）第 1、2 句：“For poor coastal households, particularly female headed households and vulnerable groups such as the elderly, shallow coral-reef resources are often their principal source of subsistence and income. Unlike many other types of fishery, where the excluded from working, coral reefs offer opportunities for women and the elderly, because reef products can be collected on foot.”（对于贫困的沿海家庭，尤其是女性户主家庭和老年人等脆弱群体而言，浅水珊瑚礁资源往往是他们主要的生计与收入来源。与许多其他渔业把这些人排除在劳动之外不同，珊瑚礁为妇女和老人提供了机会，因为礁区产物可以徒步采集。）题干所说的 the ease of physical access（体力上接近的便利），在原文中具体化为 because reef products can be collected on foot——不需要船只、不需要特殊装备，走到就能采；这也解释了为什么妇女和老人也能利用珊瑚礁资源。因此答案是 E。本段随后还提到 “This has significant benefits in empowering women in the household, and different reef-based occupations between men and women spread household risk.”，说明这种便利还带来赋权与风险分散的好处，属同一逻辑的延伸。",
+          "analysis": "第 5 段（E）第 1、2 句：“For poor coastal households, particularly female headed households and vulnerable groups such as the elderly, shallow coral-reef resources are often their principal source of subsistence and income. Unlike many other types of fishery, where they are excluded from working, coral reefs offer opportunities for women and the elderly, because reef products can be collected on foot.”（对于贫困的沿海家庭，尤其是女性户主家庭和老年人等脆弱群体而言，浅水珊瑚礁资源往往是他们主要的生计与收入来源。与许多其他渔业把这些人排除在劳动之外不同，珊瑚礁为妇女和老人提供了机会，因为礁区产物可以徒步采集。）题干所说的 the ease of physical access（体力上接近的便利），在原文中具体化为 because reef products can be collected on foot——不需要船只、不需要特殊装备，走到就能采；这也解释了为什么妇女和老人也能利用珊瑚礁资源。因此答案是 E。本段随后还提到 “This has significant benefits in empowering women in the household, and different reef-based occupations between men and women spread household risk.”，说明这种便利还带来赋权与风险分散的好处，属同一逻辑的延伸。",
           "traps": [
             "为什么不选 D（第 4 段）：D 段的 access 是 “access to a wide range of different markets”，指进入市场的经济机会，不是体力上接近珊瑚礁。",
             "为什么不选 G（第 7 段）：G 段讨论贫困者依赖加深与资源减少的困境，与接近珊瑚礁的难易无关。"
@@ -178,15 +178,15 @@
           "wordClass": "",
           "locating": {
             "paragraph": "2",
-            "quote": "National and international interest in coral reefs are growing, for example as a focus for research studies by marine biologists, reefs are also increasingly seen as part of a national heritage, as a dumping ground for waste or a source of pleasure for tourists."
+            "quote": "National and international interest in coral reefs is growing, for example as a focus for research studies by marine biologists, reefs are also increasingly seen as part of a national heritage, as a dumping ground for waste or a source of pleasure for tourists."
           },
           "synonyms": [
             "“increasingly” 同义替换为原文的 “are growing”，都表示“不断增长”",
             "“used for scientific purposes” 同义替换为原文的 “as a focus for research studies by marine biologists”",
             "“National and international interest … are growing” 与题干的 increasingly 在时间趋势上对应"
           ],
-          "locatingTip": "定位：题干的关键词是 scientific purposes，第 2 段（B）首句紧接出现 “as a focus for research studies by marine biologists”，是全文唯一把珊瑚礁与科研直接挂钩的地方。确定答案技巧：找到该句后核对题干的 trend 词 increasingly——原文用 “National and international interest in coral reefs are growing” 给出增长趋势，并用 for example 把科研列为这一趋势的例证，两处合起来正好对应“越来越多地用于科研”，因此判 TRUE。",
-          "analysis": "第 2 段（B）首句：“National and international interest in coral reefs are growing, for example as a focus for research studies by marine biologists, reefs are also increasingly seen as part of a national heritage, as a dumping ground for waste or a source of pleasure for tourists.”（国内外对珊瑚礁的关注正在增长，例如它成为海洋生物学家的研究焦点，同时也越来越多地被视为国家遗产的一部分、废物倾倒场或游客的休闲去处。）题干有两点：趋势（increasingly）与用途（scientific purposes）。原文用 are growing 表达趋势，用 for example as a focus for research studies by marine biologists 给出科研这一具体用途，even 与 increasingly 也有了原词对应（reefs are also increasingly seen as …），因此答案是 TRUE。要注意这句话里同时并列了若干用途（研究焦点、国家遗产、倾倒场、游客休闲），不要因为有的用途听起来不“科学”就否定题干——题干只问科研用途是否在增长，原文对此是肯定的。",
+          "locatingTip": "定位：题干的关键词是 scientific purposes，第 2 段（B）首句紧接出现 “as a focus for research studies by marine biologists”，是全文唯一把珊瑚礁与科研直接挂钩的地方。确定答案技巧：找到该句后核对题干的 trend 词 increasingly——原文用 “National and international interest in coral reefs is growing” 给出增长趋势，并用 for example 把科研列为这一趋势的例证，两处合起来正好对应“越来越多地用于科研”，因此判 TRUE。",
+          "analysis": "第 2 段（B）首句：“National and international interest in coral reefs is growing, for example as a focus for research studies by marine biologists, reefs are also increasingly seen as part of a national heritage, as a dumping ground for waste or a source of pleasure for tourists.”（国内外对珊瑚礁的关注正在增长，例如它成为海洋生物学家的研究焦点，同时也越来越多地被视为国家遗产的一部分、废物倾倒场或游客的休闲去处。）题干有两点：趋势（increasingly）与用途（scientific purposes）。原文用 are growing 表达趋势，用 for example as a focus for research studies by marine biologists 给出科研这一具体用途，even 与 increasingly 也有了原词对应（reefs are also increasingly seen as …），因此答案是 TRUE。要注意这句话里同时并列了若干用途（研究焦点、国家遗产、倾倒场、游客休闲），不要因为有的用途听起来不“科学”就否定题干——题干只问科研用途是否在增长，原文对此是肯定的。",
           "traps": [
             "为什么不是 FALSE：原文说国内外对珊瑚礁的关注正在增长，并明确举出 “as a focus for research studies by marine biologists”（作为海洋生物学家的研究焦点）作为例证，与题干同向。",
             "为什么不是 NOT GIVEN：题干的趋势（increasingly / growing）与用途（research studies）两处都有明确的原文对应，不属于信息缺失。"
@@ -270,7 +270,7 @@
           "wordClass": "",
           "locating": {
             "paragraph": "5",
-            "quote": "Unlike many other types of fishery, where the excluded from working, coral reefs offer opportunities for women and the elderly, because reef products can be collected on foot."
+            "quote": "Unlike many other types of fishery, where they are excluded from working, coral reefs offer opportunities for women and the elderly, because reef products can be collected on foot."
           },
           "synonyms": [
             "“As with many fisheries” 与原文的 “Unlike many other types of fishery” 形成直接对立：原文强调珊瑚礁与其他渔业“不同”",
@@ -278,7 +278,7 @@
             "“work on coral reefs” 对应原文的 “reef products can be collected on foot”，即珊瑚礁上的作业"
           ],
           "locatingTip": "定位：题干的关键词是 work on coral reefs 与 sections of the population，第 5 段（E）第二句直接比较珊瑚礁渔业与其他渔业对不同人群的态度，是本题落点。确定答案技巧：抓住原文的比较标记 Unlike many other types of fishery（与许多其他渔业不同），它说明题干开头的 As with many fisheries（与许多渔业一样）从根上就错了；再看原文的结论是 offer opportunities for women and the elderly（为妇女和老人提供机会），与“不适合某些人群”完全相反，因此判 FALSE。",
-          "analysis": "第 5 段（E）第 1、2 句：“For poor coastal households, particularly female headed households and vulnerable groups such as the elderly, shallow coral-reef resources are often their principal source of subsistence and income. Unlike many other types of fishery, where the excluded from working, coral reefs offer opportunities for women and the elderly, because reef products can be collected on foot.”（对于贫困的沿海家庭，尤其是女性户主家庭和老年人等脆弱群体而言，浅水珊瑚礁资源往往是他们主要的生计与收入来源。与许多其他渔业把这些人排除在劳动之外不同，珊瑚礁为妇女和老人提供了机会，因为礁区产物可以徒步采集。）原文的语气是明确的对比：其他渔业把部分人排除在外，珊瑚礁却相反，把机会给了这些人。题干说“与许多渔业一样，珊瑚礁上的工作对某些人群并不适合”，既误用了 As with（应为 Unlike），又把原文的“提供机会”说成“不适合”，两处都与原文相反，因此答案是 FALSE。原文后半段 “different reef-based occupations between men and women spread household risk” 也说明男女都能参与礁区作业，只是分工不同，进一步佐证题干不成立。",
+          "analysis": "第 5 段（E）第 1、2 句：“For poor coastal households, particularly female headed households and vulnerable groups such as the elderly, shallow coral-reef resources are often their principal source of subsistence and income. Unlike many other types of fishery, where they are excluded from working, coral reefs offer opportunities for women and the elderly, because reef products can be collected on foot.”（对于贫困的沿海家庭，尤其是女性户主家庭和老年人等脆弱群体而言，浅水珊瑚礁资源往往是他们主要的生计与收入来源。与许多其他渔业把这些人排除在劳动之外不同，珊瑚礁为妇女和老人提供了机会，因为礁区产物可以徒步采集。）原文的语气是明确的对比：其他渔业把部分人排除在外，珊瑚礁却相反，把机会给了这些人。题干说“与许多渔业一样，珊瑚礁上的工作对某些人群并不适合”，既误用了 As with（应为 Unlike），又把原文的“提供机会”说成“不适合”，两处都与原文相反，因此答案是 FALSE。原文后半段 “different reef-based occupations between men and women spread household risk” 也说明男女都能参与礁区作业，只是分工不同，进一步佐证题干不成立。",
           "traps": [
             "为什么不是 TRUE：原文开头就是 Unlike many other types of fishery（与许多其他渔业不同），落点是 “coral reefs offer opportunities for women and the elderly”，即珊瑚礁恰恰为妇女和老人创造了机会，与题干“不适合某些人群”相反。",
             "为什么不是 NOT GIVEN：原文对“适用人群”给出了明确且相反的信息（为妇女和老人提供机会），因此判 FALSE，而不是信息缺失。"
@@ -293,7 +293,7 @@
           "wordClass": "",
           "locating": {
             "paragraph": "6",
-            "quote": "The reefs are also degraded by coastal and inland developments and the pollution these products, as well as by the natural impacts of storms and other natural outbreaks."
+            "quote": "The reefs are also degraded by coastal and inland developments and the pollution these produce, as well as by the natural impacts of storms and other natural outbreaks."
           },
           "synonyms": [
             "“Coastal … developments” 对应原文的 “coastal and inland developments”",
@@ -301,7 +301,7 @@
             "原文另一处的 developments 出现在 “widespread development … overwhelm and degrade alternative resources such as farmland”，讲的也是开发破坏替代资源，而非使穷人受益"
           ],
           "locatingTip": "定位：题干的关键词是 coastal … developments，第 6 段（F）中的 “The reefs are also degraded by coastal and inland developments and the pollution these products …” 是全文唯一出现 coastal developments 这一表述的句子。确定答案技巧：找到该句后核对题干的两个要点——开发（原文有）与“使贫困人群受益”（原文无）。原文把沿海与内陆开发列为珊瑚礁退化的原因之一，那是负面作用；至于贫困人群是否从沿海旅游开发中获益，原文没有任何交代，因此判 NOT GIVEN。要注意不要用自己在现实中的常识去补全这一判断。",
-          "analysis": "第 6 段（F）末两句：“The reefs are also degraded by coastal and inland developments and the pollution these products, as well as by the natural impacts of storms and other natural outbreaks. However, perhaps the most significant large-scale cause of reef decline in the longer term is climate change, which threatens to damage large areas of reef worldwide.”（珊瑚礁还因沿海与内陆开发及其污染而退化，也受到风暴等自然因素的影响；然而从长远看，最重大的大规模原因是气候变化。）原文提到沿海开发（coastal and inland developments）时，说的是它给珊瑚礁带来负面影响。第 7 段（G）再进一步写到贫困者的处境：“For the poor, these changes have resulted in an increasing reliance on reefs; as larger coastal populations, widespread development, an increasing global-market forces overwhelm and degrade alternative resources such as farmland.”（对贫困者而言，这些变化使他们越来越依赖珊瑚礁；更多的沿海人口、广泛的开发以及日益增强的全球市场力量，压垮并破坏了农田等替代资源。）这里说的是开发破坏了替代资源、让穷人更依赖珊瑚礁，同样不是“使穷人受益”。全文从未评价沿海旅游开发对贫困人群的总体影响，因此答案是 NOT GIVEN。",
+          "analysis": "第 6 段（F）末两句：“The reefs are also degraded by coastal and inland developments and the pollution these produce, as well as by the natural impacts of storms and other natural outbreaks. However, perhaps the most significant large-scale cause of reef decline in the longer term is climate change, which threatens to damage large areas of reef worldwide.”（珊瑚礁还因沿海与内陆开发及其污染而退化，也受到风暴等自然因素的影响；然而从长远看，最重大的大规模原因是气候变化。）原文提到沿海开发（coastal and inland developments）时，说的是它给珊瑚礁带来负面影响。第 7 段（G）再进一步写到贫困者的处境：“For the poor, these changes have resulted in an increasing reliance on reefs; as larger coastal populations, widespread development, an increasing global-market forces overwhelm and degrade alternative resources such as farmland.”（对贫困者而言，这些变化使他们越来越依赖珊瑚礁；更多的沿海人口、广泛的开发以及日益增强的全球市场力量，压垮并破坏了农田等替代资源。）这里说的是开发破坏了替代资源、让穷人更依赖珊瑚礁，同样不是“使穷人受益”。全文从未评价沿海旅游开发对贫困人群的总体影响，因此答案是 NOT GIVEN。",
           "traps": [
             "为什么不是 TRUE：原文第 6 段只把 coastal and inland developments 列为珊瑚礁退化的原因之一，第 7 段则说开发破坏了农田等替代资源、使贫困者更加依赖珊瑚礁，都没有说他们普遍受益。",
             "为什么不是 FALSE：原文也没有明确说贫困人群没有从沿海开发中获益，只是对“受益”这一判断完全没有交代，属于信息缺失，只能判 NOT GIVEN。"

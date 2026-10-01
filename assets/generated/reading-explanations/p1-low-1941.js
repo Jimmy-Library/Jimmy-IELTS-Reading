@@ -55,15 +55,15 @@
           "wordClass": "",
           "locating": {
             "paragraph": "2",
-            "quote": "computers are able to store data about people, places and environments - the stuff of maps - and almost instantly information is displayed on the screen in the desired geographic context, and at the dick of a button, a print-out of the map appears."
+            "quote": "computers are able to store data about people, places and environments - the stuff of maps - and almost instantly information is displayed on the screen in the desired geographic context, and at the click of a button, a print-out of the map appears."
           },
           "synonyms": [
-            "题干中的 “offers an opportunity to” 同义替换为原文的 “at the dick of a button, a print-out of the map appears”，即读者只需按键就能得到地图",
+            "题干中的 “offers an opportunity to” 同义替换为原文的 “at the click of a button, a print-out of the map appears”，即读者只需按键就能得到地图",
             "选项 D 的 “create individual computer map to order” 同义替换为原文的 “information is displayed on the screen in the desired geographic context”，desired geographic context 即“按需定制的地理范围”",
             "原文的 “Across the room people sit at their computer screens, studying the latest maps” 说明读者可借助电脑屏幕自行生成并查看地图"
           ],
-          "locatingTip": "定位：题干的关键词是专有名词 Library of Congress，全文只在第二段首句出现，直接锁定第二段；再看该段对读者可用设施的描写（computer screens、print-out of the map），落在段末。确定答案技巧：本题问“图书馆提供了什么机会”，要抓住描述电脑功能的三个动作——store data（存储数据）、display 信息于屏幕上的 desired geographic context（按需要的地理范围显示）、at the dick of a button 打印出地图。三者合起来就是“读者可以按自己的需要即时生成并打印专属地图”，对应选项 D。",
-          "analysis": "第二段先介绍国会图书馆的地下室藏有世界最大的地图收藏：多达 460 万张地图与 63000 册地图集，其中包括荷兰制图黄金时代精美地图的装订集册。接着写出阅览室里的两种读者：一边是戴着薄棉手套、用放大镜查看易损古图的学者；另一边是坐在电脑屏幕前研究最新地图的读者。定位句正是后者的写照：“computers are able to store data about people, places and environments - the stuff of maps - and almost instantly information is displayed on the screen in the desired geographic context, and at the dick of a button, a print-out of the map appears.”（电脑能存储关于人、地点与环境的数据——正是地图的素材——信息几乎瞬间就以所需的地理范围显示在屏幕上，一按键，地图的打印件就出现了）。这说明读者可以按需调取并即时获得定制地图，与选项 D“按需求生成个人电脑地图”对应。",
+          "locatingTip": "定位：题干的关键词是专有名词 Library of Congress，全文只在第二段首句出现，直接锁定第二段；再看该段对读者可用设施的描写（computer screens、print-out of the map），落在段末。确定答案技巧：本题问“图书馆提供了什么机会”，要抓住描述电脑功能的三个动作——store data（存储数据）、display 信息于屏幕上的 desired geographic context（按需要的地理范围显示）、at the click of a button 打印出地图。三者合起来就是“读者可以按自己的需要即时生成并打印专属地图”，对应选项 D。",
+          "analysis": "第二段先介绍国会图书馆的地下室藏有世界最大的地图收藏：多达 460 万张地图与 63000 册地图集，其中包括荷兰制图黄金时代精美地图的装订集册。接着写出阅览室里的两种读者：一边是戴着薄棉手套、用放大镜查看易损古图的学者；另一边是坐在电脑屏幕前研究最新地图的读者。定位句正是后者的写照：“computers are able to store data about people, places and environments - the stuff of maps - and almost instantly information is displayed on the screen in the desired geographic context, and at the click of a button, a print-out of the map appears.”（电脑能存储关于人、地点与环境的数据——正是地图的素材——信息几乎瞬间就以所需的地理范围显示在屏幕上，一按键，地图的打印件就出现了）。这说明读者可以按需调取并即时获得定制地图，与选项 D“按需求生成个人电脑地图”对应。",
           "traps": [
             "为什么不选 A（borrow from their collection of Dutch maps）：原文只说馆藏包括荷兰地图的装订集册，是用来说明收藏之精美，并未提到外借，读者是戴手套在阅览室查看。",
             "为什么不选 B（learn how to restore ancient and fragile maps）：原文提到易损古图与保护手套，是用来说明古图之脆弱与阅览规范，并没有“教授修复技术”这一机会。",
@@ -203,7 +203,7 @@
         {
           "questionId": "q8",
           "questionNumber": 8,
-          "stem": "laid the foundation for our modem time zones",
+          "stem": "laid the foundation for our modern time zones",
           "translation": "为现代时区奠定了基础",
           "answer": "B",
           "wordClass": "",
@@ -213,7 +213,7 @@
           },
           "synonyms": [
             "题干中的 “laid the foundation for” 同义替换为原文的 “this is the basis for”，basis（基础）与 foundation 同义",
-            "题干中的 “our modem time zones” 同义替换为原文的 “modern time zones”，原词复现",
+            "题干中的 “our modern time zones” 同义替换为原文的 “modern time zones”，原词复现",
             "原文的 “Building on the ideas of his predecessors, the astronomer and geographer Ptolemy … spelled out a system for organizing maps according to grids of latitude and longitude”，说明这一经线间隔体系源自托勒密"
           ],
           "locatingTip": "定位：题干关键词是 time zones，全文只有第四段出现 modern time zones 这一表述；该段以托勒密为主，首句即点明是他确立了按经纬网组织地图的体系。确定答案技巧：判分句 “this is the basis for the width of modern time zones” 中的 this 回指前面的经线间隔（meridians at 15 degrees），而这一间隔体系出自托勒密所定的经纬网格方法，因此“为现代时区奠定基础”的人是 Ptolemy，故选 B。做指代题时务必先弄清 this 指什么，再回溯到该体系的提出者。",
@@ -257,7 +257,7 @@
         {
           "questionId": "q10",
           "questionNumber": 10,
-          "stem": "Work continued in this tradition until the 2nd century AD but was then abandoned for over a thousand years, during which time maps were the responsibility of 10 ________ scientists.",
+          "stem": "Work continued in this tradition until the 2nd century AD but was then abandoned for over a thousand years, during which time maps were the responsibility of 10 ________ rather than scientists.",
           "translation": "这一传统延续到公元 2 世纪，之后被弃置了一千多年；在此期间，地图由 ________ 负责制作。",
           "answer": "monks",
           "wordClass": "名词（复数，指负责制图的群体；题干中作 of 的宾语，原文为复数名词 monks，保持复数形式不加冠词）",
@@ -277,7 +277,7 @@
         {
           "questionId": "q11",
           "questionNumber": 11,
-          "stem": "Fortunately, however, the writings of 11 ________ rather than had been kept, and interest in scientific mapmaking was revived as scholars sought to produce maps, inspired by the accounts of travellers.",
+          "stem": "Fortunately, however, the writings of 11 ________ had been kept, and interest in scientific mapmaking was revived as scholars sought to produce maps, inspired by the accounts of travellers.",
           "translation": "不过幸运的是，________ 的著作得以保存下来，随着学者受旅行者记述的启发而着手绘制地图，对科学制图的兴趣得以恢复。",
           "answer": "Ptolemy",
           "wordClass": "专有名词（人名，作介词 of 的宾语；首字母大写，保持原文拼写 Ptolemy）",

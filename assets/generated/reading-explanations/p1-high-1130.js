@@ -84,7 +84,7 @@
             "“coral reef's economic significance” 对应原文对珊瑚礁渔获产值（reef fisheries were worth …）与观赏鱼价格（fish caught for aquariums were worth …）的经济学描述"
           ],
           "locatingTip": "定位：题干的关键词 statistics 指向“数字密集区”。第 4 段（C）连续出现 US$1 million per square kilometer、AU$4.3 billion、US$2 billion、US$625 million、$15,000–$150,000 per square kilometer a year、$500 a kilogram、US$5.5 million 等一连串统计数据，是全文数据最集中的一段。确定答案技巧：统计类题干优先在数字密集处确认，再用该段主题句复核——第 4 段首句 “The value of reefs in biodiverse regions can be even higher.” 正说明本段讨论的是珊瑚礁的经济价值，故选 C。",
-          "analysis": "第 4 段（C）通篇以数字支撑珊瑚礁的经济意义，例如：“In the Caribbean, says UNEP, the net annual benefits from diver tourism were US$2 billion in 2000 with US$625 million spent directly on diving on reefs.”（联合国环境规划署称，2000 年加勒比海潜水旅游的年度净收益为 20 亿美元，其中 6.25 亿美元直接花在珊瑚礁潜水活动上。）题干所问的“统计数字”在原文中还有这样一个集中体现：“The report estimates that reef fisheries were worth between $15,000 and $150,000 per square kilometer a year, while fish caught for aquariums were worth $500 a kilogram against $6 for fish caught as food. The aquarium fish export industry supports around 50,000 people and generates some US$5.5 million a year in Sri Lanka along.”（报告估计珊瑚礁渔业每平方公里年产值在 1.5 万至 15 万美元之间，而供水族箱之用的鱼每公斤值 500 美元，作为食物的鱼每公斤仅 6 美元。观赏鱼出口业养活了约 5 万人，仅在斯里兰卡每年就带来约 550 万美元收入。）这些具体到单位与年份的数字，正是题干中 statistics 与 economic significance 的落点，故选 C。注意本题与第 2 题同落第 4 段，答案表允许同一段被重复选用，作答时要分别确认各自的落点句。",
+          "analysis": "第 4 段（C）通篇以数字支撑珊瑚礁的经济意义，例如：“In the Caribbean, says UNEP, the net annual benefits from diver tourism were US$2 billion in 2000 with US$625 million spent directly on diving on reefs.”（联合国环境规划署称，2000 年加勒比海潜水旅游的年度净收益为 20 亿美元，其中 6.25 亿美元直接花在珊瑚礁潜水活动上。）题干所问的“统计数字”在原文中还有这样一个集中体现：“The report estimates that reef fisheries were worth between $15,000 and $150,000 per square kilometer a year, while fish caught for aquariums were worth $500 a kilogram against $6 for fish caught as food. The aquarium fish export industry supports around 50,000 people and generates some US$5.5 million a year in Sri Lanka alone.”（报告估计珊瑚礁渔业每平方公里年产值在 1.5 万至 15 万美元之间，而供水族箱之用的鱼每公斤值 500 美元，作为食物的鱼每公斤仅 6 美元。观赏鱼出口业养活了约 5 万人，仅在斯里兰卡每年就带来约 550 万美元收入。）这些具体到单位与年份的数字，正是题干中 statistics 与 economic significance 的落点，故选 C。注意本题与第 2 题同落第 4 段，答案表允许同一段被重复选用，作答时要分别确认各自的落点句。",
           "traps": [
             "为什么不选 B（第 3 段）：该段只给出一个全球总量数字（$US375 billion per year），并非统计数据集中的段落，主题是生态系统服务而非统计分析。",
             "为什么不选 F（第 7 段）：该段虽然有 10%、60%、80% 等比例，但讨论的是珊瑚礁死亡与濒危程度（生态威胁），属于生态统计，不是经济统计。"
@@ -260,20 +260,20 @@
         {
           "questionId": "q11",
           "questionNumber": 11,
-          "stem": "Coral reefs are greatly exchanged among and exported to other counties.",
+          "stem": "Coral reefs are greatly exchanged among and exported to other countries.",
           "translation": "珊瑚礁在各国之间大量交易并出口到他国。",
           "answer": "NOT GIVEN",
           "wordClass": "",
           "locating": {
             "paragraph": "4",
-            "quote": "The aquarium fish export industry supports around 50,000 people and generates some US$5.5 million a year in Sri Lanka along."
+            "quote": "The aquarium fish export industry supports around 50,000 people and generates some US$5.5 million a year in Sri Lanka alone."
           },
           "synonyms": [
             "“exported” 对应原文的 “export industry” 一词，但出口的对象是 aquarium fish（水族观赏鱼），不是珊瑚礁本身",
-            "“greatly exchanged among and exported to other counties” 中“珊瑚礁在国家间被交易”这一层意思在原文完全没有对应，原文也没有出现 corals 被买卖的任何表述"
+            "“greatly exchanged among and exported to other countries” 中“珊瑚礁在国家间被交易”这一层意思在原文完全没有对应，原文也没有出现 corals 被买卖的任何表述"
           ],
-          "locatingTip": "定位：题干的关键词是 exported，全文只有第 4 段（C）末尾出现 export 一词：“The aquarium fish export industry supports around 50,000 people and generates some US$5.5 million a year in Sri Lanka along.”，据此定位。确定答案技巧：找到该句后要辨清出口的对象——原文出口的是 aquarium fish（水族观赏鱼），是珊瑚礁水域的生物，不是珊瑚礁本身；关于珊瑚礁是否被跨国交易、出口，原文全篇没有任何交代，因此判 NOT GIVEN，不要因为看到 export 就草率判 TRUE。",
-          "analysis": "第 4 段（C）末尾：“The report estimates that reef fisheries were worth between $15,000 and $150,000 per square kilometer a year, while fish caught for aquariums were worth $500 a kilogram against $6 for fish caught as food. The aquarium fish export industry supports around 50,000 people and generates some US$5.5 million a year in Sri Lanka along.”（报告估计珊瑚礁渔业每平方公里年产值在 1.5 万至 15 万美元之间，而供水族箱之用的鱼每公斤值 500 美元，作为食物的鱼每公斤仅 6 美元。观赏鱼出口业养活了约 5 万人，仅在斯里兰卡每年就带来约 550 万美元收入。）原文确实提到出口（export），但出口的是 aquarium fish，属于珊瑚礁生态系统的产出物；题干说的是 Coral reefs are greatly exchanged among and exported（珊瑚礁本身在各国间被大量交易并出口），主体被偷换了，而原文对此全无交代。相关信息（如 “As well as an immediate resource, these can also act as a medium of exchange” 出自第 3 段）指的是 reef resources 可作为交换媒介，也不是“珊瑚礁在各国间交易出口”。因此答案是 NOT GIVEN。",
+          "locatingTip": "定位：题干的关键词是 exported，全文只有第 4 段（C）末尾出现 export 一词：“The aquarium fish export industry supports around 50,000 people and generates some US$5.5 million a year in Sri Lanka alone.”，据此定位。确定答案技巧：找到该句后要辨清出口的对象——原文出口的是 aquarium fish（水族观赏鱼），是珊瑚礁水域的生物，不是珊瑚礁本身；关于珊瑚礁是否被跨国交易、出口，原文全篇没有任何交代，因此判 NOT GIVEN，不要因为看到 export 就草率判 TRUE。",
+          "analysis": "第 4 段（C）末尾：“The report estimates that reef fisheries were worth between $15,000 and $150,000 per square kilometer a year, while fish caught for aquariums were worth $500 a kilogram against $6 for fish caught as food. The aquarium fish export industry supports around 50,000 people and generates some US$5.5 million a year in Sri Lanka alone.”（报告估计珊瑚礁渔业每平方公里年产值在 1.5 万至 15 万美元之间，而供水族箱之用的鱼每公斤值 500 美元，作为食物的鱼每公斤仅 6 美元。观赏鱼出口业养活了约 5 万人，仅在斯里兰卡每年就带来约 550 万美元收入。）原文确实提到出口（export），但出口的是 aquarium fish，属于珊瑚礁生态系统的产出物；题干说的是 Coral reefs are greatly exchanged among and exported（珊瑚礁本身在各国间被大量交易并出口），主体被偷换了，而原文对此全无交代。相关信息（如 “As well as an immediate resource, these can also act as a medium of exchange” 出自第 3 段）指的是 reef resources 可作为交换媒介，也不是“珊瑚礁在各国间交易出口”。因此答案是 NOT GIVEN。",
           "traps": [
             "为什么不是 TRUE：原文提到的出口对象是 aquarium fish（观赏鱼），不是珊瑚礁；题干把出口主体换成了珊瑚礁本身，且宣称“大量交易”，这些在原文都没有依据。",
             "为什么不是 FALSE：原文从未出现“珊瑚礁不被交易或不出口”这类否定表述，只是完全没有涉及该话题，因此不能判 FALSE，只能判 NOT GIVEN。"

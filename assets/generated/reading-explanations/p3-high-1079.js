@@ -25,7 +25,7 @@
         {
           "questionId": "q27",
           "questionNumber": 27,
-          "stem": "The reviewer first notes the book's physical 27 ________ and questions its target audience.",
+          "stem": "The reviewer first notes that the book is a physical 27 ________ and questions its target audience.",
           "translation": "评论者首先指出了这本书的物理 27 ________，并质疑它的目标读者。",
           "answer": "hefty tome",
           "wordClass": "名词短语（两个词，hefty 为形容词修饰名词 tome，整体作介词或表语成分，指厚重的大部头）",

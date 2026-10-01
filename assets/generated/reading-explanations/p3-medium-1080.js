@@ -237,7 +237,7 @@
         {
           "questionId": "q10",
           "questionNumber": 36,
-          "stem": "Sacks believes technological methods is of little importance compared with traditional observation when studying his patients.",
+          "stem": "Sacks believes technological methods are of little importance compared with traditional observation when studying his patients.",
           "translation": "萨克斯认为在研究病人时，技术手段与传统观察相比并不重要。",
           "answer": "NO",
           "wordClass": "",
@@ -246,7 +246,7 @@
             "quote": "He does call for both approaches, though, and we can only hope that the neurological community will respond."
           },
           "synonyms": [
-            "「believes technological methods is of little importance」与原文的「He does call for both approaches」直接冲突：他呼吁两种方法并用，而非贬低技术",
+            "「believes technological methods are of little importance」与原文的「He does call for both approaches」直接冲突：他呼吁两种方法并用，而非贬低技术",
             "「both approaches」指前文的「the simple art of observation」与「new technologies」两条路径，说明技术与观察同等重要"
           ],
           "locatingTip": "定位：题干涉及萨克斯对「技术方法与传统观察」的态度，散见于第 3 段（心倾向于观察）与第 10 段（呼吁两种方法），最明确的定性句是第 10 段的「He does call for both approaches」。确定答案技巧：作者说萨克斯「does call for both approaches」（确实呼吁两条路径并用），既然并用，就不能说他认为技术「of little importance」，题干表述与原文相悖，故选 NO。",

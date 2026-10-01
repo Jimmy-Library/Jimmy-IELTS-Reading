@@ -78,14 +78,14 @@
           "wordClass": "",
           "locating": {
             "paragraph": "3",
-            "quote": "Many of us believe adventure stories are exciting, offers engaging characters, action, and mystery but ultimately can't teach moral principles."
+            "quote": "Many of us believe adventure stories are exciting, offer engaging characters, action, and mystery but ultimately can't teach moral principles."
           },
           "synonyms": [
             "「cannot be used by writers to show moral values」同义替换为原文的「can't teach moral principles」，moral values 对应 moral principles",
             "「do not provide ... moral meaning」对应原文下句的「rarely offer a deeper moral meaning」"
           ],
           "locatingTip": "定位：题干关键词 adventure stories 是第 3 段的论述中心，段首即点明史蒂文森主要写冒险故事。确定答案技巧：作者对冒险故事的评价集中在「but ultimately can't teach moral principles」这一转折之后，转折词 but 之后往往是作者真正的态度，据此锁定选项 B。",
-          "analysis": "第 3 段解释史蒂文森受批评的原因在于其写作类型：「Stevenson mainly wrote adventure stories」，并代人发声评价这类作品：「Many of us believe adventure stories are exciting, offers engaging characters, action, and mystery but ultimately can't teach moral principles.」（我们许多人认为冒险故事令人兴奋，有吸引人的角色、动作和悬念，但最终无法传达道德准则），紧接着又说「The plot points are one-dimensional and rarely offer a deeper moral meaning」（情节单一，很少提供更深的道德含义）。可见作者笔下的冒险故事在道德教化上是缺位的，与选项 B「cannot be used by writers to show moral values」一致，故答案为 B。",
+          "analysis": "第 3 段解释史蒂文森受批评的原因在于其写作类型：「Stevenson mainly wrote adventure stories」，并代人发声评价这类作品：「Many of us believe adventure stories are exciting, offer engaging characters, action, and mystery but ultimately can't teach moral principles.」（我们许多人认为冒险故事令人兴奋，有吸引人的角色、动作和悬念，但最终无法传达道德准则），紧接着又说「The plot points are one-dimensional and rarely offer a deeper moral meaning」（情节单一，很少提供更深的道德含义）。可见作者笔下的冒险故事在道德教化上是缺位的，与选项 B「cannot be used by writers to show moral values」一致，故答案为 B。",
           "traps": [
             "为什么不是 A：原文恰恰说冒险故事「focusing on exciting and shocking plot twists and thrilling events」（专注于令人兴奋和震惊的情节转折），说明它很擅长制造情节反转，A 说它「不能很好地提供情节反转」与原文相反。",
             "为什么不是 C：原文称冒险故事是当时「a popular and entertaining writing fad」（流行而具娱乐性的写作风尚），这是对当时风气的描述，并未说它是一种「更时尚的艺术形式」，C 属无据比较。",
