@@ -164,7 +164,7 @@
       ]
     },
     {
-      "sectionTitle": "Questions 7–10 句子填空（NO MORE THAN TWO WORDS）",
+      "sectionTitle": "Questions 7–10 句子填空（ONE WORD ONLY）",
       "mode": "per_question",
       "questionRange": {
         "start": 7,
@@ -187,8 +187,8 @@
             "“physical examinations, dental checks” 与原文同名同序复现，可据此确认原句位置",
             "题干省略了原文并列项 “lung function tests”，并用 “7 ________ scans” 留空，对应原文的 “brain scans”"
           ],
-          "locatingTip": "定位：题干保留了 physical examinations 与 dental checks 这两个并列名词短语，直接回第 3 段第三句比对即可，几乎可以“照抄式”定位。确定答案技巧：本题是并列结构的填空，题干与原文的并列项顺序一致（体检、牙科检查、[7]、扫描），只需在原文并列项中找到被省掉的那一项。原文四项依次为 physical examinations、dental checks、lung function tests、brain scans，题干在第三项位置留空并紧跟 scans，说明空里要填的是修饰 scans 的词，即 brain。词数上 brain 是一个词，符合 NO MORE THAN TWO WORDS。",
-          "analysis": "第 3 段第三句：“Participants have undergone physical examinations, dental checks, lung function tests, and brain scans.”（参与者接受了体检、牙科检查、肺功能测试和脑部扫描）。题干把四个并列项改写为三个，并删去 lung function tests，在 scans 前留空。由于 scans 在原句中是 brain scans 的中心词，空格需要填其定语，答案只能是 brain。若填 lung function 会与题干已给的 scans 冲突（原文是 lung function tests，不是 lung function scans），因此不能误填。词性上，brain 在此为名词作前置定语，keep 单数原形，不写 brains。核对词数：brain 一个词，满足 NO MORE THAN TWO WORDS 的限制。",
+          "locatingTip": "定位：题干保留了 physical examinations 与 dental checks 这两个并列名词短语，直接回第 3 段第三句比对即可，几乎可以“照抄式”定位。确定答案技巧：本题是并列结构的填空，题干与原文的并列项顺序一致（体检、牙科检查、[7]、扫描），只需在原文并列项中找到被省掉的那一项。原文四项依次为 physical examinations、dental checks、lung function tests、brain scans，题干在第三项位置留空并紧跟 scans，说明空里要填的是修饰 scans 的词，即 brain。词数上 brain 是一个词，符合 ONE WORD ONLY。",
+          "analysis": "第 3 段第三句：“Participants have undergone physical examinations, dental checks, lung function tests, and brain scans.”（参与者接受了体检、牙科检查、肺功能测试和脑部扫描）。题干把四个并列项改写为三个，并删去 lung function tests，在 scans 前留空。由于 scans 在原句中是 brain scans 的中心词，空格需要填其定语，答案只能是 brain。若填 lung function 会与题干已给的 scans 冲突（原文是 lung function tests，不是 lung function scans），因此不能误填。词性上，brain 在此为名词作前置定语，keep 单数原形，不写 brains。核对词数：brain 一个词，满足 ONE WORD ONLY 的限制。",
           "traps": []
         },
         {
@@ -208,7 +208,7 @@
             "“as adults” 与原文 “as adults” 完全一致"
           ],
           "locatingTip": "定位：题干保留了 low … at age three 与 as adults 这两个固定搭配，回第 4 段找 “children with low … at age three” 即可一步到位。确定答案技巧：这是“名词被形容词修饰并留空”的典型考法。原文句式为 children with low self-control at age three，空格恰好位于 low 与 at 之间，说明所需的是被 low 修饰的名词；把原文的 self-control 直接填入即可。注意 self-control 是带连字符的复合名词，按原文写法保留连字符，不要写成 self control 或 selfcontrol。",
-          "analysis": "第 4 段第二句：“Researchers found that children with low self-control at age three were more likely to experience health problems, financial difficulties, and criminal behaviour as adults.”（研究者发现，三岁时自控力低的儿童成年后更容易出现健康问题、经济困难和犯罪行为）。题干把原文的列举 collapse 成 have problems，并把 self-control 挖空，其余部分几乎保留原句——children with low、at age three、were more likely to、as adults 全部照搬。因此空格答案就是被 low 修饰的名词 self-control。词性上是不可数抽象名词，不能加复数。词数为一个（连字符算一个词），符合 NO MORE THAN TWO WORDS。",
+          "analysis": "第 4 段第二句：“Researchers found that children with low self-control at age three were more likely to experience health problems, financial difficulties, and criminal behaviour as adults.”（研究者发现，三岁时自控力低的儿童成年后更容易出现健康问题、经济困难和犯罪行为）。题干把原文的列举 collapse 成 have problems，并把 self-control 挖空，其余部分几乎保留原句——children with low、at age three、were more likely to、as adults 全部照搬。因此空格答案就是被 low 修饰的名词 self-control。词性上是不可数抽象名词，不能加复数。词数为一个（连字符算一个词），符合 ONE WORD ONLY。",
           "traps": []
         },
         {
@@ -248,7 +248,7 @@
             "“now” 对应原文的 “also”，都表示研究在新阶段新增的方向"
           ],
           "locatingTip": "定位：题干保留了 of the original participants 这一固定搭配，回到第 8 段搜索该短语，句中生成为 the children of the original participants。确定答案技巧：空格位于 the 与 of 之间，属于“中心名词加 of 属格”的结构，所需是一个复数名词；原文对应位置正是 children。注意不要填 generation（原文的 third generation 说的是数据的代次，不是参与者的子女）或 data，这两者虽在同句出现，但与 of the original participants 的语义搭配不成立。",
-          "analysis": "第 8 段末句：“They are also beginning to study the children of the original participants, creating a third generation of data that will allow even deeper insights into how traits and conditions are passed down through families.”（他们也开始研究原参与者的子女，从而产生第三代数据，使人们能更深入地了解特征与状况如何在家族中传递）。题干保留了 beginning to study 与 of the original participants，把中间的名词挖空。从语义看，能同时满足“属于原参与者”且“可以作为研究对象”的，只有 children；从语法看，空格前有 the、后有 of the original participants，需要名词复数，children 正好是 child 的不规则复数。后半句的 passed down through families（在家族中传递）也反向印证研究对象是下一代。答案为 children，一词，符合 NO MORE THAN TWO WORDS。",
+          "analysis": "第 8 段末句：“They are also beginning to study the children of the original participants, creating a third generation of data that will allow even deeper insights into how traits and conditions are passed down through families.”（他们也开始研究原参与者的子女，从而产生第三代数据，使人们能更深入地了解特征与状况如何在家族中传递）。题干保留了 beginning to study 与 of the original participants，把中间的名词挖空。从语义看，能同时满足“属于原参与者”且“可以作为研究对象”的，只有 children；从语法看，空格前有 the、后有 of the original participants，需要名词复数，children 正好是 child 的不规则复数。后半句的 passed down through families（在家族中传递）也反向印证研究对象是下一代。答案为 children，一词，符合 ONE WORD ONLY。",
           "traps": []
         }
       ]
