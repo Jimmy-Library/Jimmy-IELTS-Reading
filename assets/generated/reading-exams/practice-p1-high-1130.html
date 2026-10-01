@@ -1,0 +1,1792 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IELTS 阅读练习</title>
+    <link rel="stylesheet" href="../../../css/vocabulary-notebook.css">
+    <link rel="stylesheet" href="../../../css/vocabulary-notebook-v2.css">
+    <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <script>
+        window.__READING_ORIGINAL_UI__ = true;
+        document.documentElement.removeAttribute('data-image-skin');
+        document.documentElement.removeAttribute('data-theme');
+    </script>
+    <style>
+        #image-skin-panel,
+        #season-theme-panel,
+        #skin-cursor-halo,
+        #skin-cursor-dot,
+        #skin-atmosphere-layer,
+        #season-weather-canvas,
+        #skin-atmosphere-canvas {
+            display: none !important;
+        }
+        :root {
+            --line: #d7dde5;
+            --panel: #ffffff;
+            --panel-alt: #edf2f9;
+            --text: #1f2937;
+            --muted: #64748b;
+            --accent: #2563eb;
+            --success: #15803d;
+            --danger: #b91c1c;
+            --shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+            --practice-header-height: 67px;
+            --practice-nav-height: 72px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            font-size: 16px;
+        }
+
+        body {
+            font-family: "SF Pro Text", "PingFang SC", "Noto Sans SC", system-ui, sans-serif;
+            background: linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
+            color: var(--text);
+            height: 100vh;
+            overflow: hidden;
+            padding-bottom: var(--practice-nav-height);
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 14px 22px;
+            background: rgba(255, 255, 255, 0.94);
+            border-bottom: 1px solid var(--line);
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+        }
+
+        .header h1 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            line-height: 1.4;
+        }
+
+        .header p {
+            font-size: 0.92rem;
+            color: var(--muted);
+        }
+
+        .header-content {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            min-width: 0;
+        }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        #timer,
+        .header-btn {
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: var(--panel);
+            padding: 8px 12px;
+            font-size: 0.92rem;
+            color: var(--text);
+        }
+
+        .header-btn {
+            cursor: pointer;
+        }
+
+        .shell {
+            display: flex;
+            height: calc(100vh - var(--practice-header-height) - var(--practice-nav-height));
+            min-height: 0;
+            width: 100%;
+        }
+
+        .pane {
+            overflow: auto;
+            background: var(--panel);
+            padding: 22px;
+        }
+
+        #left {
+            width: 50%;
+            min-width: 320px;
+        }
+
+        #divider {
+            flex: 0 0 8px;
+            background: linear-gradient(180deg, #e2e8f0 0%, #cbd5e1 100%);
+            border-left: 1px solid var(--line);
+            border-right: 1px solid var(--line);
+            cursor: ew-resize;
+        }
+
+        #right {
+            flex: 1;
+            min-width: 320px;
+            background: var(--panel-alt);
+            padding: 16px 20px;
+        }
+
+        #left p,
+        #right p {
+            line-height: 1.7;
+            margin: 0 0 14px;
+        }
+
+        .unified-group {
+            margin-bottom: 18px;
+        }
+
+        .group {
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            padding: 24px 32px;
+            margin-bottom: 24px;
+        }
+
+        .question-item,
+        .match-question-item,
+        .choice-item {
+            margin-bottom: 12px;
+        }
+
+        .paragraph-dropzone,
+        .match-dropzone {
+            min-height: 40px;
+            border: 2px dashed #93c5fd;
+            border-radius: 10px;
+            background: #eff6ff;
+            padding: 8px 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+        }
+
+        .paragraph-dropzone.drag-over,
+        .match-dropzone.drag-over {
+            border-color: var(--accent);
+            background: #dbeafe;
+        }
+
+        .paragraph-dropzone.dropzone-filled,
+        .match-dropzone.dropzone-filled {
+            border-style: solid;
+        }
+
+        .paragraph-label {
+            font-size: 0.9rem;
+            color: var(--muted);
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .pool-items,
+        .dropped-items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            flex: 1;
+        }
+
+        .pool-items {
+            min-height: 40px;
+        }
+
+        .pool-items.drag-over {
+            border-color: var(--accent);
+            background: rgba(37, 99, 235, 0.08);
+        }
+
+        .dropped-items:empty::after {
+            content: "拖到这里";
+            font-size: 0.82rem;
+            color: #7b8a98;
+            letter-spacing: 0.02em;
+        }
+
+        .drag-item {
+            border: 1px solid #bfdbfe;
+            border-radius: 8px;
+            background: #eff6ff;
+            padding: 6px 10px;
+            cursor: grab;
+            font-size: 0.9rem;
+            user-select: none;
+        }
+
+        .drag-item.dragging {
+            opacity: 0.55;
+        }
+
+        .drag-item--assigned {
+            border-style: solid;
+        }
+
+        .drag-item[draggable="false"] {
+            cursor: pointer;
+            border-style: solid;
+        }
+
+        .practice-nav {
+            position: fixed;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 12px 18px;
+            background: rgba(255, 255, 255, 0.96);
+            border-top: 1px solid var(--line);
+            box-shadow: 0 -8px 24px rgba(15, 23, 42, 0.06);
+            z-index: 2000;
+        }
+
+        .practice-nav .title {
+            font-weight: 700;
+            color: var(--muted);
+            white-space: nowrap;
+        }
+
+        .practice-nav .questions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .q-item,
+        .practice-nav .controls button {
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: var(--panel);
+            padding: 6px 12px;
+            font-size: 0.9rem;
+            color: var(--text);
+            cursor: pointer;
+        }
+
+        .q-item:hover,
+        .practice-nav .controls button:hover {
+            background: #f1f5f9;
+        }
+
+        .q-item.active {
+            border-color: var(--accent);
+            background: #eff6ff;
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        .q-item.answered {
+            background: #dbeafe;
+            border-color: #93c5fd;
+        }
+
+        .q-item.correct {
+            border-color: var(--success);
+            background: #dcfce7;
+            color: var(--success);
+        }
+
+        .q-item.incorrect {
+            border-color: var(--danger);
+            background: #fee2e2;
+            color: var(--danger);
+        }
+
+        /* ---- 套题模式：一次展示全部小节题目（约 40 题）+ 跨篇跳转 ---- */
+        .practice-nav .questions.question-nav--suite {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: flex-start;
+            gap: 6px 16px;
+            flex: 1 1 auto;
+            max-height: 140px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+
+        .q-passage {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .q-passage__label {
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: var(--muted);
+            background: rgba(148, 163, 184, 0.16);
+            border: none;
+            border-radius: 6px;
+            padding: 3px 7px;
+            white-space: nowrap;
+            line-height: 1.4;
+        }
+
+        .q-passage__label--btn {
+            cursor: pointer;
+            transition: background 0.15s ease, color 0.15s ease;
+        }
+
+        .q-passage__label--btn:hover {
+            background: rgba(37, 99, 235, 0.18);
+            color: var(--accent);
+        }
+
+        .q-passage.is-current .q-passage__label {
+            background: rgba(37, 99, 235, 0.16);
+            color: var(--accent);
+        }
+
+        .q-passage__items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+
+        .question-nav--suite .q-item {
+            padding: 3px 8px;
+            font-size: 0.8rem;
+            min-width: 30px;
+            text-align: center;
+        }
+
+        .question-nav--suite .q-passage:not(.is-current) .q-item {
+            opacity: 0.8;
+        }
+
+        .practice-nav .controls {
+            margin-left: auto;
+            display: flex;
+            gap: 8px;
+        }
+
+        /* ---- 导出 PDF：整页打印（文章 + 题目 + 作答 + 高亮 + 详情）---- */
+        /* 套题合并打印：屏幕上不显示，仅打印时启用 */
+        #suite-print-root {
+            display: none;
+        }
+
+        .pdf-inline-note-comment {
+            display: none;
+        }
+
+        body.suite-printing .pdf-inline-note-comment {
+            display: inline;
+            margin-left: 3px;
+            color: #9a3412;
+            font-size: 0.88em;
+            font-weight: 700;
+            font-style: italic;
+        }
+
+        @media print {
+            html, body {
+                background: #fff !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+                height: auto !important;
+                overflow: visible !important;
+                padding-bottom: 0 !important;
+            }
+
+            /* 套题导出：只打印三篇合并内容，隐藏只渲染单篇的实时页面 */
+            body.suite-printing .shell,
+            body.suite-printing .header,
+            body.suite-printing #results,
+            body.suite-printing #question-nav {
+                display: none !important;
+            }
+
+            body.suite-printing #suite-print-root {
+                display: block !important;
+            }
+
+            .pdf-inline-highlight {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            .pdf-inline-note-comment {
+                display: inline !important;
+                margin-left: 3px;
+                color: #9a3412 !important;
+                font-size: 9pt;
+                font-weight: 700;
+                font-style: italic;
+                white-space: normal;
+            }
+
+            #suite-print-root .suite-print__head h1 {
+                font-size: 18pt;
+                margin: 0 0 4px;
+            }
+
+            #suite-print-root .suite-print__head p {
+                margin: 0 0 16px;
+                font-weight: 700;
+            }
+
+            #suite-print-root .suite-print__passage {
+                page-break-before: always;
+                break-before: page;
+            }
+
+            #suite-print-root .suite-print__passage:first-of-type {
+                page-break-before: auto;
+                break-before: auto;
+            }
+
+            #suite-print-root .suite-print__title {
+                font-size: 14pt;
+                margin: 0 0 10px;
+                padding-bottom: 6px;
+                border-bottom: 2px solid #1f7a4d;
+            }
+
+            #suite-print-root .suite-print__tag {
+                display: inline-block;
+                margin-right: 8px;
+                padding: 1px 8px;
+                border-radius: 4px;
+                background: #1f7a4d;
+                color: #fff;
+                font-size: 11pt;
+            }
+
+            #suite-print-root .suite-print__score {
+                float: right;
+                font-size: 12pt;
+                color: #1f7a4d;
+            }
+
+            #suite-print-root .suite-print__article {
+                margin-bottom: 14px;
+                line-height: 1.7;
+            }
+
+            #suite-print-root .suite-print__answers {
+                width: 100%;
+                border-collapse: collapse;
+                page-break-inside: avoid;
+                break-inside: avoid;
+            }
+
+            #suite-print-root .suite-print__answers th,
+            #suite-print-root .suite-print__answers td {
+                border: 1px solid #cfd8dc;
+                padding: 5px 8px;
+                text-align: center;
+                font-size: 10pt;
+            }
+
+            /* 完整题目区（与单篇导出一致：文章后接全部题目） */
+            #suite-print-root .suite-print__questions {
+                margin: 6px 0 16px;
+                line-height: 1.6;
+                font-size: 10.5pt;
+            }
+
+            #suite-print-root .suite-print__questions .unified-group,
+            #suite-print-root .suite-print__questions .group {
+                margin: 0 0 14px;
+                break-inside: avoid;
+                page-break-inside: avoid;
+            }
+
+            #suite-print-root .suite-print__questions input[type="text"],
+            #suite-print-root .suite-print__questions .blank {
+                border: none;
+                border-bottom: 1px solid #555;
+                min-width: 90px;
+                background: transparent;
+            }
+
+            #suite-print-root .suite-print__answerkey {
+                margin-top: 12px;
+                break-inside: avoid;
+                page-break-inside: avoid;
+            }
+
+            #suite-print-root .suite-print__ak-title {
+                font-size: 12pt;
+                margin: 0 0 6px;
+                color: #1f7a4d;
+            }
+
+            /* 隐藏交互/悬浮元素（保留 header-controls 中的 timer 作为做题用时） */
+            #settings-panel,
+            #notes-panel,
+            .overlay,
+            #divider,
+            #selbar,
+            .practice-nav,
+            .header-controls .header-btn {
+                display: none !important;
+            }
+
+            /* 单篇导出 PDF：打印做题用时 */
+            #timer::before {
+                content: "做题用时：";
+                font-weight: 700;
+                color: #1f7a4d;
+            }
+
+            .header {
+                position: static !important;
+                box-shadow: none !important;
+            }
+
+            /* 双栏展开为整页单列，完整显示全部内容 */
+            .shell {
+                display: block !important;
+                height: auto !important;
+                overflow: visible !important;
+                padding: 0 !important;
+            }
+
+            #left,
+            #right {
+                width: 100% !important;
+                min-width: 0 !important;
+                max-width: none !important;
+                height: auto !important;
+                max-height: none !important;
+                overflow: visible !important;
+                display: block !important;
+                padding: 0 !important;
+            }
+
+            #right {
+                margin-top: 18px;
+            }
+
+            /* 练习记录详情（结果区）始终展开 */
+            #results {
+                display: block !important;
+            }
+
+            .unified-group,
+            .group,
+            #results {
+                break-inside: avoid;
+                page-break-inside: avoid;
+            }
+
+            /* 保留高亮底色 */
+            .hl {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+        }
+
+        .submit-btn {
+            background: var(--accent) !important;
+            color: white !important;
+            border-color: var(--accent) !important;
+            font-weight: 600;
+        }
+
+        #results {
+            display: none;
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            padding: 18px;
+            margin-top: 18px;
+        }
+
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 12px;
+            font-size: 0.92rem;
+        }
+
+        .results-table th,
+        .results-table td {
+            border: 1px solid var(--line);
+            padding: 8px 10px;
+            text-align: center;
+        }
+
+        .result-correct {
+            color: var(--success);
+            font-weight: 700;
+        }
+
+        .result-incorrect {
+            color: var(--danger);
+            font-weight: 700;
+        }
+
+        /* 套题结果：三篇分节呈现 */
+        .suite-result-section__time {
+            font-size: 0.82rem;
+            color: #64748b;
+            margin-right: 8px;
+            white-space: nowrap;
+        }
+        .suite-result-duration {
+            margin: 4px 0 14px;
+            font-size: 0.86rem;
+            color: #475569;
+        }
+        #timer[data-timer-overtime="1"] {
+            color: #b91c1c;
+            font-weight: 700;
+        }
+        .suite-result-total {
+            font-size: 1.02rem;
+            font-weight: 700;
+            margin: 6px 0 4px;
+        }
+
+        .suite-result-band {
+            display: inline-block;
+            margin-left: 8px;
+            padding: 2px 10px;
+            border-radius: 999px;
+            background: var(--success);
+            color: #fff;
+            font-size: 0.86rem;
+        }
+
+        .suite-result-section {
+            margin-top: 16px;
+            padding-top: 12px;
+            border-top: 1px solid var(--line);
+        }
+
+        .suite-result-section__head {
+            display: flex;
+            align-items: baseline;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .suite-result-section__tag {
+            flex: 0 0 auto;
+            font-weight: 700;
+            font-size: 0.78rem;
+            padding: 2px 8px;
+            border-radius: 4px;
+            background: rgba(37, 99, 235, 0.12);
+            color: #1d4ed8;
+        }
+
+        .suite-result-section__title {
+            flex: 1 1 auto;
+            min-width: 0;
+            font-size: 0.92rem;
+            opacity: 0.85;
+        }
+
+        .suite-result-section__score {
+            flex: 0 0 auto;
+            font-weight: 700;
+            color: var(--success);
+            white-space: nowrap;
+        }
+
+        /* 提交后展示的微信 / 二维码联系卡片 */
+        .contact-card {
+            margin-top: 20px;
+            padding: 18px 16px;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            text-align: center;
+            background: var(--panel-alt, #f8fafc);
+        }
+
+        .contact-card .contact-title {
+            margin: 0 0 12px;
+            font-size: 0.98rem;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .contact-card .contact-qr {
+            display: block;
+            width: 200px;
+            max-width: 70%;
+            height: auto;
+            margin: 0 auto 12px;
+            border-radius: 8px;
+        }
+
+        .contact-card .contact-wechat {
+            margin: 6px 0 4px;
+            font-size: 0.95rem;
+            color: var(--text);
+        }
+
+        .contact-card .wechat-id-copy {
+            display: inline-block;
+            padding: 4px 12px;
+            margin-left: 4px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #fff;
+            background: #07c160;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: inherit;
+            transition: background 0.15s ease;
+        }
+
+        .contact-card .wechat-id-copy:hover {
+            background: #06ad56;
+        }
+
+        .contact-card .wechat-id-copy.copied {
+            background: #0369d9;
+        }
+
+        .contact-card .contact-hint {
+            margin: 2px 0 0;
+            font-size: 0.8rem;
+            color: var(--muted, #94a3b8);
+        }
+
+        body.dark-mode .contact-card {
+            background: var(--panel-alt, #0f172a);
+        }
+
+        .overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.12);
+            z-index: 800;
+        }
+
+        #settings-panel,
+        #notes-panel,
+        #selbar {
+            display: none;
+        }
+
+        @media (max-width: 980px) {
+            body {
+                overflow: auto;
+                padding-bottom: calc(var(--practice-nav-height) + 16px);
+            }
+
+            .shell {
+                display: block;
+                height: auto;
+            }
+
+            #left,
+            #right {
+                width: 100%;
+                min-width: 0;
+            }
+
+            #divider {
+                display: none;
+            }
+
+            .practice-nav {
+                flex-wrap: wrap;
+                align-items: flex-start;
+            }
+
+            .practice-nav .controls {
+                margin-left: 0;
+                width: 100%;
+                justify-content: flex-end;
+            }
+        }
+
+        /* ---------------- Phase 2 Aesthetics ---------------- */
+        #timer {
+            cursor: pointer;
+            transition: opacity 0.2s ease, background 0.2s ease;
+        }
+
+        #timer:hover {
+            opacity: 0.85;
+        }
+
+        #timer.paused {
+            opacity: 0.5;
+        }
+
+        #settings-btn {
+            font-size: 1.1rem;
+            padding: 6px 12px;
+            font-weight: 700;
+        }
+
+        /* ---------------- IELTS Aesthetic Tweaks ---------------- */
+        /* Flattening corners */
+        .group,
+        .unified-group,
+        #results {
+            border-radius: 4px;
+        }
+
+        .paragraph-dropzone,
+        .match-dropzone {
+            border-radius: 4px;
+        }
+
+        .drag-item {
+            border-radius: 4px;
+        }
+
+        #timer,
+        .header-btn,
+        .q-item,
+        .practice-nav .controls button {
+            border-radius: 4px;
+        }
+
+        /* Font size utility classes */
+        html.font-normal {
+            font-size: 16px;
+        }
+
+        html.font-large {
+            font-size: 18px;
+        }
+
+        html.font-xlarge {
+            font-size: 20px;
+        }
+
+        /* Highlight visual */
+        .hl {
+            background-color: #72361c;
+            color: #fff;
+        }
+
+        /* Note highlight */
+        .hl[data-hl-type="note"] {
+            background-color: #0369d9;
+            color: #fff;
+            cursor: pointer;
+        }
+
+        .hl[data-hl-type="note"].note-anchor-active {
+            background-color: #0ea5e9;
+            box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.35);
+        }
+
+        /* Pink highlight (second highlight pass) */
+        .hl[data-hl-type="pink"] {
+            background-color: #ec4899;
+            color: #fff;
+        }
+
+        /* 回顾只读模式：隐藏选区工具条的高亮/删除按钮（仅保留 Note 查看） */
+        body.review-readonly-mode #btnHL,
+        body.review-readonly-mode #btnUH {
+            display: none;
+        }
+
+        /* 回顾只读模式：计时器不可点击 */
+        body.review-readonly-mode #timer {
+            cursor: default;
+        }
+
+        /* Dark Mode variables */
+        body.dark-mode {
+            --panel: #1e293b;
+            --panel-alt: #0f172a;
+            --text: #f8fafc;
+            --line: #334155;
+            background: #020617;
+        }
+
+        body.dark-mode .header {
+            background: rgba(30, 41, 59, 0.94);
+            border-bottom: 1px solid var(--line);
+        }
+
+        body.dark-mode .group,
+        body.dark-mode .unified-group {
+            background: var(--panel);
+        }
+
+        body.dark-mode .hl {
+            background-color: #72361c;
+            color: #fff;
+        }
+
+        body.dark-mode .hl[data-hl-type="note"] {
+            background-color: #0369d9;
+            color: #fff;
+        }
+
+        body.dark-mode .hl[data-hl-type="pink"] {
+            background-color: #ec4899;
+            color: #fff;
+        }
+
+        body.dark-mode .paragraph-dropzone,
+        body.dark-mode .match-dropzone {
+            background: #1e293b;
+            border-color: #475569;
+        }
+
+        body.dark-mode .drag-item {
+            background: #334155;
+            border-color: #64748b;
+            color: #f8fafc;
+        }
+
+        body.dark-mode #timer,
+        body.dark-mode .header-btn {
+            background: var(--panel);
+            color: #f8fafc;
+        }
+
+        /* Phase 3 Nav Dark Mode */
+        body.dark-mode .practice-nav {
+            background: var(--panel);
+            border-color: var(--line);
+        }
+
+        body.dark-mode .q-item,
+        body.dark-mode .practice-nav .controls button {
+            background: var(--panel-alt);
+            color: #f8fafc;
+            border-color: var(--line);
+        }
+
+        body.dark-mode .q-item:hover,
+        body.dark-mode .practice-nav .controls button:hover {
+            background: #334155;
+        }
+
+        body.dark-mode .q-item.active {
+            border-color: var(--accent);
+            background: #1e40af;
+            color: white;
+        }
+
+        body.dark-mode .q-item.answered {
+            background: #1e3a8a;
+            border-color: #3b82f6;
+            color: #ffffff;
+        }
+
+        body.dark-mode .q-item.correct {
+            background: #064e3b;
+            border-color: var(--success);
+            color: #dcfce7;
+        }
+
+        body.dark-mode .q-item.incorrect {
+            background: #7f1d1d;
+            border-color: var(--danger);
+            color: #fee2e2;
+        }
+
+        body.dark-mode .submit-btn {
+            background: var(--accent) !important;
+        }
+
+        /* Selection bar visual */
+        #selbar {
+            position: absolute;
+            z-index: 1000;
+            background: #1e293b;
+            color: white;
+            padding: 4px;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+            display: none;
+            /* hidden by default */
+            gap: 4px;
+        }
+
+        #selbar button {
+            background: transparent;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 0.85rem;
+        }
+
+        #selbar button:hover {
+            background: #334155;
+        }
+
+        /* Settings Panel floating */
+        #settings-panel {
+            position: fixed;
+            top: 60px;
+            right: 20px;
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            padding: 16px;
+            width: 260px;
+            z-index: 1000;
+            display: none;
+            /* toggled by JS */
+        }
+
+        #settings-panel .settings-section {
+            margin-bottom: 16px;
+        }
+
+        #settings-panel .settings-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .settings-title {
+            font-size: 0.9rem;
+            color: var(--muted);
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .settings-options {
+            display: flex;
+            gap: 8px;
+        }
+
+        .settings-option {
+            flex: 1;
+            padding: 8px;
+            background: var(--panel-alt);
+            border: 1px solid var(--line);
+            border-radius: 4px;
+            cursor: pointer;
+            color: var(--text);
+            text-align: center;
+        }
+
+        .settings-option.active {
+            border-color: var(--accent);
+            background: var(--accent);
+            color: white;
+        }
+
+        /* Notes panel —— 右侧边栏样式 */
+        :root {
+            --notes-panel-width: clamp(320px, 28vw, 380px);
+        }
+
+        @media (min-width: 981px) {
+            body.notes-panel-open .header,
+            body.notes-panel-open .shell {
+                width: calc(100% - var(--notes-panel-width));
+            }
+
+            body.notes-panel-open .practice-nav {
+                right: var(--notes-panel-width);
+            }
+        }
+
+        #notes-panel {
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: var(--notes-panel-width);
+            max-width: 92vw;
+            height: 100%;
+            background: var(--panel);
+            border-left: 1px solid var(--line);
+            box-shadow: -10px 0 30px rgba(0, 0, 0, 0.12);
+            z-index: 2100;
+            display: none;
+            /* toggled by JS */
+            flex-direction: column;
+        }
+
+        @media (max-width: 980px) {
+            #notes-panel {
+                position: relative;
+                top: auto;
+                right: auto;
+                width: 100%;
+                max-width: none;
+                height: min(52vh, 460px);
+                border-left: none;
+                border-bottom: 1px solid var(--line);
+                box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+            }
+        }
+
+        #notes-panel header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 18px;
+            border-bottom: 1px solid var(--line);
+            flex-shrink: 0;
+        }
+
+        #notes-panel header h3 {
+            margin: 0;
+            font-size: 1.15rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        #notes-panel .notes-header-actions {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        #notes-panel .notes-header-actions button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--text);
+            padding: 0;
+            display: inline-flex;
+            align-items: center;
+            opacity: 0.85;
+        }
+
+        #notes-panel .notes-header-actions button:hover {
+            opacity: 1;
+        }
+
+        /* 笔记列表容器 */
+        #notes-panel .notes-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0;
+        }
+
+        #notes-panel .notes-list__empty {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--muted, #999);
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        /* 单条笔记 */
+        .note-item {
+            border-bottom: 1px solid var(--line);
+            display: flex;
+            flex-direction: column;
+            background: var(--panel);
+            transition: background-color 0.18s ease, box-shadow 0.18s ease;
+        }
+
+        .note-item.is-active {
+            background: #dff2ff;
+            box-shadow: inset 4px 0 0 #2563eb;
+        }
+
+        body.dark-mode .note-item.is-active {
+            background: #17375e;
+        }
+
+        .note-item:last-child {
+            border-bottom: none;
+        }
+
+        .note-item__header {
+            display: flex;
+            align-items: flex-start;
+            padding: 12px 14px 8px;
+            gap: 8px;
+            background: transparent;
+            cursor: pointer;
+        }
+
+        .note-item.is-active .note-item__header {
+            background: rgba(37, 99, 235, 0.08);
+        }
+
+        body.dark-mode .note-item__header {
+            background: transparent;
+        }
+
+        .note-item__part {
+            font-weight: 700;
+            font-size: 0.85rem;
+            color: #2563eb;
+            white-space: nowrap;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+        .note-item__text {
+            flex: 1;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            word-break: break-word;
+        }
+
+        .note-item__delete {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #999;
+            font-size: 1.2rem;
+            line-height: 1;
+            padding: 0 2px;
+            flex-shrink: 0;
+            opacity: 0.6;
+            transition: opacity 0.15s, color 0.15s;
+        }
+
+        .note-item__delete:hover {
+            opacity: 1;
+            color: #e53e3e;
+        }
+
+        .note-item__textarea {
+            width: 100%;
+            min-height: 60px;
+            padding: 10px 14px 12px;
+            border: none;
+            border-top: 1px dashed var(--line);
+            resize: vertical;
+            background: transparent;
+            color: var(--text);
+            font-family: inherit;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            box-sizing: border-box;
+        }
+
+        .note-item__textarea:focus {
+            outline: none;
+            background: rgba(37, 99, 235, 0.03);
+        }
+
+        #notes-panel .notes-footer {
+            padding: 10px 18px;
+            text-align: right;
+            border-top: 1px solid var(--line);
+            flex-shrink: 0;
+        }
+
+        #notes-panel #notes-delete-all {
+            background: none;
+            border: none;
+            color: #e53e3e;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        #notes-panel #notes-delete-all:hover {
+            text-decoration: underline;
+        }
+
+        /* 眼睛图标：隐藏标注时淡化全部高亮背景 */
+        body.notes-hide-marks .hl {
+            background-color: transparent !important;
+            color: inherit !important;
+        }
+
+        /* ---------------- Exam Option Layouts ---------------- */
+        .choice-item label,
+        .checkbox-options label,
+        .options-list label,
+        .multiple-choice-options label,
+        .matching-options label,
+        .mcq-group label,
+        .radio-options label,
+        .radio-group label,
+        .multiple-choice label,
+        .true-false-ng label {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            line-height: 1.5;
+        }
+
+        .choice-item label input[type="checkbox"],
+        .checkbox-options label input[type="checkbox"],
+        .options-list label input[type="checkbox"],
+        .choice-item label input[type="radio"],
+        .multiple-choice-options label input[type="radio"],
+        .matching-options label input[type="radio"],
+        .mcq-group label input[type="radio"],
+        .radio-options label input[type="radio"],
+        .radio-group label input[type="radio"],
+        .multiple-choice label input[type="radio"],
+        .true-false-ng label input[type="radio"] {
+            margin-top: 4px;
+            flex-shrink: 0;
+            cursor: pointer;
+        }
+
+        .matching-table,
+        .completion-table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 10px 0;
+            border: 2px solid var(--line);
+        }
+
+        .matching-table th,
+        .matching-table td,
+        .completion-table th,
+        .completion-table td {
+            border: 1px solid var(--line);
+            padding: 8px 10px;
+            vertical-align: middle;
+        }
+
+        .matching-table thead th,
+        .completion-table thead th {
+            background: var(--panel-alt);
+            text-align: center;
+            font-weight: 700;
+        }
+
+        .matching-table td:first-child { text-align: left; }
+        .matching-table td { text-align: center; }
+        .completion-table td { text-align: left; }
+
+        /* short_answer / flow_chart / diagram_label (renderer classes, future-proof) */
+        .short-answer-list { list-style: none; padding-left: 0; }
+        .short-answer-item { margin-bottom: 14px; }
+
+        .flow-chart {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            margin: 12px 0;
+        }
+
+        .flow-box {
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            padding: 10px 14px;
+            background: var(--panel-alt, var(--bg));
+            width: 100%;
+            max-width: 560px;
+            text-align: center;
+        }
+        /* ---------------- Table Completion Layout ---------------- */
+        .table-section {
+            margin-top: 12px;
+            overflow-x: auto;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: var(--bg);
+            padding: 10px 12px;
+        }
+
+        .table-section table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+
+        .table-section thead th {
+            border: 1px solid var(--line);
+            background: var(--panel-alt);
+            font-weight: 700;
+            text-align: center;
+            padding: 10px 8px;
+        }
+
+        .table-section tbody td {
+            border: 1px solid var(--line);
+            padding: 10px 10px;
+            vertical-align: top;
+            line-height: 1.45;
+        }
+
+        .table-section thead th:first-child,
+        .table-section tbody td:first-child {
+            width: 16%;
+        }
+
+        .table-section thead th:nth-child(2),
+        .table-section tbody td:nth-child(2) {
+            width: 20%;
+        }
+
+        .table-section thead th:nth-child(3),
+        .table-section tbody td:nth-child(3) {
+            width: 64%;
+        }
+
+        .table-section ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+
+        .table-section li + li {
+            margin-top: 6px;
+        }
+
+        .table-section input.blank {
+            display: inline-block;
+            min-width: 120px;
+            max-width: 180px;
+            width: 40%;
+            padding: 2px 6px;
+            border: 1px solid var(--line);
+            border-radius: 4px;
+            background: var(--panel);
+            color: var(--text);
+            vertical-align: middle;
+        }
+
+        @media (max-width: 900px) {
+            .table-section input.blank {
+                width: 100%;
+                max-width: none;
+                margin-top: 4px;
+            }
+        }
+
+        /* ---------------- Drop Targets ---------------- */
+        .drop-target-summary {
+            display: inline-flex;
+            min-width: 80px;
+            min-height: 30px;
+            border-bottom: 2px solid var(--muted);
+            margin: 0 4px;
+            vertical-align: bottom;
+            align-items: center;
+            justify-content: center;
+            padding: 0 8px;
+            background: rgba(0, 0, 0, 0.02);
+            border-radius: 4px 4px 0 0;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .drop-target-summary.drag-over {
+            border-bottom-color: var(--accent);
+            background: #dbeafe;
+        }
+
+        .drop-target-summary.dropzone-filled {
+            border-bottom-color: var(--success);
+            background: #dcfce7;
+            color: var(--success);
+            font-weight: 600;
+        }
+
+        .drop-target-summary .drag-item {
+            border: none;
+            background: transparent;
+            padding: 0;
+            margin: 0;
+            cursor: grab;
+            color: inherit;
+            font-weight: inherit;
+        }
+    
+/* ---------------- 题型渲染器 alignment (renderers.js output) ---------------- */
+        /* single_choice: mcq-options / mcq-option grid */
+        .mcq-options {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            margin: 8px 0 4px;
+        }
+</style>
+    <link rel="stylesheet" href="../../../css/zyz-practice-theme.css">
+  <link rel="stylesheet" href="../../../css/practice-official-options.css">
+</head>
+
+<body>
+    <header class="header">
+        <div class="header-content">
+            <div class="jimmy-practice-brand" aria-label="Jimmy">
+                <img src="../../../Jimmy's logo.png" alt="Jimmy Logo" decoding="async">
+            </div>
+            <div class="candidate-status">
+                <strong>Test taker ID</strong>
+                <div class="candidate-time"><span id="timer" title="点击启停">00:00</span><span> remaining</span></div>
+            </div>
+            <div class="header-exam-meta" aria-live="polite">
+                <h1 id="exam-title">IELTS 阅读练习</h1>
+                <p id="exam-subtitle">统一阅读页</p>
+            </div>
+        </div>
+        <div class="header-controls">
+            <span class="header-status-icon" title="网络状态" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M2 8.8a16 16 0 0 1 20 0M5.5 12.3a10.5 10.5 0 0 1 13 0M9 15.7a5 5 0 0 1 6 0M12 20h.01"/></svg>
+            </span>
+            <span class="header-status-icon" title="提醒" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg>
+            </span>
+            <button class="header-btn" id="settings-btn" title="Settings" aria-label="设置" type="button">
+                <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+            </button>
+            <button class="header-btn" id="note-btn" title="Note" aria-label="笔记" type="button">
+                <svg viewBox="0 0 24 24"><path d="M14 4h6v6M13 11l7-7M19 13v6a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h6"/></svg>
+            </button>
+        </div>
+    </header>
+
+    <section class="exam-instruction-banner" aria-live="polite">
+        <div class="exam-instruction-heading">
+            <strong id="exam-part-label">Part 1</strong>
+            <span id="suite-custom-mode-badge" class="suite-custom-mode-badge" hidden>自定义组题模式</span>
+        </div>
+        <span id="exam-part-instruction">Read the passage and answer the questions.</span>
+    </section>
+
+    <div id="settings-panel">
+        <div class="settings-section">
+            <h3 class="settings-title">字号调整</h3>
+            <div class="settings-options">
+                <button class="settings-option active" data-size="normal">A</button>
+                <button class="settings-option" data-size="large" style="font-size: 1.1rem;">A</button>
+                <button class="settings-option" data-size="xlarge" style="font-size: 1.25rem;">A</button>
+            </div>
+        </div>
+        <div class="settings-section">
+            <h3 class="settings-title">背景颜色</h3>
+            <div class="settings-options">
+                <button class="settings-option active" data-mode="light">浅色</button>
+                <button class="settings-option" data-mode="dark">深色</button>
+            </div>
+        </div>
+        <div class="settings-section" id="suite-flow-mode-section" style="display: none;">
+            <h3 class="settings-title">套题流程模式</h3>
+            <div class="settings-options">
+                <button class="settings-option" data-suite-flow-mode="auto">自动跳转下一篇</button>
+                <button class="settings-option" data-suite-flow-mode="manual">提交后停留回看</button>
+            </div>
+        </div>
+    </div>
+    <div id="notes-panel">
+        <header>
+            <h3>NOTES</h3>
+            <div class="notes-header-actions">
+                <button id="notes-eye" type="button" title="显示/隐藏标注" aria-label="显示或隐藏标注">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z" />
+                        <circle cx="12" cy="12" r="3" />
+                    </svg>
+                </button>
+                <button id="close-note" type="button" aria-label="关闭">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                </button>
+            </div>
+        </header>
+        <div class="notes-list" id="notes-list">
+            <div class="notes-list__empty" id="notes-list-empty">
+                📝 选中文章中的文字，点击 Note 按钮添加笔记
+            </div>
+        </div>
+        <div class="notes-footer">
+            <button id="notes-delete-all" type="button">DELETE ALL</button>
+        </div>
+    </div>
+    <div class="overlay"></div>
+
+    <div class="shell">
+        <section class="pane" id="left"></section>
+        <div id="divider"></div>
+        <section class="pane" id="right">
+            <div id="question-groups"></div>
+            <div id="results"></div>
+        </section>
+    </div>
+
+    <div id="selbar">
+        <button type="button" id="btnHL" data-role="highlight">Highlight</button>
+        <button type="button" id="btnUH" data-role="remove-highlight">Remove</button>
+        <button type="button" id="btnNote" data-role="note">Note</button>
+        <button type="button" id="btnDictionary" data-role="dictionary">查词</button>
+        <button type="button" id="btnTranslate" data-role="translate">翻译</button>
+        <button type="button" id="btnAddVocabulary" data-role="add-vocabulary">加入单词本</button>
+    </div>
+
+    <div class="practice-nav">
+        <div class="title">题目导航</div>
+        <div class="questions" id="question-nav"></div>
+        <div class="controls">
+            <button id="exit-btn" type="button" title="退出" style="margin-right: 8px; display: none;">Exit</button>
+            <button id="export-pdf-btn" type="button" title="导出整页与练习详情为 PDF">导出PDF</button>
+            <button id="reset-btn" type="button">Reset</button>
+            <button id="submit-btn" class="primary" type="button">Submit</button>
+        </div>
+    </div>
+
+    <script src="../../../js/runtime/readingExamRegistry.js"></script>
+    <script src="../../../js/runtime/readingExplanationRegistry.js"></script>
+    <script>
+(function (global) {
+  'use strict';
+  global.__READING_EXAM_MANIFEST__ = {
+    "p1-high-1130": { "examId": "p1-high-1130", "dataKey": "p1-high-1130", "script": "./p1-high-1130.js", "title": "Coral Reefs 珊瑚礁", "category": "P1" }
+  };
+})(typeof window !== 'undefined' ? window : this);
+
+(function registerReadingExamData(global) {
+  'use strict';
+  if (!global.__READING_EXAM_DATA__ || typeof global.__READING_EXAM_DATA__.register !== "function") {
+    throw new Error("reading_exam_registry_missing");
+  }
+  global.__READING_EXAM_DATA__.register("p1-high-1130", {
+  "schemaVersion": "ReadingExamSourceV1",
+  "examId": "p1-high-1130",
+  "meta": {
+    "title": "Coral Reefs 珊瑚礁",
+    "category": "P1",
+    "frequency": "high",
+    "pdfFilename": "",
+    "source": "IELTS清洗库 ielts-reading-tests/txt/coral-reefs-de-thi-that-ielts-reading-giai-thich-cau-truc-kho-dap-an-giai.txt",
+    "questionIntroHtml": "<h3>Questions</h3>"
+  },
+  "passage": {
+    "blocks": [
+      {
+        "blockId": "passage-main",
+        "kind": "html",
+        "html": "<h2>READING PASSAGE</h2>\n<h3>Coral Reefs 珊瑚礁</h3>\n<p>Coral reefs are underwater structures made from calcium carbonate secreted by corals. Coral reefs are colonies of tiny living animals found in marine waters that contain few nutrients. Most coral reefs are built from stony corals, which in turn consist of polyps that cluster in groups.</p>\n<p><strong>A</strong> Coral reefs are estimated to cover 284,300 km2 just under 0.1% of the oceans' surface area, about half the area of France. The Indo-Pacific region accounts for 91.9% of this total area. Southeast Asia accounts for 32.3% of that figure, while the Pacific including Australia accounts for 40.8%. Atlantic and Caribbean coral reefs account for 7.6%. Yet often called \"rainforests of the sea\", coral reefs form some of the most diverse ecosystems on Earth. They provide a home for 25% of all marine species, including fish, mollusks, worms, crustaceans, echinoderms, sponges, tunicates and other cnidarians. Paradoxically, coral reefs flourish even though they are surrounded by ocean waters that provide few nutrients. They are most commonly found at shallow depths in tropical waters, but deep water and cold water corals also exist on smaller scales in other areas. Although corals exist both in temperate and tropical waters, shallow-water reefs form only in a zone extending from 30°N to 30°S of the equator. Deepwater coral can exist at greater depths and colder temperatures at much higher latitudes, as far north as Norway. Coral reefs are rare along the American and African west coasts. This is due primarily to upwelling and strong cold coastal currents that reduce water temperatures in these areas (respectively the Peru, Benguela and Canary streams). Corals are seldom found along the coastline of South Asia from the eastern tip of India (Madras) to the Bangladesh and Myanmar borders. They are also rare along the coast around northeastern South America and Bangladesh due to the freshwater released from the Amazon and Ganges Rivers, respectively.</p>\n<p><strong>B</strong> Coral reefs deliver ecosystem services to tourism, fisheries and coastline protection. The global economic value of coral reefs has been estimated at as much as $US375 billion per year. Coral reefs protect shorelines by absorbing wave energy, and many small islands would not exist without their reef to protect them.</p>\n<p><strong>C</strong> The value of reefs in biodiverse regions can be even higher. In parts of Indonesia and the Caribbean where tourism is the main use, reefs are estimated to be worth US$1 million per square kilometer, based on the cost of maintaining sandy beaches and the value of attracting snorkelers and scuba divers. Meanwhile, a recent study of the Great Barrier Reef in Australia found that the reef is worth more to the country as an intact ecosystem than an extractive reserve for fishing. Each year more than 1.8 million tourists visit the reef, spending an estimated AU$4.3 billion (Australian dollars) on reef-related industries from diving to boat rental to posh island resort stays. In the Caribbean, says UNEP, the net annual benefits from diver tourism were US$2 billion in 2000 with US$625 million spent directly on diving on reefs. Further, reef tourism is an important source of employment, especially for some of the world's poorest people. UNEP says that of the estimated 30 million small-scale fishers in the developing world, most are dependent to a greater or lesser extent on coral reefs. In the Philippines, for example, more than one million small-scale fishers depend directly on coral reefs for their livelihoods. The report estimates that reef fisheries were worth between $15,000 and $150,000 per square kilometer a year, while fish caught for aquariums were worth $500 a kilogram against $6 for fish caught as food. The aquarium fish export industry supports around 50,000 people and generates some US$5.5 million a year in Sri Lanka along.</p>\n<p><strong>D</strong> Unfortunately, coral reefs are dying around the world. In particular, coral mining, agricultural and urban runoff, pollution (organic and inorganic), disease, and the digging of canals and access into islands and bays are localized threats to coral ecosystems. Broader threats are sea temperature rise, sea-level rise and pH changes from ocean acidification, all associated with greenhouse gas emissions. Some current fishing practices are destructive and unsustainable. These include cyanide fishing, overfishing and blast fishing. Although cyanide fishing supplies live reef fish for the tropical aquarium market, most fish caught using this method are sold in restaurants, primarily in Asia, where live fish are prized for their freshness. To catch fish with cyanide, fishers dive down to the reef and squirt cyanide in coral crevices and on the fast-moving fish, to stun the fish making them easy to catch. Overfishing is another leading cause for coral reef degradation. Often, too many fish are taken from one reef to sustain a population in that area. Poor fishing practices, such as banging on the reef with sticks (muro-ami), destroy coral formations that normally function as fish habitat. In some instances, people fish with explosives (blast fishing), which blast apart the surrounding coral.</p>\n<p><strong>E</strong> Tourist resorts that empty their sewage directly into the water surrounding coral reefs contribute to coral reef degradation. Wastes kept in poorly maintained septic tanks can also leak into surrounding groundwater, eventually seeping out to the reefs. Careless boating, diving, snorkeling and fishing can also damage coral reefs. Whenever people grab, kick, and walk on, or stir up sediment in the reefs, they contribute to coral reef destruction. Corals are also harmed or killed when people drop anchors on them or when people collect coral.</p>\n<p><strong>F</strong> To find answers for these problems, scientists and researchers study the various factors that impact reefs. The list includes the ocean's role as a carbon dioxide sink, atmospheric changes, ultraviolet light, ocean acidification, viruses, impacts of dust storms carrying agents to far-flung reefs, pollutants, algal blooms and others. Reefs are threatened well beyond coastal areas. General estimates show approximately 10% of the world's coral reefs are dead. About 60% of the world's reefs are at risk due to destructive, human-related activities. The threat to the health of reefs is particularly strong in Southeast Asia, where 80% of reefs are endangered.</p>\n<p><strong>G</strong> In Australia, the Great Barrier Reef is protected by the Great Barrier Reef Marine Park Authority and is the subject of much legislation, including a biodiversity action plan. Inhabitants of Ahus Island, Manus Province, Papua New Guinea, have followed a generations-old practice of restricting fishing in six areas of their reef lagoon. Their cultural traditions allow line fishing, but not net or spearfishing. The result is both the biomass and individual fish sizes are significantly larger in these areas than in places where fishing is unrestricted.</p>"
+      }
+    ]
+  },
+  "questionGroups": [
+    {
+      "groupId": "group-1",
+      "kind": "matching",
+      "questionIds": [
+        "q1",
+        "q2",
+        "q3",
+        "q4",
+        "q5",
+        "q6"
+      ],
+      "bodyHtml": "<div class=\"group\" id=\"q1-2-3-4-5-6-anchor\"><h4>Questions 1-6</h4><p>Reading Passage 1 has 7 paragraphs, <strong>A-G</strong>.</p><p>Which paragraph contains the following information?</p><p><em>Write the correct letter, <strong>A-G</strong>, in boxes 1-6 on your answer sheet. You may use any letter more than once.</em></p><div style=\"overflow-x: auto;\"><table class=\"matching-table\"><thead><tr><th style=\"min-width: 260px;\"></th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th><th>F</th><th>G</th></tr></thead><tbody><tr><td><strong>1</strong> Geographical Location of the world's coral reef</td><td><input type=\"radio\" name=\"q1\" value=\"A\"></td><td><input type=\"radio\" name=\"q1\" value=\"B\"></td><td><input type=\"radio\" name=\"q1\" value=\"C\"></td><td><input type=\"radio\" name=\"q1\" value=\"D\"></td><td><input type=\"radio\" name=\"q1\" value=\"E\"></td><td><input type=\"radio\" name=\"q1\" value=\"F\"></td><td><input type=\"radio\" name=\"q1\" value=\"G\"></td></tr><tr><td><strong>2</strong> How does coral reef benefit economy locally</td><td><input type=\"radio\" name=\"q2\" value=\"A\"></td><td><input type=\"radio\" name=\"q2\" value=\"B\"></td><td><input type=\"radio\" name=\"q2\" value=\"C\"></td><td><input type=\"radio\" name=\"q2\" value=\"D\"></td><td><input type=\"radio\" name=\"q2\" value=\"E\"></td><td><input type=\"radio\" name=\"q2\" value=\"F\"></td><td><input type=\"radio\" name=\"q2\" value=\"G\"></td></tr><tr><td><strong>3</strong> The statistics of coral reef's economic significance</td><td><input type=\"radio\" name=\"q3\" value=\"A\"></td><td><input type=\"radio\" name=\"q3\" value=\"B\"></td><td><input type=\"radio\" name=\"q3\" value=\"C\"></td><td><input type=\"radio\" name=\"q3\" value=\"D\"></td><td><input type=\"radio\" name=\"q3\" value=\"E\"></td><td><input type=\"radio\" name=\"q3\" value=\"F\"></td><td><input type=\"radio\" name=\"q3\" value=\"G\"></td></tr><tr><td><strong>4</strong> The listed reasons for the declining number of coral reef</td><td><input type=\"radio\" name=\"q4\" value=\"A\"></td><td><input type=\"radio\" name=\"q4\" value=\"B\"></td><td><input type=\"radio\" name=\"q4\" value=\"C\"></td><td><input type=\"radio\" name=\"q4\" value=\"D\"></td><td><input type=\"radio\" name=\"q4\" value=\"E\"></td><td><input type=\"radio\" name=\"q4\" value=\"F\"></td><td><input type=\"radio\" name=\"q4\" value=\"G\"></td></tr><tr><td><strong>5</strong> Physical approach to the coral reef by people</td><td><input type=\"radio\" name=\"q5\" value=\"A\"></td><td><input type=\"radio\" name=\"q5\" value=\"B\"></td><td><input type=\"radio\" name=\"q5\" value=\"C\"></td><td><input type=\"radio\" name=\"q5\" value=\"D\"></td><td><input type=\"radio\" name=\"q5\" value=\"E\"></td><td><input type=\"radio\" name=\"q5\" value=\"F\"></td><td><input type=\"radio\" name=\"q5\" value=\"G\"></td></tr><tr><td><strong>6</strong> Unsustainable fishing methods are applied in regions of the world</td><td><input type=\"radio\" name=\"q6\" value=\"A\"></td><td><input type=\"radio\" name=\"q6\" value=\"B\"></td><td><input type=\"radio\" name=\"q6\" value=\"C\"></td><td><input type=\"radio\" name=\"q6\" value=\"D\"></td><td><input type=\"radio\" name=\"q6\" value=\"E\"></td><td><input type=\"radio\" name=\"q6\" value=\"F\"></td><td><input type=\"radio\" name=\"q6\" value=\"G\"></td></tr></tbody></table></div></div>",
+      "leadHtml": ""
+    },
+    {
+      "groupId": "group-2",
+      "kind": "true_false_not_given",
+      "questionIds": [
+        "q7",
+        "q8",
+        "q9",
+        "q10",
+        "q11",
+        "q12"
+      ],
+      "bodyHtml": "<div class=\"group\" id=\"q7-8-9-10-11-12-anchor\"><h4>Questions 7-12</h4><p>Do the following statements agree with the information given in Reading Passage 1?</p><div class=\"question-item\"><p><strong>7</strong> Coral reef distributes around the ocean disproportionally.</p><div class=\"radio-options\"><label><input name=\"q7\" type=\"radio\" value=\"TRUE\"> TRUE</label><label><input name=\"q7\" type=\"radio\" value=\"FALSE\"> FALSE</label><label><input name=\"q7\" type=\"radio\" value=\"NOT GIVEN\"> NOT GIVEN</label></div></div><div class=\"question-item\"><p><strong>8</strong> Coral reefs provide habitat to a variety of marine life.</p><div class=\"radio-options\"><label><input name=\"q8\" type=\"radio\" value=\"TRUE\"> TRUE</label><label><input name=\"q8\" type=\"radio\" value=\"FALSE\"> FALSE</label><label><input name=\"q8\" type=\"radio\" value=\"NOT GIVEN\"> NOT GIVEN</label></div></div><div class=\"question-item\"><p><strong>9</strong> Reef tourism is of economic essence generally for some poor people.</p><div class=\"radio-options\"><label><input name=\"q9\" type=\"radio\" value=\"TRUE\"> TRUE</label><label><input name=\"q9\" type=\"radio\" value=\"FALSE\"> FALSE</label><label><input name=\"q9\" type=\"radio\" value=\"NOT GIVEN\"> NOT GIVEN</label></div></div><div class=\"question-item\"><p><strong>10</strong> As with other fishing business, coral fishery is not suitable to women and children.</p><div class=\"radio-options\"><label><input name=\"q10\" type=\"radio\" value=\"TRUE\"> TRUE</label><label><input name=\"q10\" type=\"radio\" value=\"FALSE\"> FALSE</label><label><input name=\"q10\" type=\"radio\" value=\"NOT GIVEN\"> NOT GIVEN</label></div></div><div class=\"question-item\"><p><strong>11</strong> Coral reefs are greatly exchanged among and exported to other counties.</p><div class=\"radio-options\"><label><input name=\"q11\" type=\"radio\" value=\"TRUE\"> TRUE</label><label><input name=\"q11\" type=\"radio\" value=\"FALSE\"> FALSE</label><label><input name=\"q11\" type=\"radio\" value=\"NOT GIVEN\"> NOT GIVEN</label></div></div><div class=\"question-item\"><p><strong>12</strong> Coral reef is increasingly important for scientific purpose.</p><div class=\"radio-options\"><label><input name=\"q12\" type=\"radio\" value=\"TRUE\"> TRUE</label><label><input name=\"q12\" type=\"radio\" value=\"FALSE\"> FALSE</label><label><input name=\"q12\" type=\"radio\" value=\"NOT GIVEN\"> NOT GIVEN</label></div></div></div>",
+      "leadHtml": ""
+    },
+    {
+      "groupId": "group-3",
+      "kind": "single_choice",
+      "questionIds": [
+        "q13"
+      ],
+      "bodyHtml": "<div class=\"group\" id=\"q13-anchor\"><h4>Question 13</h4><p>Choose the correct letter, A, B, C or D.</p><a id=\"q13-anchor\"></a><div><p>13. What is the main purpose of this passage?</p><div class=\"mcq-options\"><div class=\"mcq-option\"><label><input type=\"radio\" name=\"q13\" value=\"A\"> A. Demonstrate how coral reef growth in the ocean</label></div><div class=\"mcq-option\"><label><input type=\"radio\" name=\"q13\" value=\"B\"> B. To tell that coral reef is widely used as a scientific project</label></div><div class=\"mcq-option\"><label><input type=\"radio\" name=\"q13\" value=\"C\"> C. Present the general benefits and an alarming situation of coral reef</label></div><div class=\"mcq-option\"><label><input type=\"radio\" name=\"q13\" value=\"D\"> D. To show the vital efforts made to protect the coral reef in Australia</label></div></div></div></div>",
+      "leadHtml": ""
+    }
+  ],
+  "answerKey": {
+    "q1": "A",
+    "q2": "C",
+    "q3": "C",
+    "q4": "D",
+    "q5": "E",
+    "q6": "D",
+    "q7": "TRUE",
+    "q8": "TRUE",
+    "q9": "TRUE",
+    "q10": "NOT GIVEN",
+    "q11": "NOT GIVEN",
+    "q12": "NOT GIVEN",
+    "q13": "C"
+  },
+  "questionOrder": [
+    "q1",
+    "q2",
+    "q3",
+    "q4",
+    "q5",
+    "q6",
+    "q7",
+    "q8",
+    "q9",
+    "q10",
+    "q11",
+    "q12",
+    "q13"
+  ],
+  "questionDisplayMap": {
+    "q1": "1",
+    "q2": "2",
+    "q3": "3",
+    "q4": "4",
+    "q5": "5",
+    "q6": "6",
+    "q7": "7",
+    "q8": "8",
+    "q9": "9",
+    "q10": "10",
+    "q11": "11",
+    "q12": "12",
+    "q13": "13"
+  }
+});
+})(typeof window !== "undefined" ? window : this);
+
+// 自动设置 examId（独立单篇页）
+(function () {
+  var qs = new URLSearchParams(window.location.search);
+  if (!qs.get('examId')) qs.set('examId', 'p1-high-1130');
+  if (!qs.get('dataKey')) qs.set('dataKey', 'p1-high-1130');
+  var q = qs.toString();
+  if (window.location.search !== ('?' + q)) {
+    window.location.replace(window.location.pathname + '?' + q);
+  }
+})();
+</script>
+    <script src="../../../js/runtime/suiteResources.js"></script>
+    <script src="../../../js/utils/answerMatchCore.js"></script>
+    <script src="../../../js/components/vocabularyNotebook.js"></script>
+    <script src="../../../js/practice-page-ui.js"></script>
+    <!-- 套题交卷后按雅思分数表换算三篇合计成绩 -->
+    <script src="../../../js/utils/ieltsBandScore.js"></script>
+    <script src="../../../js/runtime/unifiedReadingPage.js"></script>
+  <script src="../../../js/practice-drag-scroll-fix.js"></script>
+  <script src="../../../js/practice-official-options.js"></script>
+</body>
+
+</html>

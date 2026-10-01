@@ -626,11 +626,17 @@
      * 可用即优先；若这些篇目都练过，排序会自然回落到常规未做/高频逻辑，不会卡死。
      */
     function getPriorityExamIds() {
-        const list = global.__SEPTEMBER_2026_PRIORITY_IDS || global.__SEPTEMBER_2026_HIGH_IDS;
+        const list = global.__OCTOBER_2026_PRIORITY_IDS
+            || global.__OCTOBER_2026_HIGH_IDS
+            || global.__SEPTEMBER_2026_PRIORITY_IDS
+            || global.__SEPTEMBER_2026_HIGH_IDS;
         if (Array.isArray(list) && list.length) return new Set(list.map(String));
         return new Set([
-            'p1-medium-1227', 'p1-medium-1583', 'p2-medium-1764',
-            'p3-medium-1693', 'p3-medium-1827', 'p3-low-1937'
+            'p3-medium-1078', 'p1-high-1130', 'p2-high-1129', 'p2-high-1791',
+            'p1-low-1118', 'p2-medium-1542', 'p2-medium-1726',
+            'p3-medium-1509', 'p1-medium-1714', 'p3-high-1079', 'p1-medium-1911',
+            'p3-high-1243', 'p3-medium-1080', 'p2-high-1455',
+            'p1-high-1940', 'p1-low-1941'
         ]);
     }
 

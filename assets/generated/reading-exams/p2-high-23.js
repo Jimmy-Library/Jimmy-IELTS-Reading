@@ -72,7 +72,7 @@
     "q7": "D",
     "q8": "A",
     "q9": "archaeological",
-    "q10": "andes",
+    "q10": "Andes",
     "q11": "currant",
     "q12": "mutation",
     "q13": "infections"

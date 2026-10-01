@@ -15,16 +15,16 @@
   "passageNotes": [],
   "questionExplanations": [
     {
-      "sectionTitle": "Questions 1–4 选择题（Choose the correct letter, A, B, C or D）",
+      "sectionTitle": "Questions 27–30 选择题（Choose the correct letter, A, B, C or D）",
       "mode": "per_question",
       "questionRange": {
-        "start": 1,
-        "end": 4
+        "start": 27,
+        "end": 30
       },
       "items": [
         {
           "questionId": "q1",
-          "questionNumber": 1,
+          "questionNumber": 27,
           "stem": "What does the typist's experiment show in the passage?",
           "translation": "文中的打字员实验说明了什么？",
           "answer": "C",
@@ -48,7 +48,7 @@
         },
         {
           "questionId": "q2",
-          "questionNumber": 2,
+          "questionNumber": 28,
           "stem": "Which is correct about the rat experiment?",
           "translation": "关于老鼠实验，下列哪一项是正确的？",
           "answer": "D",
@@ -73,7 +73,7 @@
         },
         {
           "questionId": "q3",
-          "questionNumber": 3,
+          "questionNumber": 29,
           "stem": "What can be concluded in the chess game of a children's group?",
           "translation": "从儿童组的国际象棋测试中可以得出什么结论？",
           "answer": "B",
@@ -97,7 +97,7 @@
         },
         {
           "questionId": "q4",
-          "questionNumber": 4,
+          "questionNumber": 30,
           "stem": "What is the author's purpose of using “vocabulary study” at the end of the passage?",
           "translation": "作者在文章末尾使用“词汇研究”的目的是什么？",
           "answer": "C",
@@ -122,16 +122,16 @@
       ]
     },
     {
-      "sectionTitle": "Questions 5–10 摘要填空（Choose no more than two words from the passage）",
+      "sectionTitle": "Questions 31–36 摘要填空（Choose no more than two words from the passage）",
       "mode": "per_question",
       "questionRange": {
-        "start": 5,
-        "end": 10
+        "start": 31,
+        "end": 36
       },
       "items": [
         {
           "questionId": "q5",
-          "questionNumber": 5,
+          "questionNumber": 31,
           "stem": "It's long been known that 5 ________ declined with age.",
           "translation": "人们早就知道 ________ 会随年龄增长而衰退。",
           "answer": "memory",
@@ -151,7 +151,7 @@
         },
         {
           "questionId": "q6",
-          "questionNumber": 6,
+          "questionNumber": 32,
           "stem": "They used advanced technology, neurochemical experiments and ran several cognitive and 6 ________ experiments.",
           "translation": "他们使用了先进技术、神经化学实验，并进行了若干认知类与 ________ 类的实验。",
           "answer": "psychological",
@@ -172,7 +172,7 @@
         },
         {
           "questionId": "q7",
-          "questionNumber": 7,
+          "questionNumber": 33,
           "stem": "Bahrick called one form “ 7 ________ ”, which describes factual knowledge.",
           "translation": "Bahrick 把其中一种形式称为“________”，它描述的是事实性知识。",
           "answer": "semantic memory",
@@ -186,13 +186,13 @@
             "“describes factual knowledge” 对应原文前文的 “What we call knowledge–facts”（我们所谓的事实性知识）",
             "“Bahrick” 原词复现，与原文的 “psychologists such as Harry P. Bahrick, Ph.D., of Ohio Wesleyan University” 一致"
           ],
-          "locatingTip": "定位：题干中的人名 Bahrick 与语义记忆的定义同现于第 5 段倒数第三句 “What we call knowledge–facts-is what psychologists such as Harry P. Bahrick, Ph.D., of Ohio Wesleyan University calls semantic memory.”，扫到人名加 calls 即可锁定。确定答案技巧：题干说这一形式“describes factual knowledge”（描述事实性知识），原文在同一句前段用 “What we call knowledge–facts”（我们称之为知识、也就是事实的东西）解释这种记忆的内容，两者相互印证，被 Bahrick 命名的术语就是 semantic memory。填两个词时要连同形容词一起写（semantic memory），只写 memory 会与第 8 题的 episodic memory 混淆；同时注意两个词已用满字数上限，不能再加冠词或复述为 the semantic memory。",
+          "locatingTip": "定位：题干中的人名 Bahrick 与语义记忆的定义同现于第 5 段倒数第三句 “What we call knowledge–facts-is what psychologists such as Harry P. Bahrick, Ph.D., of Ohio Wesleyan University calls semantic memory.”，扫到人名加 calls 即可锁定。确定答案技巧：题干说这一形式“describes factual knowledge”（描述事实性知识），原文在同一句前段用 “What we call knowledge–facts”（我们称之为知识、也就是事实的东西）解释这种记忆的内容，两者相互印证，被 Bahrick 命名的术语就是 semantic memory。填两个词时要连同形容词一起写（semantic memory），只写 memory 会与第 34 题的 episodic memory 混淆；同时注意两个词已用满字数上限，不能再加冠词或复述为 the semantic memory。",
           "analysis": "第 5 段在讨论记忆的多种形式时给出了两个术语：“Memory exists in more than one form. What we call knowledge–facts-is what psychologists such as Harry P. Bahrick, Ph.D., of Ohio Wesleyan University calls semantic memory. Events, conversations, and occurrences in time and space, on the other hand, make up episodic or event memory, which is triggered by cues from the context.”（记忆不止一种形式。我们所说的知识，也就是事实，被 Harry P. Bahrick 等心理学家称为语义记忆；而时空中的事件、对话与经历则构成情景记忆或事件记忆，由情境线索触发）。摘要句 “Bahrick called one form ‘7 …’, which describes factual knowledge” 把这一术语提取出来：which describes factual knowledge 对应原文的 knowledge–facts，因此空格应填 semantic memory。词数方面，题目要求“no more than two words from the passage”，而语义记忆这一术语正好由 semantic 与 memory 两个词构成，可以整体照抄；语义上它与下一空 episodic memory 形成对照：semantic memory 记内容（事实、知识），episodic memory 记事件发生的时间空间与情境，第 6 段 “You remember the content, not the context.” 正是这一区分的通俗总结。",
           "traps": []
         },
         {
           "questionId": "q8",
-          "questionNumber": 8,
+          "questionNumber": 34,
           "stem": "Another one called “ 8 ________ ” contains events in time and space format.",
           "translation": "另一种被称为“________”的记忆包含以时间与空间形式呈现的事件。",
           "answer": "episodic memory",
@@ -206,13 +206,13 @@
             "“contains events in time and space” 同义替换为原文的 “Events, conversations, and occurrences in time and space”",
             "答案中的 episodic 与原文的 “episodic or event memory” 完全一致（episodic 与 event 为同义并列写法）"
           ],
-          "locatingTip": "定位：本题紧接第 7 题，仍在第 5 段。摘要的题干关键词是 events in time and space，这正是原文第 5 段 “Events, conversations, and occurrences in time and space, on the other hand, make up episodic or event memory” 的原句；只要抓住 time and space 这一短语就能一步锁定。确定答案技巧：原文在给出第二种记忆时用了 “on the other hand” 表示与前面的 semantic memory 相对，并用并列词 “episodic or event memory” 提供两个同义名称。由于空格前有 called，后面要填的是被命名的术语，而题目允许不超过两个词，因此从 “episodic or event memory” 中取 episodic memory 两个词最稳妥（只写 event memory 也可接受其义，但按原文首选项 episodic memory 更标准）。",
-          "analysis": "第 5 段在讲完语义记忆后立刻给出第二种记忆：“Events, conversations, and occurrences in time and space, on the other hand, make up episodic or event memory, which is triggered by cues from the context.”（另一方面，时空中的事件、对话与发生的事构成情景记忆，或称事件记忆，它由情境线索触发）。摘要句把它写成 “Another one called ‘8 …’ contains events in time and space format”，其中 Another one 对应 on the other hand 引出的第二种形式，contains events in time and space 直接对应 Events, conversations, and occurrences in time and space。段末的例证进一步说明这种记忆的性质：“If you were around in 1963 you don't need to be reminded of the circumstances surrounding the moment you heard that JFK had been assassinated. That event is etched into your episodic memory.”（如果你 1963 年已经记事，就不需要别人提醒你听到肯尼迪遇刺那一刻的情形，那件事已经刻进你的情景记忆里）——句末的 episodic memory 正是答案的原文形式。第 6 段还补充了这种记忆会随时间自然衰退（“episodic memory begins to decline when most people are in their 50s”），与第 7 空描述的语义记忆形成对照。答案写两个词 episodic memory，注意形容词首字母小写照抄原文，不要写成 Episodic Memory。",
+          "locatingTip": "定位：本题紧接第 33 题，仍在第 5 段。摘要的题干关键词是 events in time and space，这正是原文第 5 段 “Events, conversations, and occurrences in time and space, on the other hand, make up episodic or event memory” 的原句；只要抓住 time and space 这一短语就能一步锁定。确定答案技巧：原文在给出第二种记忆时用了 “on the other hand” 表示与前面的 semantic memory 相对，并用并列词 “episodic or event memory” 提供两个同义名称。由于空格前有 called，后面要填的是被命名的术语，而题目允许不超过两个词，因此从 “episodic or event memory” 中取 episodic memory 两个词最稳妥（只写 event memory 也可接受其义，但按原文首选项 episodic memory 更标准）。",
+          "analysis": "第 5 段在讲完语义记忆后立刻给出第二种记忆：“Events, conversations, and occurrences in time and space, on the other hand, make up episodic or event memory, which is triggered by cues from the context.”（另一方面，时空中的事件、对话与发生的事构成情景记忆，或称事件记忆，它由情境线索触发）。摘要句把它写成 “Another one called ‘8 …’ contains events in time and space format”，其中 Another one 对应 on the other hand 引出的第二种形式，contains events in time and space 直接对应 Events, conversations, and occurrences in time and space。段末的例证进一步说明这种记忆的性质：“If you were around in 1963 you don't need to be reminded of the circumstances surrounding the moment you heard that JFK had been assassinated. That event is etched into your episodic memory.”（如果你 1963 年已经记事，就不需要别人提醒你听到肯尼迪遇刺那一刻的情形，那件事已经刻进你的情景记忆里）——句末的 episodic memory 正是答案的原文形式。第 6 段还补充了这种记忆会随时间自然衰退（“episodic memory begins to decline when most people are in their 50s”），与第 33 空描述的语义记忆形成对照。答案写两个词 episodic memory，注意形容词首字母小写照抄原文，不要写成 Episodic Memory。",
           "traps": []
         },
         {
           "questionId": "q9",
-          "questionNumber": 9,
+          "questionNumber": 35,
           "stem": "He conducted two experiments toward knowledge memory's longevity, he asked 1000 candidates some knowledge of 9 ________, some could even remember it decades ago.",
           "translation": "他为研究知识记忆的持久性做了两个实验：他让 1000 名被试回忆某类 ________ 的知识，其中一些人甚至在几十年后仍能记得。",
           "answer": "algebra",
@@ -232,7 +232,7 @@
         },
         {
           "questionId": "q10",
-          "questionNumber": 10,
+          "questionNumber": 36,
           "stem": "Second research of Spanish courses found that multiple course participants could remember more than half of 10 ________ they learned after decades, whereas single course taker only remembered as short as 3 years.",
           "translation": "第二项关于西班牙语课程的研究发现，上过多门课程的受试者几十年后仍能记得所学 ________ 的一半以上，而只上过一门课的人仅仅三年后记忆就所剩无几。",
           "answer": "vocabulary",
@@ -247,23 +247,23 @@
             "“after decades” 同义替换为原文的 “decades later”",
             "“single course taker only remembered as short as 3 years” 同义替换为原文的 “Those who took just one course retained only a trace after three years.”"
           ],
-          "locatingTip": "定位：题干中的关键词 Spanish 与 decades 指向第 8 段首句 “In another study, Bahrick discovered that people who had taken several courses in Spanish, spread out over a couple of years, could recall, decades later, 60 percent or more of the vocabulary they learned.”；Spanish 一词在全文只此一处，非常好定位。确定答案技巧：题干说“记得一半以上的某物”，原文对应 “60 percent or more of the vocabulary they learned”，其中 60 percent or more 即 more than half，空格处需要的是被记住的内容名词，即 vocabulary。要注意与第 9 题的 algebra 区分：第 9 题来自第 7 段的代数实验（记得 1000 名毕业生的代数），第 10 题来自第 8 段的西班牙语实验（记得词汇），两题分属不同实验、不同段落，不能互换。",
+          "locatingTip": "定位：题干中的关键词 Spanish 与 decades 指向第 8 段首句 “In another study, Bahrick discovered that people who had taken several courses in Spanish, spread out over a couple of years, could recall, decades later, 60 percent or more of the vocabulary they learned.”；Spanish 一词在全文只此一处，非常好定位。确定答案技巧：题干说“记得一半以上的某物”，原文对应 “60 percent or more of the vocabulary they learned”，其中 60 percent or more 即 more than half，空格处需要的是被记住的内容名词，即 vocabulary。要注意与第 35 题的 algebra 区分：第 35 题来自第 7 段的代数实验（记得 1000 名毕业生的代数），第 36 题来自第 8 段的西班牙语实验（记得词汇），两题分属不同实验、不同段落，不能互换。",
           "analysis": "第 8 段是 Bahrick 的第二个实验：“In another study, Bahrick discovered that people who had taken several courses in Spanish, spread out over a couple of years, could recall, decades later, 60 percent or more of the vocabulary they learned. Those who took just one course retained only a trace after three years.”（在另一项研究中，Bahrick 发现，那些在几年间上过多门西班牙语课程的人，几十年后仍能回忆出所学词汇的 60% 甚至更多；而只上过一门课的人，三年后就只剩下一点痕迹）。摘要句 “Second research of Spanish courses found that multiple course participants could remember more than half of 10 … they learned after decades, whereas single course taker only remembered as short as 3 years” 与原文逐项对应：multiple course participants 对应 taken several courses in Spanish，more than half of 对应 60 percent or more of，after decades 对应 decades later，single course taker … as short as 3 years 对应 Those who took just one course retained only a trace after three years。被记住的内容在原文中是 the vocabulary they learned，故空格填 vocabulary。该段接着用引文总结这一发现的普遍意义：“This long-term residue of knowledge remains stable over the decades, independent of the age of the person and the age of the memory.”（这种长期留存的知识在数十年间保持稳定，与人的年龄和记忆的年龄无关），也与第 10 段 “Vocabulary is one such specialized form of accrued knowledge. Research clearly shows that vocabulary improves with time.” 前后呼应。词性上 vocabulary 为不可数名词，作 of 的宾语，用原形即可。",
           "traps": []
         }
       ]
     },
     {
-      "sectionTitle": "Questions 11–14 人名匹配（Match each statement with the correct option, A-F）",
+      "sectionTitle": "Questions 37–40 人名匹配（Match each statement with the correct option, A-F）",
       "mode": "per_question",
       "questionRange": {
-        "start": 11,
-        "end": 14
+        "start": 37,
+        "end": 40
       },
       "items": [
         {
           "questionId": "q11",
-          "questionNumber": 11,
+          "questionNumber": 37,
           "stem": "Examined brain blood circulation of both young and old subjects while testing.",
           "translation": "在测试过程中检测了年轻与年长受试者的脑部血液循环。",
           "answer": "E",
@@ -288,7 +288,7 @@
         },
         {
           "questionId": "q12",
-          "questionNumber": 12,
+          "questionNumber": 38,
           "stem": "Aging is a significant link between physical and mental activity.",
           "translation": "衰老是身体活动与心智活动之间的重要联系。",
           "answer": "B",
@@ -312,7 +312,7 @@
         },
         {
           "questionId": "q13",
-          "questionNumber": 13,
+          "questionNumber": 39,
           "stem": "Some semantic memories of an event fade away by repetition.",
           "translation": "有些关于某一事件的语义记忆会因重复而逐渐消退。",
           "answer": "A",
@@ -336,7 +336,7 @@
         },
         {
           "questionId": "q14",
-          "questionNumber": 14,
+          "questionNumber": 40,
           "stem": "Rat's brain developed when put in a diverse environment.",
           "translation": "当老鼠被放入多样化的环境时，它的大脑得到了发育。",
           "answer": "C",

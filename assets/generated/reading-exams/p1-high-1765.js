@@ -1,0 +1,71 @@
+(function registerReadingExamData(global) {
+  'use strict';
+  if (!global.__READING_EXAM_DATA__ || typeof global.__READING_EXAM_DATA__.register !== "function") {
+    throw new Error("reading_exam_registry_missing");
+  }
+  global.__READING_EXAM_DATA__.register("p1-high-1765", {
+  "schemaVersion": "ReadingExamSourceV1",
+  "examId": "p1-high-1765",
+  "meta": {
+    "title": "The History of the Chicken 鸡的历史",
+    "category": "P1",
+    "frequency": "high",
+    "pdfFilename": "",
+    "source": "IELTS清洗库 ielts-reading-tests/txt/the-history-of-the-chicken-answers-with-location-de-thi-that-ielts.txt",
+    "questionIntroHtml": "<h3>Questions</h3>"
+  },
+  "passage": {
+    "blocks": [
+      {
+        "blockId": "passage-main",
+        "kind": "html",
+        "html": "<h2>READING PASSAGE</h2>\n<h3>The History of the Chicken 鸡的历史</h3>\n<p><strong>A</strong> The story begins 10,000 years ago in a jungle in Asia and ends today in kitchens all over the world. Chicken is the universal food of our era, crossing cultural boundaries with ease. With its mild and uniform flavor, it adapts easily to any cuisine. However, until the introduction of large-scale industrial production in the 20th century, the economic and nutritional contribution of chickens was small. Chickens were considered as domestic birds that were useful to humanity, but unlike other animals such as the horse or the ox, they did little to change the course of history. Nonetheless, the chicken has inspired contributions to culture, art, cuisine, science and religion over the millennia. Chickens were, and still are, a sacred animal in some cultures. The hen is a worldwide symbol of nurturing and fertility. The rooster is a universal sign of masculinity.</p>\n<p><strong>B</strong> The domesticated chicken has a complicated family tree, stretching back 10,000 years. Recent DNA testing has shown that the chicken's wild ancestor is the red junglefowl. The bird's resemblance to modern chickens is seen in the red feathers on top of its head, the red flesh around its mouth, and its distinctive call in the morning. The females of this breed protect their eggs in the same way modern-day chickens do, and they make the same clucking sounds. In its habitat, which stretches from northeastern India to the Philippines, the red junglefowl looks on the forest floor for insects, seeds and fruit, and flies up to nest in the trees at night. That's about as much flying as it can manage, a trait that made it relatively easy for humans to capture and domesticate it. But the red junglefowl is not the sole ancestor of the modern chicken. Scientists have identified three closely related species that might have bred with the red junglefowl. Precisely how much genetic material these other birds contributed to the DNA of domesticated chickens is unknown. However, recent research suggests that modern chickens inherited at least one trait, their yellow skin, from the grey junglefowl of southern India.</p>\n<p><strong>C</strong> Once chickens were domesticated, cultural contacts, trade, migration and territorial conquest resulted in their introduction to different regions around the world over several thousand years. Chickens arrived in Egypt in around 1750 BC, as fighting birds and additions to zoos. Drawings of the birds decorated royal tombs, which contained the treasures that the kings and queens would take to the afterlife. Yet it would be another 100 years before the bird became popular among ordinary Egyptians.</p>\n<p><strong>D</strong> It was in that era that Egyptians mastered the technique of artificial incubation, which freed hens to lay more eggs. This was not easy. Most chicken eggs will hatch in three weeks, but only if the temperature remains at around 38 degrees Celsius. The eggs must also be turned three to five times a day, and the humidity must remain stable at about 55 percent, otherwise physical deformities can result, or the eggs won't hatch. The Egyptians constructed vast complexes of large rooms, which were essentially ovens, and these were connected to a series of corridors and vents that allowed attendants to regulate the heat from fires. The egg attendants kept their methods a secret from outsiders for centuries.</p>\n<p><strong>E</strong> Around the Mediterranean, archaeologists have uncovered chicken bones from about 800 BC. Chickens were a delicacy among the Romans, whose culinary innovations included the omelette, and the practice of stuffing birds for cooking. European farmers began developing methods to fatten the birds, such as feeding them bread which had been soaked in wine. But the chicken's status in Europe appears to have diminished with the collapse of Rome. In the period after the fall of the Roman Empire, chicken farms vanished and the birds returned to the size they had been 1,000 years earlier.</p>\n<p><strong>F</strong> Well into the 20th century chickens, although valued as a source of eggs, played a relatively minor role in diet and the economy. Long after cattle had entered the industrial age of centralized and mechanized large-scale production, chicken production was still mostly a small-scale, local enterprise. The breakthrough that made today's huge bird farms possible was the inclusion of antibiotics, along with a mixture of different vitamins, in the food chickens ate. This allowed chickens to be raised indoors and be protected from cold temperatures and heavy rain as well as predators. This factory farming represents the chicken's final step in its transformation into a big protein-producing business.</p>\n<p><strong>G</strong> Factory farms turning out an increasing amount of chicken have resulted in an increasing demand. Modern chickens are cogs in a system designed to convert grain into protein with staggering efficiency. It takes less than 1 kilogram of feed to produce 400 grams of chicken. By comparison, around 3 kilograms of feed are required to produce 400 grams of beef. A day-old chick can be turned into a 2 kilogram bird in six weeks—half the time it took two generations ago.</p>\n<p><strong>H</strong> Chickens also make wonderful pets, as breeders will tell you. They are as colorful as tropical fish but more affectionate, as cute as guinea pigs and better at catching mice than cats. In the USA, exotic and heritage breeds of chicken are being sold for considerable sums of money as the fashion for keeping chickens in the backyard becomes more popular.</p>\n<p><strong>I</strong> All in all, the globe-spanning chicken is an epic story of evolutionary, agricultural and culinary success, outnumbering human beings on the planet by nearly three to one.</p>"
+      }
+    ]
+  },
+  "questionGroups": [
+    {
+      "groupId": "group-1",
+      "kind": "true_false_not_given",
+      "questionIds": [
+        "q1",
+        "q2",
+        "q3",
+        "q4",
+        "q5",
+        "q6",
+        "q7"
+      ],
+      "bodyHtml": "<div class=\"group\" id=\"q1-2-3-4-5-6-7-anchor\"><h4>Questions 1-7</h4><p>Do the following statements agree with the information given in Reading Passage 1?</p><div class=\"question-item\"><p><strong>1</strong> Chicken is globally popular because it can be used for different styles of cooking.</p><div class=\"radio-options\"><label><input name=\"q1\" type=\"radio\" value=\"TRUE\"> TRUE</label><label><input name=\"q1\" type=\"radio\" value=\"FALSE\"> FALSE</label><label><input name=\"q1\" type=\"radio\" value=\"NOT GIVEN\"> NOT GIVEN</label></div></div><div class=\"question-item\"><p><strong>2</strong> Chickens have poor capacity for flight compared to junglefowl.</p><div class=\"radio-options\"><label><input name=\"q2\" type=\"radio\" value=\"TRUE\"> TRUE</label><label><input name=\"q2\" type=\"radio\" value=\"FALSE\"> FALSE</label><label><input name=\"q2\" type=\"radio\" value=\"NOT GIVEN\"> NOT GIVEN</label></div></div><div class=\"question-item\"><p><strong>3</strong> Scientists believe that the domestic chicken has more than one ancestor.</p><div class=\"radio-options\"><label><input name=\"q3\" type=\"radio\" value=\"TRUE\"> TRUE</label><label><input name=\"q3\" type=\"radio\" value=\"FALSE\"> FALSE</label><label><input name=\"q3\" type=\"radio\" value=\"NOT GIVEN\"> NOT GIVEN</label></div></div><div class=\"question-item\"><p><strong>4</strong> A modern chicken has the same skin colour as the grey junglefowl.</p><div class=\"radio-options\"><label><input name=\"q4\" type=\"radio\" value=\"TRUE\"> TRUE</label><label><input name=\"q4\" type=\"radio\" value=\"FALSE\"> FALSE</label><label><input name=\"q4\" type=\"radio\" value=\"NOT GIVEN\"> NOT GIVEN</label></div></div><div class=\"question-item\"><p><strong>5</strong> After the Roman Empire ended, chicken consumption in Europe declined.</p><div class=\"radio-options\"><label><input name=\"q5\" type=\"radio\" value=\"TRUE\"> TRUE</label><label><input name=\"q5\" type=\"radio\" value=\"FALSE\"> FALSE</label><label><input name=\"q5\" type=\"radio\" value=\"NOT GIVEN\"> NOT GIVEN</label></div></div><div class=\"question-item\"><p><strong>6</strong> Some people criticise the methods involved in factory farming chickens.</p><div class=\"radio-options\"><label><input name=\"q6\" type=\"radio\" value=\"TRUE\"> TRUE</label><label><input name=\"q6\" type=\"radio\" value=\"FALSE\"> FALSE</label><label><input name=\"q6\" type=\"radio\" value=\"NOT GIVEN\"> NOT GIVEN</label></div></div><div class=\"question-item\"><p><strong>7</strong> In the USA, fewer people are keeping expensive breeds of chicken at home.</p><div class=\"radio-options\"><label><input name=\"q7\" type=\"radio\" value=\"TRUE\"> TRUE</label><label><input name=\"q7\" type=\"radio\" value=\"FALSE\"> FALSE</label><label><input name=\"q7\" type=\"radio\" value=\"NOT GIVEN\"> NOT GIVEN</label></div></div></div>",
+      "leadHtml": ""
+    }
+  ],
+  "answerKey": {
+    "q1": "TRUE",
+    "q2": "NOT GIVEN",
+    "q3": "TRUE",
+    "q4": "TRUE",
+    "q5": "TRUE",
+    "q6": "NOT GIVEN",
+    "q7": "FALSE"
+  },
+  "questionOrder": [
+    "q1",
+    "q2",
+    "q3",
+    "q4",
+    "q5",
+    "q6",
+    "q7"
+  ],
+  "questionDisplayMap": {
+    "q1": "1",
+    "q2": "2",
+    "q3": "3",
+    "q4": "4",
+    "q5": "5",
+    "q6": "6",
+    "q7": "7"
+  }
+});
+})(typeof window !== "undefined" ? window : this);

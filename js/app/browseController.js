@@ -30,6 +30,7 @@
                 { id: 'all', label: '全部', type: 'all' },
                 { id: 'new-august-2026', label: '2026.8月新增', newOnly: 'august-2026' },
                 { id: 'new-september-2026', label: '2026.9月高频', newOnly: 'september-2026' },
+                { id: 'new-october-2026', label: '2026.10月高频', newOnly: 'october-2026' },
                 { id: 'p1', label: 'P1', category: 'P1' },
                 { id: 'p2', label: 'P2', category: 'P2' },
                 { id: 'p3', label: 'P3', category: 'P3' }

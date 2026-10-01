@@ -1836,6 +1836,120 @@
     "dataKey": "p3-medium-1939",
     "script": "../reading-explanations/p3-medium-1939.js",
     "title": "Rights for apes 猿类的权利"
+  },
+  "p3-medium-1078": {
+    "examId": "p3-medium-1078",
+    "dataKey": "p3-medium-1078",
+    "script": "../reading-explanations/p3-medium-1078.js",
+    "title": "Book Review: Architecture in the United States by Dell Upton 书评：戴尔·厄普顿《美国建筑》"
+  },
+  "p1-high-1130": {
+    "examId": "p1-high-1130",
+    "dataKey": "p1-high-1130",
+    "script": "../reading-explanations/p1-high-1130.js",
+    "title": "Coral Reefs 珊瑚礁"
+  },
+  "p2-high-1129": {
+    "examId": "p2-high-1129",
+    "dataKey": "p2-high-1129",
+    "script": "../reading-explanations/p2-high-1129.js",
+    "title": "Coral reefs are found in shallow waters throughout the tropical world 珊瑚礁分布于热带浅海"
+  },
+  "p2-high-1791": {
+    "examId": "p2-high-1791",
+    "dataKey": "p2-high-1791",
+    "script": "../reading-explanations/p2-high-1791.js",
+    "title": "The Lost City 失落之城"
+  },
+  "p1-low-1118": {
+    "examId": "p1-low-1118",
+    "dataKey": "p1-low-1118",
+    "script": "../reading-explanations/p1-low-1118.js",
+    "title": "Coffee Then and Now 咖啡的今昔"
+  },
+  "p2-medium-1542": {
+    "examId": "p2-medium-1542",
+    "dataKey": "p2-medium-1542",
+    "script": "../reading-explanations/p2-medium-1542.js",
+    "title": "Natural Choice Coffee and Chocolate 天然之选咖啡与巧克力"
+  },
+  "p2-medium-1726": {
+    "examId": "p2-medium-1726",
+    "dataKey": "p2-medium-1726",
+    "script": "../reading-explanations/p2-medium-1726.js",
+    "title": "The Evolutionary Mystery: Crocodile Survives 进化的谜团：鳄鱼幸存"
+  },
+  "p1-high-1348": {
+    "examId": "p1-high-1348",
+    "dataKey": "p1-high-1348",
+    "script": "../reading-explanations/p1-high-1348.js",
+    "title": "Detection of a Meteorite Lake 发现陨石湖"
+  },
+  "p3-medium-1509": {
+    "examId": "p3-medium-1509",
+    "dataKey": "p3-medium-1509",
+    "script": "../reading-explanations/p3-medium-1509.js",
+    "title": "Mark Strizic: A career of an Australian photographer 马克·斯特里齐克：澳大利亚摄影师的一生"
+  },
+  "p1-medium-1714": {
+    "examId": "p1-medium-1714",
+    "dataKey": "p1-medium-1714",
+    "script": "../reading-explanations/p1-medium-1714.js",
+    "title": "The Dunedin Study 达尼丁研究"
+  },
+  "p3-high-1079": {
+    "examId": "p3-high-1079",
+    "dataKey": "p3-high-1079",
+    "script": "../reading-explanations/p3-high-1079.js",
+    "title": "Book Review: Cities Are Good for You by Leo Hollis 书评：利奥·霍利斯《城市有益于你》"
+  },
+  "p1-medium-1911": {
+    "examId": "p1-medium-1911",
+    "dataKey": "p1-medium-1911",
+    "script": "../reading-explanations/p1-medium-1911.js",
+    "title": "When Maps were Made for the Public 当地图为公众而制"
+  },
+  "p3-high-1243": {
+    "examId": "p3-high-1243",
+    "dataKey": "p3-high-1243",
+    "script": "../reading-explanations/p3-high-1243.js",
+    "title": "Robert Louis Stevenson 罗伯特·路易斯·史蒂文森"
+  },
+  "p1-high-1765": {
+    "examId": "p1-high-1765",
+    "dataKey": "p1-high-1765",
+    "script": "../reading-explanations/p1-high-1765.js",
+    "title": "The History of the Chicken 鸡的历史"
+  },
+  "p3-medium-1080": {
+    "examId": "p3-medium-1080",
+    "dataKey": "p3-medium-1080",
+    "script": "../reading-explanations/p3-medium-1080.js",
+    "title": "Book review on Musicophilia 《音乐癖》书评"
+  },
+  "p2-high-1455": {
+    "examId": "p2-high-1455",
+    "dataKey": "p2-high-1455",
+    "script": "../reading-explanations/p2-high-1455.js",
+    "title": "Investment in shares versus investment in other assets - which gives the greater gain? 股票投资与其他资产投资——哪个回报更高？"
+  },
+  "p1-high-1940": {
+    "examId": "p1-high-1940",
+    "dataKey": "p1-high-1940",
+    "script": "../reading-explanations/p1-high-1940.js",
+    "title": "Designed to Last 经久耐用"
+  },
+  "p1-low-1941": {
+    "examId": "p1-low-1941",
+    "dataKey": "p1-low-1941",
+    "script": "../reading-explanations/p1-low-1941.js",
+    "title": "Revolutions in Mapping 制图革命"
+  },
+  "p2-medium-1942": {
+    "examId": "p2-medium-1942",
+    "dataKey": "p2-medium-1942",
+    "script": "../reading-explanations/p2-medium-1942.js",
+    "title": "Motivating Employees under Adverse Conditions 逆境中激励员工"
   }
 };
 })(typeof window !== "undefined" ? window : globalThis);

@@ -7798,6 +7798,34 @@
     "script": "./p1-high-1737.js",
     "title": "The Fruit Book 水果之书",
     "category": "P1"
+  },
+  "p3-medium-1080": {
+    "examId": "p3-medium-1080",
+    "dataKey": "p3-medium-1080",
+    "script": "./p3-medium-1080.js",
+    "title": "Book review on Musicophilia 《音乐癖》书评",
+    "category": "P3"
+  },
+  "p1-high-1940": {
+    "examId": "p1-high-1940",
+    "dataKey": "p1-high-1940",
+    "script": "./p1-high-1940.js",
+    "title": "Designed to Last 经久耐用",
+    "category": "P1"
+  },
+  "p1-low-1941": {
+    "examId": "p1-low-1941",
+    "dataKey": "p1-low-1941",
+    "script": "./p1-low-1941.js",
+    "title": "Revolutions in Mapping 制图革命",
+    "category": "P1"
+  },
+  "p2-medium-1942": {
+    "examId": "p2-medium-1942",
+    "dataKey": "p2-medium-1942",
+    "script": "./p2-medium-1942.js",
+    "title": "Motivating Employees under Adverse Conditions 逆境中激励员工",
+    "category": "P2"
   }
 };
 })(typeof window !== "undefined" ? window : globalThis);

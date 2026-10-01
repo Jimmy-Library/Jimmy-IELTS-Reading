@@ -295,22 +295,22 @@
           "questionNumber": 40,
           "stem": "What is the author's attitude toward the experiment using three different recordings in the last paragraph?",
           "translation": "作者对最后一段中使用三种不同录音的那项实验持什么态度？",
-          "answer": "A",
+          "answer": "C",
           "wordClass": "",
           "locating": {
             "paragraph": "8",
             "quote": "I didn't expect the results to be that clear-cut."
           },
           "synonyms": [
-            "“The outcome is definitely out of the original expectation” 同义替换为原文的 “I didn't expect the results to be that clear-cut.”，即结果比预想的更明确、超出原有预期",
+            "“The result can be somewhat undecided or inaccurate” 同义替换为原文研究者自己给出的限定：“The data I've observed so far imply that the elephants responded exactly as I expected.”——so far（到目前为止）与 imply（暗示）说明这只是现阶段数据的一种暗示，并不是定论",
             "“the experiment using three different recordings” 对应原文的 “It used three different recordings: the 1994 warning call from Mushara, an anti-predator call recorded by scientist Joyce Poole in Kenya, and a made-up warble tone.”",
-            "“the fascinating finding” 与题干中的态度词 attitude 相互呼应，原文用 fascinating（引人入胜的）表达对这一发现的重视"
+            "“somewhat” 这一缓和限定词与原文的 “they didn't always flee”（大象并不是每次都逃跑）相呼应：反应并不一致，结果仍带有不确定性"
           ],
-          "locatingTip": "定位：题干已经指明“最后一段（the last paragraph）”，直接看第 8 段即可，无需全文搜索。确定答案技巧：问态度题，要找带感情色彩或评价性措辞的句子。第 8 段引语中有两处关键表述——先是 “The data I've observed so far imply that the elephants responded exactly as I expected.”（观察到的数据表明大象的反应与我预期的完全一致），随后用 However 转折给出真正令她意外之处：“the fascinating finding is that the anti-predator call from Kenya—unfamiliar to them—caused them to gather, tense up and rumble aggressively as well; but they didn't always flee. I didn't expect the results to be that clear-cut.”（引人入胜的发现是，来自肯尼亚、对它们而言陌生的反捕食者叫声同样让它们聚拢、紧张并发出侵略性的低吼，但它们并不总是逃跑。我没想到结果会如此清晰明确）。末句 “I didn't expect ...” 直接表明结果超出原有预期，与选项 A 的 “out of the original expectation” 对应，故选 A。",
-          "analysis": "第 8 段描述“去年”进行的后续实验及研究者的反应：“Last year, an experiment was set up to pursue the problem further. It used three different recordings: the 1994 warning call from Mushara, an anti-predator call recorded by scientist Joyce Poole in Kenya, and a made-up warble tone. ‘The data I've observed so far imply that the elephants responded exactly as I expected. However, the fascinating finding is that the anti-predator call from Kenya—unfamiliar to them—caused them to gather, tense up and rumble aggressively as well; but they didn't always flee. I didn't expect the results to be that clear-cut.'”（去年又设计了实验以进一步探究这一问题。实验用了三种不同的录音：1994 年 Mushara 的警告呼叫、科学家 Joyce Poole 在肯尼亚录制的反捕食者呼叫，以及一种虚构的颤音。“到目前为止我观察到的数据表明，大象的反应与我的预期完全一致。然而，引人入胜的发现是，来自肯尼亚、对它们来说陌生的反捕食者呼叫，同样让它们聚拢、紧张并发出侵略性的低吼——不过它们并不总是逃跑。我没想到结果会如此清晰明确。”）。三个选项的排除依据都在这段原文里：B 说“数据无法清晰获得”，与 “The data I've observed so far imply ...” 以及 “clear-cut” 明确矛盾；C 说“结果可能犹豫不定或不准确”，与 “responded exactly as I expected” 和 “that clear-cut” 相冲突；D 说“结果对公众而言陌生”，而原文 unfamiliar 形容的是大象对这些叫声感到陌生（“unfamiliar to them”），选项把陌生感的主体从大象偷换成了 the public。只有 A 与 “I didn't expect the results to be that clear-cut” 一致——研究者本来没料到结果会如此清晰，即结果超出了最初的预期。",
+          "locatingTip": "定位：题干已经指明“最后一段（the last paragraph）”，直接看第 8 段即可，无需全文搜索。确定答案技巧：态度题要看研究者/作者表述结论时所用的限定语。第 8 段研究者先说 “The data I've observed so far imply that the elephants responded exactly as I expected.”——so far 与 imply 把结论限定为“目前数据所暗示的”，而不是定论；随后又说这种陌生的反捕食者呼叫虽然让大象聚拢、紧张、低吼，但它们 “didn't always flee”，即反应并不一致。可见作者对这项实验的态度是保留的：结果仍有不确定、不够精确之处，与 C 的 somewhat undecided or inaccurate 一致，故选 C。",
+          "analysis": "第 8 段描述“去年”进行的后续实验及研究者的反应：“Last year, an experiment was set up to pursue the problem further. It used three different recordings: the 1994 warning call from Mushara, an anti-predator call recorded by scientist Joyce Poole in Kenya, and a made-up warble tone. ‘The data I've observed so far imply that the elephants responded exactly as I expected. However, the fascinating finding is that the anti-predator call from Kenya—unfamiliar to them—caused them to gather, tense up and rumble aggressively as well; but they didn't always flee. I didn't expect the results to be that clear-cut.'”（去年又设计了实验以进一步探究这一问题。实验用了三种不同的录音：1994 年 Mushara 的警告呼叫、科学家 Joyce Poole 在肯尼亚录制的反捕食者呼叫，以及一种虚构的颤音。“到目前为止我观察到的数据表明，大象的反应与我的预期一致。然而，引人入胜的发现是，来自肯尼亚、对它们来说陌生的反捕食者呼叫，同样让它们聚拢、紧张并发出侵略性的低吼——不过它们并不总是逃跑。我没想到结果会如此清晰明确。”）。选项的取舍都在这段原文里：原文对结论的表述始终带有限定——“The data I've observed so far imply …” 用 so far 与 imply 说明结论只建立在现阶段的数据上、只是一种暗示，而 “they didn't always flee” 又表明大象的反应并不一致，所以这项实验的结果仍存在不确定、不够精确之处，与 C 的 The result can be somewhat undecided or inaccurate 对应，故选 C。",
           "traps": [
-            "为什么不是 B（The data cannot be very clearly obtained）：原文明确说 “The data I've observed so far imply that the elephants responded exactly as I expected”，数据不但能够获得，而且已经支撑了明确结论；B 与原文直接冲突。",
-            "为什么不是 C（The result can be somewhat undecided or inaccurate）：原文反复强调结果的明确性，既说大象的反应“exactly as I expected”，又说 “I didn't expect the results to be that clear-cut”（没想到结果如此清晰明确）；clear-cut 与 “undecided or inaccurate” 正好相反。",
+            "为什么不是 A（The outcome is definitely out of the original expectation）：原文虽然出现一句 “I didn't expect the results to be that clear-cut”，但那只是研究者对“结果清晰程度”的一句感叹；整段对结论的表述仍以 so far、imply、didn't always flee 这类限定语为主，作者的整体态度是保留的，A 用 definitely 把话说得过于绝对。",
+            "为什么不是 B（The data cannot be very clearly obtained）：原文说 “The data I've observed so far imply that the elephants responded exactly as I expected”，数据不但能够获得，还被用来支撑结论；B 的“无法清晰获得数据”在原文中没有依据。",
             "为什么不是 D（The result can be unfamiliar to the public）：原文的 unfamiliar 出现在 “the anti-predator call from Kenya—unfamiliar to them—caused them to gather”，其中 them 指代大象，说的是这种肯尼亚叫声对大象而言陌生，而不是说研究结果对公众陌生，D 把 unfamiliar 的承受对象偷换成了 the public。"
           ]
         }

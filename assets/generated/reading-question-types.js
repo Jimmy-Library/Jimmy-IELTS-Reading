@@ -6,7 +6,7 @@
 (function registerReadingQuestionTypes(global) {
   'use strict';
   global.__READING_QUESTION_TYPES__ = {
-  "generatedAt": "2026-09-19",
+  "generatedAt": "2026-10-01",
   "source": "人工分类索引 + 题目数据自动识别",
   "types": [
     {
@@ -153,14 +153,27 @@
       "matching-headings",
       "note"
     ],
+    "p1-high-1130": [
+      "mc",
+      "tfng",
+      "matching-info"
+    ],
     "p1-high-118": [
       "mc",
       "tfng",
       "matching-headings"
     ],
+    "p1-high-1348": [
+      "tfng",
+      "summary-passage",
+      "note"
+    ],
     "p1-high-171": [
       "tfng",
       "note"
+    ],
+    "p1-high-1765": [
+      "tfng"
     ],
     "p1-high-1783": [
       "tfng",
@@ -189,6 +202,11 @@
     "p1-high-194": [
       "tfng",
       "note"
+    ],
+    "p1-high-1940": [
+      "mc",
+      "ynng",
+      "summary-list"
     ],
     "p1-high-200": [
       "tfng",
@@ -310,6 +328,10 @@
       "tfng",
       "table"
     ],
+    "p1-low-1118": [
+      "tfng",
+      "note"
+    ],
     "p1-low-112": [
       "tfng",
       "note"
@@ -348,6 +370,11 @@
     ],
     "p1-low-1930": [
       "tfng"
+    ],
+    "p1-low-1941": [
+      "mc",
+      "matching-features",
+      "summary-passage"
     ],
     "p1-low-223": [
       "tfng",
@@ -532,10 +559,19 @@
       "tfng",
       "note"
     ],
+    "p1-medium-1714": [
+      "mc",
+      "tfng",
+      "sentence"
+    ],
     "p1-medium-182": [
       "mc",
       "tfng",
       "matching-info"
+    ],
+    "p1-medium-1911": [
+      "tfng",
+      "note"
     ],
     "p1-medium-1923": [
       "mc",
@@ -579,6 +615,11 @@
       "matching-headings",
       "matching-features",
       "summary-passage"
+    ],
+    "p2-high-1129": [
+      "mc",
+      "tfng",
+      "matching-info"
     ],
     "p2-high-120": [
       "matching-headings",
@@ -650,6 +691,11 @@
       "matching-features",
       "summary-passage"
     ],
+    "p2-high-1455": [
+      "matching-headings",
+      "matching-features",
+      "summary-passage"
+    ],
     "p2-high-16": [
       "mc",
       "matching-headings",
@@ -659,6 +705,11 @@
       "matching-info",
       "matching-features",
       "summary-passage"
+    ],
+    "p2-high-1791": [
+      "mc",
+      "matching-info",
+      "summary-list"
     ],
     "p2-high-19": [
       "matching-info",
@@ -942,6 +993,14 @@
       "matching-features",
       "summary-passage"
     ],
+    "p2-medium-1542": [
+      "tfng",
+      "matching-features"
+    ],
+    "p2-medium-1726": [
+      "matching-headings",
+      "summary-passage"
+    ],
     "p2-medium-1764": [
       "matching-info",
       "matching-features",
@@ -949,6 +1008,11 @@
     ],
     "p2-medium-1925": [
       "matching-headings"
+    ],
+    "p2-medium-1942": [
+      "ynng",
+      "matching-headings",
+      "matching-features"
     ],
     "p2-medium-209": [
       "matching-info",
@@ -1004,10 +1068,20 @@
       "ynng",
       "summary-list"
     ],
+    "p3-high-1079": [
+      "mc",
+      "ynng",
+      "summary-passage"
+    ],
     "p3-high-1133": [
       "mc",
       "tfng",
       "matching-endings"
+    ],
+    "p3-high-1243": [
+      "mc",
+      "tfng",
+      "summary-list"
     ],
     "p3-high-1458": [
       "mc",
@@ -1376,6 +1450,20 @@
       "mc",
       "ynng"
     ],
+    "p3-medium-1078": [
+      "mc",
+      "ynng",
+      "summary-passage"
+    ],
+    "p3-medium-1080": [
+      "mc",
+      "ynng",
+      "matching-endings"
+    ],
+    "p3-medium-1509": [
+      "ynng",
+      "matching-features"
+    ],
     "p3-medium-152": [
       "mc",
       "tfng",
@@ -1493,15 +1581,21 @@
   "autoDetectedExamIds": [
     "p1-high-1052",
     "p1-high-1102",
+    "p1-high-1130",
+    "p1-high-1348",
+    "p1-high-1765",
     "p1-high-1783",
     "p1-high-1805",
     "p1-high-1928",
     "p1-high-1931",
     "p1-high-1934",
+    "p1-high-1940",
     "p1-high-240",
     "p1-low-1029",
     "p1-low-1032",
+    "p1-low-1118",
     "p1-low-1930",
+    "p1-low-1941",
     "p1-medium-1019",
     "p1-medium-1041",
     "p1-medium-1042",
@@ -1510,18 +1604,28 @@
     "p1-medium-1471",
     "p1-medium-1486",
     "p1-medium-1583",
+    "p1-medium-1714",
+    "p1-medium-1911",
     "p1-medium-1923",
     "p1-medium-1938",
     "p2-high-1015",
+    "p2-high-1129",
+    "p2-high-1455",
+    "p2-high-1791",
     "p2-high-1935",
     "p2-high-1936",
     "p2-low-240",
     "p2-low-242",
     "p2-medium-1394",
+    "p2-medium-1542",
+    "p2-medium-1726",
     "p2-medium-1764",
     "p2-medium-1925",
+    "p2-medium-1942",
     "p3-high-1051",
+    "p3-high-1079",
     "p3-high-1133",
+    "p3-high-1243",
     "p3-high-1458",
     "p3-high-1591",
     "p3-high-1849",
@@ -1530,6 +1634,9 @@
     "p3-low-1933",
     "p3-low-1937",
     "p3-low-240",
+    "p3-medium-1078",
+    "p3-medium-1080",
+    "p3-medium-1509",
     "p3-medium-1693",
     "p3-medium-1827",
     "p3-medium-1929",

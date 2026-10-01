@@ -3,6 +3,65 @@
 // 数据版本: v3.2
 window.completeExamIndex = [
 {
+        id: "p1-high-1940", title: "Designed to Last 经久耐用", category: "P1", frequency: "high", path: "assets/generated/reading-exams/", filename: "p1-high-1940.js", hasHtml: true, hasPdf: false,
+    },
+{
+        id: "p1-low-1941", title: "Revolutions in Mapping 制图革命", category: "P1", frequency: "low", path: "assets/generated/reading-exams/", filename: "p1-low-1941.js", hasHtml: true, hasPdf: false,
+    },
+{
+        id: "p2-medium-1942", title: "Motivating Employees under Adverse Conditions 逆境中激励员工", category: "P2", frequency: "medium", path: "assets/generated/reading-exams/", filename: "p2-medium-1942.js", hasHtml: true, hasPdf: false,
+    },
+
+{
+        id: "p3-medium-1078", title: "Book Review: Architecture in the United States by Dell Upton 书评：戴尔·厄普顿《美国建筑》", category: "P3", frequency: "medium", path: "assets/generated/reading-exams/", filename: "p3-medium-1078.js", hasHtml: true, hasPdf: false,
+    },
+{
+        id: "p1-high-1130", title: "Coral Reefs 珊瑚礁", category: "P1", frequency: "high", path: "assets/generated/reading-exams/", filename: "p1-high-1130.js", hasHtml: true, hasPdf: false,
+    },
+{
+        id: "p2-high-1129", title: "Coral reefs are found in shallow waters throughout the tropical world 珊瑚礁分布于热带浅海", category: "P2", frequency: "high", path: "assets/generated/reading-exams/", filename: "p2-high-1129.js", hasHtml: true, hasPdf: false,
+    },
+{
+        id: "p2-high-1791", title: "The Lost City 失落之城", category: "P2", frequency: "high", path: "assets/generated/reading-exams/", filename: "p2-high-1791.js", hasHtml: true, hasPdf: false,
+    },
+{
+        id: "p1-low-1118", title: "Coffee Then and Now 咖啡的今昔", category: "P1", frequency: "low", path: "assets/generated/reading-exams/", filename: "p1-low-1118.js", hasHtml: true, hasPdf: false,
+    },
+{
+        id: "p2-medium-1542", title: "Natural Choice Coffee and Chocolate 天然之选咖啡与巧克力", category: "P2", frequency: "medium", path: "assets/generated/reading-exams/", filename: "p2-medium-1542.js", hasHtml: true, hasPdf: false,
+    },
+{
+        id: "p2-medium-1726", title: "The Evolutionary Mystery: Crocodile Survives 进化的谜团：鳄鱼幸存", category: "P2", frequency: "medium", path: "assets/generated/reading-exams/", filename: "p2-medium-1726.js", hasHtml: true, hasPdf: false,
+    },
+{
+        id: "p1-high-1348", title: "Detection of a Meteorite Lake 发现陨石湖", category: "P1", frequency: "high", path: "assets/generated/reading-exams/", filename: "p1-high-1348.js", hasHtml: true, hasPdf: false,
+    },
+{
+        id: "p3-medium-1509", title: "Mark Strizic: A career of an Australian photographer 马克·斯特里齐克：澳大利亚摄影师的一生", category: "P3", frequency: "medium", path: "assets/generated/reading-exams/", filename: "p3-medium-1509.js", hasHtml: true, hasPdf: false,
+    },
+{
+        id: "p1-medium-1714", title: "The Dunedin Study 达尼丁研究", category: "P1", frequency: "medium", path: "assets/generated/reading-exams/", filename: "p1-medium-1714.js", hasHtml: true, hasPdf: false,
+    },
+{
+        id: "p3-high-1079", title: "Book Review: Cities Are Good for You by Leo Hollis 书评：利奥·霍利斯《城市有益于你》", category: "P3", frequency: "high", path: "assets/generated/reading-exams/", filename: "p3-high-1079.js", hasHtml: true, hasPdf: false,
+    },
+{
+        id: "p1-medium-1911", title: "When Maps were Made for the Public 当地图为公众而制", category: "P1", frequency: "medium", path: "assets/generated/reading-exams/", filename: "p1-medium-1911.js", hasHtml: true, hasPdf: false,
+    },
+{
+        id: "p3-high-1243", title: "Robert Louis Stevenson 罗伯特·路易斯·史蒂文森", category: "P3", frequency: "high", path: "assets/generated/reading-exams/", filename: "p3-high-1243.js", hasHtml: true, hasPdf: false,
+    },
+{
+        id: "p1-high-1765", title: "The History of the Chicken 鸡的历史", category: "P1", frequency: "high", path: "assets/generated/reading-exams/", filename: "p1-high-1765.js", hasHtml: true, hasPdf: false,
+    },
+{
+        id: "p3-medium-1080", title: "Book review on Musicophilia 《音乐癖》书评", category: "P3", frequency: "medium", path: "assets/generated/reading-exams/", filename: "p3-medium-1080.js", hasHtml: true, hasPdf: false,
+    },
+{
+        id: "p2-high-1455", title: "Investment in shares versus investment in other assets - which gives the greater gain? 股票投资与其他资产投资——哪个回报更高？", category: "P2", frequency: "high", path: "assets/generated/reading-exams/", filename: "p2-high-1455.js", hasHtml: true, hasPdf: false,
+    },
+
+{
         id: "p1-high-1805", title: "The origins of cinema 电影的起源", category: "P1", frequency: "high", path: "assets/generated/reading-exams/", filename: "p1-high-1805.js", hasHtml: true, hasPdf: false,
     },
 {

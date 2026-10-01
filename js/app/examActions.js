@@ -114,10 +114,38 @@
     ];
     global.__SEPTEMBER_2026_PRIORITY_IDS = SEPTEMBER_2026_PRIORITY_IDS;
 
+    // ===== 2026.10 月批次 =====
+    // 筛选白名单：本批新上传的篇目 + 用户点名要进 10 月筛选的旧篇
+    const OCTOBER_2026_HIGH_IDS = [
+        // 本批新上传
+        'p3-medium-1078', 'p1-high-1130', 'p2-high-1129', 'p2-high-1791',
+        'p1-low-1118', 'p2-medium-1542', 'p2-medium-1726', 'p1-high-1348',
+        'p3-medium-1509', 'p1-medium-1714', 'p3-high-1079', 'p1-medium-1911',
+        'p3-high-1243', 'p1-high-1765', 'p3-medium-1080', 'p2-high-1455',
+        'p1-medium-1005', 'p3-low-1933',
+        // 从 mini-ielts 下载重建
+        'p1-high-1940', 'p1-low-1941', 'p2-medium-1942',
+        // 用户点名加入 10 月筛选的旧篇
+        'p3-high-156', 'p1-high-101', 'p3-high-174',
+        'p3-low-55', 'p3-medium-162', 'p2-high-23'
+    ];
+    global.__OCTOBER_2026_HIGH_IDS = OCTOBER_2026_HIGH_IDS;
+
+    // 套题推荐优先推荐本批新上传；题数与分类标准（P1/P2=13、P3=14）不符的篇目不进这个列表
+    const OCTOBER_2026_PRIORITY_IDS = [
+        'p3-medium-1078', 'p1-high-1130', 'p2-high-1129', 'p2-high-1791',
+        'p1-low-1118', 'p2-medium-1542', 'p2-medium-1726',
+        'p3-medium-1509', 'p1-medium-1714', 'p3-high-1079', 'p1-medium-1911',
+        'p3-high-1243', 'p3-medium-1080', 'p2-high-1455',
+        'p1-high-1940', 'p1-low-1941'
+    ];
+    global.__OCTOBER_2026_PRIORITY_IDS = OCTOBER_2026_PRIORITY_IDS;
+
     // __browseNewOnly 存放月份键（或 false）；旧值 true 视为最新批次
     const NEW_BATCHES = {
         'august-2026': { ids: AUGUST_2026_NEW_IDS, label: '2026.8月新增', filterId: 'new-august-2026' },
-        'september-2026': { ids: SEPTEMBER_2026_HIGH_IDS, label: '2026.9月高频', filterId: 'new-september-2026' }
+        'september-2026': { ids: SEPTEMBER_2026_HIGH_IDS, label: '2026.9月高频', filterId: 'new-september-2026' },
+        'october-2026': { ids: OCTOBER_2026_HIGH_IDS, label: '2026.10月高频', filterId: 'new-october-2026' }
     };
     global.__NEW_BATCHES = NEW_BATCHES;
 
@@ -1292,6 +1320,10 @@
 
     global.filterByNewSeptember2026 = function () {
         filterByNewBatch('september-2026');
+    };
+
+    global.filterByNewOctober2026 = function () {
+        filterByNewBatch('october-2026');
     };
 
     console.log('[ExamActions] 模块已加载 (Phase 2)');

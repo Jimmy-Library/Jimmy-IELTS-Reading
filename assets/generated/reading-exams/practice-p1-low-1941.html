@@ -1,0 +1,1792 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IELTS 阅读练习</title>
+    <link rel="stylesheet" href="../../../css/vocabulary-notebook.css">
+    <link rel="stylesheet" href="../../../css/vocabulary-notebook-v2.css">
+    <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <script>
+        window.__READING_ORIGINAL_UI__ = true;
+        document.documentElement.removeAttribute('data-image-skin');
+        document.documentElement.removeAttribute('data-theme');
+    </script>
+    <style>
+        #image-skin-panel,
+        #season-theme-panel,
+        #skin-cursor-halo,
+        #skin-cursor-dot,
+        #skin-atmosphere-layer,
+        #season-weather-canvas,
+        #skin-atmosphere-canvas {
+            display: none !important;
+        }
+        :root {
+            --line: #d7dde5;
+            --panel: #ffffff;
+            --panel-alt: #edf2f9;
+            --text: #1f2937;
+            --muted: #64748b;
+            --accent: #2563eb;
+            --success: #15803d;
+            --danger: #b91c1c;
+            --shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+            --practice-header-height: 67px;
+            --practice-nav-height: 72px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            font-size: 16px;
+        }
+
+        body {
+            font-family: "SF Pro Text", "PingFang SC", "Noto Sans SC", system-ui, sans-serif;
+            background: linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
+            color: var(--text);
+            height: 100vh;
+            overflow: hidden;
+            padding-bottom: var(--practice-nav-height);
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 14px 22px;
+            background: rgba(255, 255, 255, 0.94);
+            border-bottom: 1px solid var(--line);
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+        }
+
+        .header h1 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            line-height: 1.4;
+        }
+
+        .header p {
+            font-size: 0.92rem;
+            color: var(--muted);
+        }
+
+        .header-content {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            min-width: 0;
+        }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        #timer,
+        .header-btn {
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: var(--panel);
+            padding: 8px 12px;
+            font-size: 0.92rem;
+            color: var(--text);
+        }
+
+        .header-btn {
+            cursor: pointer;
+        }
+
+        .shell {
+            display: flex;
+            height: calc(100vh - var(--practice-header-height) - var(--practice-nav-height));
+            min-height: 0;
+            width: 100%;
+        }
+
+        .pane {
+            overflow: auto;
+            background: var(--panel);
+            padding: 22px;
+        }
+
+        #left {
+            width: 50%;
+            min-width: 320px;
+        }
+
+        #divider {
+            flex: 0 0 8px;
+            background: linear-gradient(180deg, #e2e8f0 0%, #cbd5e1 100%);
+            border-left: 1px solid var(--line);
+            border-right: 1px solid var(--line);
+            cursor: ew-resize;
+        }
+
+        #right {
+            flex: 1;
+            min-width: 320px;
+            background: var(--panel-alt);
+            padding: 16px 20px;
+        }
+
+        #left p,
+        #right p {
+            line-height: 1.7;
+            margin: 0 0 14px;
+        }
+
+        .unified-group {
+            margin-bottom: 18px;
+        }
+
+        .group {
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            padding: 24px 32px;
+            margin-bottom: 24px;
+        }
+
+        .question-item,
+        .match-question-item,
+        .choice-item {
+            margin-bottom: 12px;
+        }
+
+        .paragraph-dropzone,
+        .match-dropzone {
+            min-height: 40px;
+            border: 2px dashed #93c5fd;
+            border-radius: 10px;
+            background: #eff6ff;
+            padding: 8px 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+        }
+
+        .paragraph-dropzone.drag-over,
+        .match-dropzone.drag-over {
+            border-color: var(--accent);
+            background: #dbeafe;
+        }
+
+        .paragraph-dropzone.dropzone-filled,
+        .match-dropzone.dropzone-filled {
+            border-style: solid;
+        }
+
+        .paragraph-label {
+            font-size: 0.9rem;
+            color: var(--muted);
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .pool-items,
+        .dropped-items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            flex: 1;
+        }
+
+        .pool-items {
+            min-height: 40px;
+        }
+
+        .pool-items.drag-over {
+            border-color: var(--accent);
+            background: rgba(37, 99, 235, 0.08);
+        }
+
+        .dropped-items:empty::after {
+            content: "拖到这里";
+            font-size: 0.82rem;
+            color: #7b8a98;
+            letter-spacing: 0.02em;
+        }
+
+        .drag-item {
+            border: 1px solid #bfdbfe;
+            border-radius: 8px;
+            background: #eff6ff;
+            padding: 6px 10px;
+            cursor: grab;
+            font-size: 0.9rem;
+            user-select: none;
+        }
+
+        .drag-item.dragging {
+            opacity: 0.55;
+        }
+
+        .drag-item--assigned {
+            border-style: solid;
+        }
+
+        .drag-item[draggable="false"] {
+            cursor: pointer;
+            border-style: solid;
+        }
+
+        .practice-nav {
+            position: fixed;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 12px 18px;
+            background: rgba(255, 255, 255, 0.96);
+            border-top: 1px solid var(--line);
+            box-shadow: 0 -8px 24px rgba(15, 23, 42, 0.06);
+            z-index: 2000;
+        }
+
+        .practice-nav .title {
+            font-weight: 700;
+            color: var(--muted);
+            white-space: nowrap;
+        }
+
+        .practice-nav .questions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .q-item,
+        .practice-nav .controls button {
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: var(--panel);
+            padding: 6px 12px;
+            font-size: 0.9rem;
+            color: var(--text);
+            cursor: pointer;
+        }
+
+        .q-item:hover,
+        .practice-nav .controls button:hover {
+            background: #f1f5f9;
+        }
+
+        .q-item.active {
+            border-color: var(--accent);
+            background: #eff6ff;
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        .q-item.answered {
+            background: #dbeafe;
+            border-color: #93c5fd;
+        }
+
+        .q-item.correct {
+            border-color: var(--success);
+            background: #dcfce7;
+            color: var(--success);
+        }
+
+        .q-item.incorrect {
+            border-color: var(--danger);
+            background: #fee2e2;
+            color: var(--danger);
+        }
+
+        /* ---- 套题模式：一次展示全部小节题目（约 40 题）+ 跨篇跳转 ---- */
+        .practice-nav .questions.question-nav--suite {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: flex-start;
+            gap: 6px 16px;
+            flex: 1 1 auto;
+            max-height: 140px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+
+        .q-passage {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .q-passage__label {
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: var(--muted);
+            background: rgba(148, 163, 184, 0.16);
+            border: none;
+            border-radius: 6px;
+            padding: 3px 7px;
+            white-space: nowrap;
+            line-height: 1.4;
+        }
+
+        .q-passage__label--btn {
+            cursor: pointer;
+            transition: background 0.15s ease, color 0.15s ease;
+        }
+
+        .q-passage__label--btn:hover {
+            background: rgba(37, 99, 235, 0.18);
+            color: var(--accent);
+        }
+
+        .q-passage.is-current .q-passage__label {
+            background: rgba(37, 99, 235, 0.16);
+            color: var(--accent);
+        }
+
+        .q-passage__items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+
+        .question-nav--suite .q-item {
+            padding: 3px 8px;
+            font-size: 0.8rem;
+            min-width: 30px;
+            text-align: center;
+        }
+
+        .question-nav--suite .q-passage:not(.is-current) .q-item {
+            opacity: 0.8;
+        }
+
+        .practice-nav .controls {
+            margin-left: auto;
+            display: flex;
+            gap: 8px;
+        }
+
+        /* ---- 导出 PDF：整页打印（文章 + 题目 + 作答 + 高亮 + 详情）---- */
+        /* 套题合并打印：屏幕上不显示，仅打印时启用 */
+        #suite-print-root {
+            display: none;
+        }
+
+        .pdf-inline-note-comment {
+            display: none;
+        }
+
+        body.suite-printing .pdf-inline-note-comment {
+            display: inline;
+            margin-left: 3px;
+            color: #9a3412;
+            font-size: 0.88em;
+            font-weight: 700;
+            font-style: italic;
+        }
+
+        @media print {
+            html, body {
+                background: #fff !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+                height: auto !important;
+                overflow: visible !important;
+                padding-bottom: 0 !important;
+            }
+
+            /* 套题导出：只打印三篇合并内容，隐藏只渲染单篇的实时页面 */
+            body.suite-printing .shell,
+            body.suite-printing .header,
+            body.suite-printing #results,
+            body.suite-printing #question-nav {
+                display: none !important;
+            }
+
+            body.suite-printing #suite-print-root {
+                display: block !important;
+            }
+
+            .pdf-inline-highlight {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            .pdf-inline-note-comment {
+                display: inline !important;
+                margin-left: 3px;
+                color: #9a3412 !important;
+                font-size: 9pt;
+                font-weight: 700;
+                font-style: italic;
+                white-space: normal;
+            }
+
+            #suite-print-root .suite-print__head h1 {
+                font-size: 18pt;
+                margin: 0 0 4px;
+            }
+
+            #suite-print-root .suite-print__head p {
+                margin: 0 0 16px;
+                font-weight: 700;
+            }
+
+            #suite-print-root .suite-print__passage {
+                page-break-before: always;
+                break-before: page;
+            }
+
+            #suite-print-root .suite-print__passage:first-of-type {
+                page-break-before: auto;
+                break-before: auto;
+            }
+
+            #suite-print-root .suite-print__title {
+                font-size: 14pt;
+                margin: 0 0 10px;
+                padding-bottom: 6px;
+                border-bottom: 2px solid #1f7a4d;
+            }
+
+            #suite-print-root .suite-print__tag {
+                display: inline-block;
+                margin-right: 8px;
+                padding: 1px 8px;
+                border-radius: 4px;
+                background: #1f7a4d;
+                color: #fff;
+                font-size: 11pt;
+            }
+
+            #suite-print-root .suite-print__score {
+                float: right;
+                font-size: 12pt;
+                color: #1f7a4d;
+            }
+
+            #suite-print-root .suite-print__article {
+                margin-bottom: 14px;
+                line-height: 1.7;
+            }
+
+            #suite-print-root .suite-print__answers {
+                width: 100%;
+                border-collapse: collapse;
+                page-break-inside: avoid;
+                break-inside: avoid;
+            }
+
+            #suite-print-root .suite-print__answers th,
+            #suite-print-root .suite-print__answers td {
+                border: 1px solid #cfd8dc;
+                padding: 5px 8px;
+                text-align: center;
+                font-size: 10pt;
+            }
+
+            /* 完整题目区（与单篇导出一致：文章后接全部题目） */
+            #suite-print-root .suite-print__questions {
+                margin: 6px 0 16px;
+                line-height: 1.6;
+                font-size: 10.5pt;
+            }
+
+            #suite-print-root .suite-print__questions .unified-group,
+            #suite-print-root .suite-print__questions .group {
+                margin: 0 0 14px;
+                break-inside: avoid;
+                page-break-inside: avoid;
+            }
+
+            #suite-print-root .suite-print__questions input[type="text"],
+            #suite-print-root .suite-print__questions .blank {
+                border: none;
+                border-bottom: 1px solid #555;
+                min-width: 90px;
+                background: transparent;
+            }
+
+            #suite-print-root .suite-print__answerkey {
+                margin-top: 12px;
+                break-inside: avoid;
+                page-break-inside: avoid;
+            }
+
+            #suite-print-root .suite-print__ak-title {
+                font-size: 12pt;
+                margin: 0 0 6px;
+                color: #1f7a4d;
+            }
+
+            /* 隐藏交互/悬浮元素（保留 header-controls 中的 timer 作为做题用时） */
+            #settings-panel,
+            #notes-panel,
+            .overlay,
+            #divider,
+            #selbar,
+            .practice-nav,
+            .header-controls .header-btn {
+                display: none !important;
+            }
+
+            /* 单篇导出 PDF：打印做题用时 */
+            #timer::before {
+                content: "做题用时：";
+                font-weight: 700;
+                color: #1f7a4d;
+            }
+
+            .header {
+                position: static !important;
+                box-shadow: none !important;
+            }
+
+            /* 双栏展开为整页单列，完整显示全部内容 */
+            .shell {
+                display: block !important;
+                height: auto !important;
+                overflow: visible !important;
+                padding: 0 !important;
+            }
+
+            #left,
+            #right {
+                width: 100% !important;
+                min-width: 0 !important;
+                max-width: none !important;
+                height: auto !important;
+                max-height: none !important;
+                overflow: visible !important;
+                display: block !important;
+                padding: 0 !important;
+            }
+
+            #right {
+                margin-top: 18px;
+            }
+
+            /* 练习记录详情（结果区）始终展开 */
+            #results {
+                display: block !important;
+            }
+
+            .unified-group,
+            .group,
+            #results {
+                break-inside: avoid;
+                page-break-inside: avoid;
+            }
+
+            /* 保留高亮底色 */
+            .hl {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+        }
+
+        .submit-btn {
+            background: var(--accent) !important;
+            color: white !important;
+            border-color: var(--accent) !important;
+            font-weight: 600;
+        }
+
+        #results {
+            display: none;
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            padding: 18px;
+            margin-top: 18px;
+        }
+
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 12px;
+            font-size: 0.92rem;
+        }
+
+        .results-table th,
+        .results-table td {
+            border: 1px solid var(--line);
+            padding: 8px 10px;
+            text-align: center;
+        }
+
+        .result-correct {
+            color: var(--success);
+            font-weight: 700;
+        }
+
+        .result-incorrect {
+            color: var(--danger);
+            font-weight: 700;
+        }
+
+        /* 套题结果：三篇分节呈现 */
+        .suite-result-section__time {
+            font-size: 0.82rem;
+            color: #64748b;
+            margin-right: 8px;
+            white-space: nowrap;
+        }
+        .suite-result-duration {
+            margin: 4px 0 14px;
+            font-size: 0.86rem;
+            color: #475569;
+        }
+        #timer[data-timer-overtime="1"] {
+            color: #b91c1c;
+            font-weight: 700;
+        }
+        .suite-result-total {
+            font-size: 1.02rem;
+            font-weight: 700;
+            margin: 6px 0 4px;
+        }
+
+        .suite-result-band {
+            display: inline-block;
+            margin-left: 8px;
+            padding: 2px 10px;
+            border-radius: 999px;
+            background: var(--success);
+            color: #fff;
+            font-size: 0.86rem;
+        }
+
+        .suite-result-section {
+            margin-top: 16px;
+            padding-top: 12px;
+            border-top: 1px solid var(--line);
+        }
+
+        .suite-result-section__head {
+            display: flex;
+            align-items: baseline;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .suite-result-section__tag {
+            flex: 0 0 auto;
+            font-weight: 700;
+            font-size: 0.78rem;
+            padding: 2px 8px;
+            border-radius: 4px;
+            background: rgba(37, 99, 235, 0.12);
+            color: #1d4ed8;
+        }
+
+        .suite-result-section__title {
+            flex: 1 1 auto;
+            min-width: 0;
+            font-size: 0.92rem;
+            opacity: 0.85;
+        }
+
+        .suite-result-section__score {
+            flex: 0 0 auto;
+            font-weight: 700;
+            color: var(--success);
+            white-space: nowrap;
+        }
+
+        /* 提交后展示的微信 / 二维码联系卡片 */
+        .contact-card {
+            margin-top: 20px;
+            padding: 18px 16px;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            text-align: center;
+            background: var(--panel-alt, #f8fafc);
+        }
+
+        .contact-card .contact-title {
+            margin: 0 0 12px;
+            font-size: 0.98rem;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .contact-card .contact-qr {
+            display: block;
+            width: 200px;
+            max-width: 70%;
+            height: auto;
+            margin: 0 auto 12px;
+            border-radius: 8px;
+        }
+
+        .contact-card .contact-wechat {
+            margin: 6px 0 4px;
+            font-size: 0.95rem;
+            color: var(--text);
+        }
+
+        .contact-card .wechat-id-copy {
+            display: inline-block;
+            padding: 4px 12px;
+            margin-left: 4px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #fff;
+            background: #07c160;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: inherit;
+            transition: background 0.15s ease;
+        }
+
+        .contact-card .wechat-id-copy:hover {
+            background: #06ad56;
+        }
+
+        .contact-card .wechat-id-copy.copied {
+            background: #0369d9;
+        }
+
+        .contact-card .contact-hint {
+            margin: 2px 0 0;
+            font-size: 0.8rem;
+            color: var(--muted, #94a3b8);
+        }
+
+        body.dark-mode .contact-card {
+            background: var(--panel-alt, #0f172a);
+        }
+
+        .overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.12);
+            z-index: 800;
+        }
+
+        #settings-panel,
+        #notes-panel,
+        #selbar {
+            display: none;
+        }
+
+        @media (max-width: 980px) {
+            body {
+                overflow: auto;
+                padding-bottom: calc(var(--practice-nav-height) + 16px);
+            }
+
+            .shell {
+                display: block;
+                height: auto;
+            }
+
+            #left,
+            #right {
+                width: 100%;
+                min-width: 0;
+            }
+
+            #divider {
+                display: none;
+            }
+
+            .practice-nav {
+                flex-wrap: wrap;
+                align-items: flex-start;
+            }
+
+            .practice-nav .controls {
+                margin-left: 0;
+                width: 100%;
+                justify-content: flex-end;
+            }
+        }
+
+        /* ---------------- Phase 2 Aesthetics ---------------- */
+        #timer {
+            cursor: pointer;
+            transition: opacity 0.2s ease, background 0.2s ease;
+        }
+
+        #timer:hover {
+            opacity: 0.85;
+        }
+
+        #timer.paused {
+            opacity: 0.5;
+        }
+
+        #settings-btn {
+            font-size: 1.1rem;
+            padding: 6px 12px;
+            font-weight: 700;
+        }
+
+        /* ---------------- IELTS Aesthetic Tweaks ---------------- */
+        /* Flattening corners */
+        .group,
+        .unified-group,
+        #results {
+            border-radius: 4px;
+        }
+
+        .paragraph-dropzone,
+        .match-dropzone {
+            border-radius: 4px;
+        }
+
+        .drag-item {
+            border-radius: 4px;
+        }
+
+        #timer,
+        .header-btn,
+        .q-item,
+        .practice-nav .controls button {
+            border-radius: 4px;
+        }
+
+        /* Font size utility classes */
+        html.font-normal {
+            font-size: 16px;
+        }
+
+        html.font-large {
+            font-size: 18px;
+        }
+
+        html.font-xlarge {
+            font-size: 20px;
+        }
+
+        /* Highlight visual */
+        .hl {
+            background-color: #72361c;
+            color: #fff;
+        }
+
+        /* Note highlight */
+        .hl[data-hl-type="note"] {
+            background-color: #0369d9;
+            color: #fff;
+            cursor: pointer;
+        }
+
+        .hl[data-hl-type="note"].note-anchor-active {
+            background-color: #0ea5e9;
+            box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.35);
+        }
+
+        /* Pink highlight (second highlight pass) */
+        .hl[data-hl-type="pink"] {
+            background-color: #ec4899;
+            color: #fff;
+        }
+
+        /* 回顾只读模式：隐藏选区工具条的高亮/删除按钮（仅保留 Note 查看） */
+        body.review-readonly-mode #btnHL,
+        body.review-readonly-mode #btnUH {
+            display: none;
+        }
+
+        /* 回顾只读模式：计时器不可点击 */
+        body.review-readonly-mode #timer {
+            cursor: default;
+        }
+
+        /* Dark Mode variables */
+        body.dark-mode {
+            --panel: #1e293b;
+            --panel-alt: #0f172a;
+            --text: #f8fafc;
+            --line: #334155;
+            background: #020617;
+        }
+
+        body.dark-mode .header {
+            background: rgba(30, 41, 59, 0.94);
+            border-bottom: 1px solid var(--line);
+        }
+
+        body.dark-mode .group,
+        body.dark-mode .unified-group {
+            background: var(--panel);
+        }
+
+        body.dark-mode .hl {
+            background-color: #72361c;
+            color: #fff;
+        }
+
+        body.dark-mode .hl[data-hl-type="note"] {
+            background-color: #0369d9;
+            color: #fff;
+        }
+
+        body.dark-mode .hl[data-hl-type="pink"] {
+            background-color: #ec4899;
+            color: #fff;
+        }
+
+        body.dark-mode .paragraph-dropzone,
+        body.dark-mode .match-dropzone {
+            background: #1e293b;
+            border-color: #475569;
+        }
+
+        body.dark-mode .drag-item {
+            background: #334155;
+            border-color: #64748b;
+            color: #f8fafc;
+        }
+
+        body.dark-mode #timer,
+        body.dark-mode .header-btn {
+            background: var(--panel);
+            color: #f8fafc;
+        }
+
+        /* Phase 3 Nav Dark Mode */
+        body.dark-mode .practice-nav {
+            background: var(--panel);
+            border-color: var(--line);
+        }
+
+        body.dark-mode .q-item,
+        body.dark-mode .practice-nav .controls button {
+            background: var(--panel-alt);
+            color: #f8fafc;
+            border-color: var(--line);
+        }
+
+        body.dark-mode .q-item:hover,
+        body.dark-mode .practice-nav .controls button:hover {
+            background: #334155;
+        }
+
+        body.dark-mode .q-item.active {
+            border-color: var(--accent);
+            background: #1e40af;
+            color: white;
+        }
+
+        body.dark-mode .q-item.answered {
+            background: #1e3a8a;
+            border-color: #3b82f6;
+            color: #ffffff;
+        }
+
+        body.dark-mode .q-item.correct {
+            background: #064e3b;
+            border-color: var(--success);
+            color: #dcfce7;
+        }
+
+        body.dark-mode .q-item.incorrect {
+            background: #7f1d1d;
+            border-color: var(--danger);
+            color: #fee2e2;
+        }
+
+        body.dark-mode .submit-btn {
+            background: var(--accent) !important;
+        }
+
+        /* Selection bar visual */
+        #selbar {
+            position: absolute;
+            z-index: 1000;
+            background: #1e293b;
+            color: white;
+            padding: 4px;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+            display: none;
+            /* hidden by default */
+            gap: 4px;
+        }
+
+        #selbar button {
+            background: transparent;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 0.85rem;
+        }
+
+        #selbar button:hover {
+            background: #334155;
+        }
+
+        /* Settings Panel floating */
+        #settings-panel {
+            position: fixed;
+            top: 60px;
+            right: 20px;
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            padding: 16px;
+            width: 260px;
+            z-index: 1000;
+            display: none;
+            /* toggled by JS */
+        }
+
+        #settings-panel .settings-section {
+            margin-bottom: 16px;
+        }
+
+        #settings-panel .settings-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .settings-title {
+            font-size: 0.9rem;
+            color: var(--muted);
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .settings-options {
+            display: flex;
+            gap: 8px;
+        }
+
+        .settings-option {
+            flex: 1;
+            padding: 8px;
+            background: var(--panel-alt);
+            border: 1px solid var(--line);
+            border-radius: 4px;
+            cursor: pointer;
+            color: var(--text);
+            text-align: center;
+        }
+
+        .settings-option.active {
+            border-color: var(--accent);
+            background: var(--accent);
+            color: white;
+        }
+
+        /* Notes panel —— 右侧边栏样式 */
+        :root {
+            --notes-panel-width: clamp(320px, 28vw, 380px);
+        }
+
+        @media (min-width: 981px) {
+            body.notes-panel-open .header,
+            body.notes-panel-open .shell {
+                width: calc(100% - var(--notes-panel-width));
+            }
+
+            body.notes-panel-open .practice-nav {
+                right: var(--notes-panel-width);
+            }
+        }
+
+        #notes-panel {
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: var(--notes-panel-width);
+            max-width: 92vw;
+            height: 100%;
+            background: var(--panel);
+            border-left: 1px solid var(--line);
+            box-shadow: -10px 0 30px rgba(0, 0, 0, 0.12);
+            z-index: 2100;
+            display: none;
+            /* toggled by JS */
+            flex-direction: column;
+        }
+
+        @media (max-width: 980px) {
+            #notes-panel {
+                position: relative;
+                top: auto;
+                right: auto;
+                width: 100%;
+                max-width: none;
+                height: min(52vh, 460px);
+                border-left: none;
+                border-bottom: 1px solid var(--line);
+                box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+            }
+        }
+
+        #notes-panel header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 18px;
+            border-bottom: 1px solid var(--line);
+            flex-shrink: 0;
+        }
+
+        #notes-panel header h3 {
+            margin: 0;
+            font-size: 1.15rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        #notes-panel .notes-header-actions {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        #notes-panel .notes-header-actions button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--text);
+            padding: 0;
+            display: inline-flex;
+            align-items: center;
+            opacity: 0.85;
+        }
+
+        #notes-panel .notes-header-actions button:hover {
+            opacity: 1;
+        }
+
+        /* 笔记列表容器 */
+        #notes-panel .notes-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0;
+        }
+
+        #notes-panel .notes-list__empty {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--muted, #999);
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        /* 单条笔记 */
+        .note-item {
+            border-bottom: 1px solid var(--line);
+            display: flex;
+            flex-direction: column;
+            background: var(--panel);
+            transition: background-color 0.18s ease, box-shadow 0.18s ease;
+        }
+
+        .note-item.is-active {
+            background: #dff2ff;
+            box-shadow: inset 4px 0 0 #2563eb;
+        }
+
+        body.dark-mode .note-item.is-active {
+            background: #17375e;
+        }
+
+        .note-item:last-child {
+            border-bottom: none;
+        }
+
+        .note-item__header {
+            display: flex;
+            align-items: flex-start;
+            padding: 12px 14px 8px;
+            gap: 8px;
+            background: transparent;
+            cursor: pointer;
+        }
+
+        .note-item.is-active .note-item__header {
+            background: rgba(37, 99, 235, 0.08);
+        }
+
+        body.dark-mode .note-item__header {
+            background: transparent;
+        }
+
+        .note-item__part {
+            font-weight: 700;
+            font-size: 0.85rem;
+            color: #2563eb;
+            white-space: nowrap;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+        .note-item__text {
+            flex: 1;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            word-break: break-word;
+        }
+
+        .note-item__delete {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #999;
+            font-size: 1.2rem;
+            line-height: 1;
+            padding: 0 2px;
+            flex-shrink: 0;
+            opacity: 0.6;
+            transition: opacity 0.15s, color 0.15s;
+        }
+
+        .note-item__delete:hover {
+            opacity: 1;
+            color: #e53e3e;
+        }
+
+        .note-item__textarea {
+            width: 100%;
+            min-height: 60px;
+            padding: 10px 14px 12px;
+            border: none;
+            border-top: 1px dashed var(--line);
+            resize: vertical;
+            background: transparent;
+            color: var(--text);
+            font-family: inherit;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            box-sizing: border-box;
+        }
+
+        .note-item__textarea:focus {
+            outline: none;
+            background: rgba(37, 99, 235, 0.03);
+        }
+
+        #notes-panel .notes-footer {
+            padding: 10px 18px;
+            text-align: right;
+            border-top: 1px solid var(--line);
+            flex-shrink: 0;
+        }
+
+        #notes-panel #notes-delete-all {
+            background: none;
+            border: none;
+            color: #e53e3e;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        #notes-panel #notes-delete-all:hover {
+            text-decoration: underline;
+        }
+
+        /* 眼睛图标：隐藏标注时淡化全部高亮背景 */
+        body.notes-hide-marks .hl {
+            background-color: transparent !important;
+            color: inherit !important;
+        }
+
+        /* ---------------- Exam Option Layouts ---------------- */
+        .choice-item label,
+        .checkbox-options label,
+        .options-list label,
+        .multiple-choice-options label,
+        .matching-options label,
+        .mcq-group label,
+        .radio-options label,
+        .radio-group label,
+        .multiple-choice label,
+        .true-false-ng label {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            line-height: 1.5;
+        }
+
+        .choice-item label input[type="checkbox"],
+        .checkbox-options label input[type="checkbox"],
+        .options-list label input[type="checkbox"],
+        .choice-item label input[type="radio"],
+        .multiple-choice-options label input[type="radio"],
+        .matching-options label input[type="radio"],
+        .mcq-group label input[type="radio"],
+        .radio-options label input[type="radio"],
+        .radio-group label input[type="radio"],
+        .multiple-choice label input[type="radio"],
+        .true-false-ng label input[type="radio"] {
+            margin-top: 4px;
+            flex-shrink: 0;
+            cursor: pointer;
+        }
+
+        .matching-table,
+        .completion-table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 10px 0;
+            border: 2px solid var(--line);
+        }
+
+        .matching-table th,
+        .matching-table td,
+        .completion-table th,
+        .completion-table td {
+            border: 1px solid var(--line);
+            padding: 8px 10px;
+            vertical-align: middle;
+        }
+
+        .matching-table thead th,
+        .completion-table thead th {
+            background: var(--panel-alt);
+            text-align: center;
+            font-weight: 700;
+        }
+
+        .matching-table td:first-child { text-align: left; }
+        .matching-table td { text-align: center; }
+        .completion-table td { text-align: left; }
+
+        /* short_answer / flow_chart / diagram_label (renderer classes, future-proof) */
+        .short-answer-list { list-style: none; padding-left: 0; }
+        .short-answer-item { margin-bottom: 14px; }
+
+        .flow-chart {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            margin: 12px 0;
+        }
+
+        .flow-box {
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            padding: 10px 14px;
+            background: var(--panel-alt, var(--bg));
+            width: 100%;
+            max-width: 560px;
+            text-align: center;
+        }
+        /* ---------------- Table Completion Layout ---------------- */
+        .table-section {
+            margin-top: 12px;
+            overflow-x: auto;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: var(--bg);
+            padding: 10px 12px;
+        }
+
+        .table-section table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+
+        .table-section thead th {
+            border: 1px solid var(--line);
+            background: var(--panel-alt);
+            font-weight: 700;
+            text-align: center;
+            padding: 10px 8px;
+        }
+
+        .table-section tbody td {
+            border: 1px solid var(--line);
+            padding: 10px 10px;
+            vertical-align: top;
+            line-height: 1.45;
+        }
+
+        .table-section thead th:first-child,
+        .table-section tbody td:first-child {
+            width: 16%;
+        }
+
+        .table-section thead th:nth-child(2),
+        .table-section tbody td:nth-child(2) {
+            width: 20%;
+        }
+
+        .table-section thead th:nth-child(3),
+        .table-section tbody td:nth-child(3) {
+            width: 64%;
+        }
+
+        .table-section ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+
+        .table-section li + li {
+            margin-top: 6px;
+        }
+
+        .table-section input.blank {
+            display: inline-block;
+            min-width: 120px;
+            max-width: 180px;
+            width: 40%;
+            padding: 2px 6px;
+            border: 1px solid var(--line);
+            border-radius: 4px;
+            background: var(--panel);
+            color: var(--text);
+            vertical-align: middle;
+        }
+
+        @media (max-width: 900px) {
+            .table-section input.blank {
+                width: 100%;
+                max-width: none;
+                margin-top: 4px;
+            }
+        }
+
+        /* ---------------- Drop Targets ---------------- */
+        .drop-target-summary {
+            display: inline-flex;
+            min-width: 80px;
+            min-height: 30px;
+            border-bottom: 2px solid var(--muted);
+            margin: 0 4px;
+            vertical-align: bottom;
+            align-items: center;
+            justify-content: center;
+            padding: 0 8px;
+            background: rgba(0, 0, 0, 0.02);
+            border-radius: 4px 4px 0 0;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .drop-target-summary.drag-over {
+            border-bottom-color: var(--accent);
+            background: #dbeafe;
+        }
+
+        .drop-target-summary.dropzone-filled {
+            border-bottom-color: var(--success);
+            background: #dcfce7;
+            color: var(--success);
+            font-weight: 600;
+        }
+
+        .drop-target-summary .drag-item {
+            border: none;
+            background: transparent;
+            padding: 0;
+            margin: 0;
+            cursor: grab;
+            color: inherit;
+            font-weight: inherit;
+        }
+    
+/* ---------------- 题型渲染器 alignment (renderers.js output) ---------------- */
+        /* single_choice: mcq-options / mcq-option grid */
+        .mcq-options {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            margin: 8px 0 4px;
+        }
+</style>
+    <link rel="stylesheet" href="../../../css/zyz-practice-theme.css">
+  <link rel="stylesheet" href="../../../css/practice-official-options.css">
+</head>
+
+<body>
+    <header class="header">
+        <div class="header-content">
+            <div class="jimmy-practice-brand" aria-label="Jimmy">
+                <img src="../../../Jimmy's logo.png" alt="Jimmy Logo" decoding="async">
+            </div>
+            <div class="candidate-status">
+                <strong>Test taker ID</strong>
+                <div class="candidate-time"><span id="timer" title="点击启停">00:00</span><span> remaining</span></div>
+            </div>
+            <div class="header-exam-meta" aria-live="polite">
+                <h1 id="exam-title">IELTS 阅读练习</h1>
+                <p id="exam-subtitle">统一阅读页</p>
+            </div>
+        </div>
+        <div class="header-controls">
+            <span class="header-status-icon" title="网络状态" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M2 8.8a16 16 0 0 1 20 0M5.5 12.3a10.5 10.5 0 0 1 13 0M9 15.7a5 5 0 0 1 6 0M12 20h.01"/></svg>
+            </span>
+            <span class="header-status-icon" title="提醒" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg>
+            </span>
+            <button class="header-btn" id="settings-btn" title="Settings" aria-label="设置" type="button">
+                <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+            </button>
+            <button class="header-btn" id="note-btn" title="Note" aria-label="笔记" type="button">
+                <svg viewBox="0 0 24 24"><path d="M14 4h6v6M13 11l7-7M19 13v6a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h6"/></svg>
+            </button>
+        </div>
+    </header>
+
+    <section class="exam-instruction-banner" aria-live="polite">
+        <div class="exam-instruction-heading">
+            <strong id="exam-part-label">Part 1</strong>
+            <span id="suite-custom-mode-badge" class="suite-custom-mode-badge" hidden>自定义组题模式</span>
+        </div>
+        <span id="exam-part-instruction">Read the passage and answer the questions.</span>
+    </section>
+
+    <div id="settings-panel">
+        <div class="settings-section">
+            <h3 class="settings-title">字号调整</h3>
+            <div class="settings-options">
+                <button class="settings-option active" data-size="normal">A</button>
+                <button class="settings-option" data-size="large" style="font-size: 1.1rem;">A</button>
+                <button class="settings-option" data-size="xlarge" style="font-size: 1.25rem;">A</button>
+            </div>
+        </div>
+        <div class="settings-section">
+            <h3 class="settings-title">背景颜色</h3>
+            <div class="settings-options">
+                <button class="settings-option active" data-mode="light">浅色</button>
+                <button class="settings-option" data-mode="dark">深色</button>
+            </div>
+        </div>
+        <div class="settings-section" id="suite-flow-mode-section" style="display: none;">
+            <h3 class="settings-title">套题流程模式</h3>
+            <div class="settings-options">
+                <button class="settings-option" data-suite-flow-mode="auto">自动跳转下一篇</button>
+                <button class="settings-option" data-suite-flow-mode="manual">提交后停留回看</button>
+            </div>
+        </div>
+    </div>
+    <div id="notes-panel">
+        <header>
+            <h3>NOTES</h3>
+            <div class="notes-header-actions">
+                <button id="notes-eye" type="button" title="显示/隐藏标注" aria-label="显示或隐藏标注">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z" />
+                        <circle cx="12" cy="12" r="3" />
+                    </svg>
+                </button>
+                <button id="close-note" type="button" aria-label="关闭">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                </button>
+            </div>
+        </header>
+        <div class="notes-list" id="notes-list">
+            <div class="notes-list__empty" id="notes-list-empty">
+                📝 选中文章中的文字，点击 Note 按钮添加笔记
+            </div>
+        </div>
+        <div class="notes-footer">
+            <button id="notes-delete-all" type="button">DELETE ALL</button>
+        </div>
+    </div>
+    <div class="overlay"></div>
+
+    <div class="shell">
+        <section class="pane" id="left"></section>
+        <div id="divider"></div>
+        <section class="pane" id="right">
+            <div id="question-groups"></div>
+            <div id="results"></div>
+        </section>
+    </div>
+
+    <div id="selbar">
+        <button type="button" id="btnHL" data-role="highlight">Highlight</button>
+        <button type="button" id="btnUH" data-role="remove-highlight">Remove</button>
+        <button type="button" id="btnNote" data-role="note">Note</button>
+        <button type="button" id="btnDictionary" data-role="dictionary">查词</button>
+        <button type="button" id="btnTranslate" data-role="translate">翻译</button>
+        <button type="button" id="btnAddVocabulary" data-role="add-vocabulary">加入单词本</button>
+    </div>
+
+    <div class="practice-nav">
+        <div class="title">题目导航</div>
+        <div class="questions" id="question-nav"></div>
+        <div class="controls">
+            <button id="exit-btn" type="button" title="退出" style="margin-right: 8px; display: none;">Exit</button>
+            <button id="export-pdf-btn" type="button" title="导出整页与练习详情为 PDF">导出PDF</button>
+            <button id="reset-btn" type="button">Reset</button>
+            <button id="submit-btn" class="primary" type="button">Submit</button>
+        </div>
+    </div>
+
+    <script src="../../../js/runtime/readingExamRegistry.js"></script>
+    <script src="../../../js/runtime/readingExplanationRegistry.js"></script>
+    <script>
+(function (global) {
+  'use strict';
+  global.__READING_EXAM_MANIFEST__ = {
+    "p1-low-1941": { "examId": "p1-low-1941", "dataKey": "p1-low-1941", "script": "./p1-low-1941.js", "title": "Revolutions in Mapping 制图革命", "category": "P1" }
+  };
+})(typeof window !== 'undefined' ? window : this);
+
+(function registerReadingExamData(global) {
+  'use strict';
+  if (!global.__READING_EXAM_DATA__ || typeof global.__READING_EXAM_DATA__.register !== "function") {
+    throw new Error("reading_exam_registry_missing");
+  }
+  global.__READING_EXAM_DATA__.register("p1-low-1941", {
+  "schemaVersion": "ReadingExamSourceV1",
+  "examId": "p1-low-1941",
+  "meta": {
+    "title": "Revolutions in Mapping 制图革命",
+    "category": "P1",
+    "frequency": "low",
+    "pdfFilename": "",
+    "source": "IELTS清洗库 ",
+    "questionIntroHtml": "<h3>Questions</h3>"
+  },
+  "passage": {
+    "blocks": [
+      {
+        "blockId": "passage-main",
+        "kind": "html",
+        "html": "<h2>READING PASSAGE</h2>\n<h3>Revolutions in Mapping 制图革命</h3>\n<p>Today, the mapmaker's vision is no longer confined to what the human eye can see. The perspective of mapmaking has shifted from the crow's nest of the sailing vessel, mountain top and airplane to 'new orbital heights. Radar, which bounces microwave radio signals off a given surface to create images of its contours and textures, can penetrate jungle foliage and has produced the first maps of the mountains of the planet Venus. And a combination of sonar and radar produces charts of the seafloor, putting much of Earth on the map for the first time. ‘Suddenly it's a whole different world for US,’ says Joel Morrison, chief of geography at the U.S. Bureau of the Census, ‘Our future as mapmakers - even ten years from now - is uncertain.’</p>\n<p>The world's largest collection of maps resides in the basement of the Library of Congress in Washington, D.c. The collection, consisting of up to 4,6 million map sheets and 63,000 atlases, includes magnificent bound collections of elaborate maps- the pride of the golden age of Dutch cartography*. In the reading room scholars, wearing thin cotton gloves to protect the fragile sheets, examine ancient maps with magnifying glasses. Across the room people sit at their computer screens, studying the latest maps, with their prodigious memories, computers are able to store data about people, places and environments - the stuff of maps - and almost instantly information is displayed on the screen in the desired geographic context, and at the dick of a button, a print-out of the map appears.</p>\n<p>Measuring the spherical Earth ranks as the first major milestone in scientific cartography. This was first achieved by the Greek astronomer Eratosthenes, a scholar at the famous Alexandrian Library in Egypt in the third century BC. He calculated the Earth's circumference as 25,200 miles, which was remarkably accurate. The longitudinal circumference is known to be 24,860 miles.</p>\n<p>Building on the ideas of his predecessors, the astronomer and geographer Ptolemy, working in the second century AD, spelled out a system for organizing maps according to grids of latitude and longitude. Today, parallels of latitude are often spaced at intervals of 10 to 20 degrees and meridians** at 15 degrees, and this is the basis for the width of modern time zones. Another legacy of Ptolemy's is his advice to cartographers to create maps to scale. Distance on today's maps is expressed as a fraction or ratio of the real distance. But mapmakers in Ptolemy's time lacked the geographic knowledge to live up to Ptolemy's scientific principles. Even now, when surveyors achieve accuracies down to inches and satellites can plot potential missile targets within feet, maps are not true pictures of reality.</p>\n<p>However, just as the compass improved navigation and created demand for useful charts, so the invention of the printing press in the 15th century put maps in the hands of more people, and took their production away from monks, who had tended to illustrate theology rather than geography. Ocean-going ships launched an age of discovery, enlarging both what could and needed to be mapped, and awakened an intellectual spirit and desire for knowledge of the world.</p>\n<p>Inspired by the rediscovered Ptolemy, whose writing had been preserved by Arabs after the sacking of the Alexandrian Library in AD 931, mapmakers in the 15th century gradually replaced theology with knowledge of faraway places, as reported by travelling merchants like Marco Polo.</p>\n<p>Gerhardus Mercator, the foremost shipmaker of the 16th century, developed a technique of arranging meridians and parallels in such a way that navigators could draw straight lines between two points and steer a constant compass course between them. This distortion formula, introduced on his world map of 1569, created the ‘Greenland problem’. Even on some standard maps to this day, Greenland looks as large as South America - one of the many problems when one tries to portray a round world on a flat sheet of paper. But the Mercator projection was so practical that it is still popular with sailors.</p>\n<p>Scientific mapping of the land came into its own with the achievements of the Cassini family- father, son, grandson and great-grandson. In the late 17th century, the Italian - born founder, Jean-Dominique, invented a complex method of determining longitude based on observations of Jupiter's moons. Using this technique, surveyors were able to produce an accurate map of France. The family continued to map the French countryside arid his great-grandson finally published their famous Cassini map in 1793 during the French Revolution. While it may have lacked the artistic appeal of earlier maps, it was the model of a social and geographic map showing roads, rivers, canals, towns, abbeys, vineyards, lakes and even windmills. With this achievement, France became the first country to be completely mapped by scientific methods.</p>\n<p>Mapmaking has come a long way since those days. Today's surveyors rarely go into the field without being linked to navigation satellites. Their hand-held receivers are the most familiar of the new mapping technologies, and the satellite system, developed and still operated by the US Defense Department, is increasingly used by surveyors. Even ordinary hikers, sailors and explorers can tap into it for data telling them where they are. Simplified civilian versions of the receivers are available for a few hundred dollars and they are also the heart of electronic map displays available in some cars. Cartography is pressing on to cosmic frontiers, but its objective is, and always has been, to communicate a sense of ‘here’ in relation to ‘there’, however far away ‘there’ may be.</p>"
+      }
+    ]
+  },
+  "questionGroups": [
+    {
+      "groupId": "group-1",
+      "kind": "single_choice",
+      "questionIds": [
+        "q1",
+        "q2",
+        "q3",
+        "q4",
+        "q5"
+      ],
+      "bodyHtml": "<div class=\"group\" id=\"q1-2-3-4-5-anchor\"><h4>Questions 1-5</h4><p>Choose the correct letter, A, B, C or D.</p><a id=\"q1-anchor\"></a><div><p>1. According to the first paragraph, mapmakers in the 21st century</p><div class=\"mcq-options\"><div class=\"mcq-option\"><label><input type=\"radio\" name=\"q1\" value=\"A\"> A. combine techniques to chart unknown territory.</label></div><div class=\"mcq-option\"><label><input type=\"radio\" name=\"q1\" value=\"B\"> B. still rely on being able to see what they map.</label></div><div class=\"mcq-option\"><label><input type=\"radio\" name=\"q1\" value=\"C\"> C. are now able to visit the darkest jungle.</label></div><div class=\"mcq-option\"><label><input type=\"radio\" name=\"q1\" value=\"D\"> D. need input from experts in other fields.</label></div></div></div><a id=\"q2-anchor\"></a><div><p>2. The Library of Congress offers an opportunity to</p><div class=\"mcq-options\"><div class=\"mcq-option\"><label><input type=\"radio\" name=\"q2\" value=\"A\"> A. borrow from their collection of Dutch maps.</label></div><div class=\"mcq-option\"><label><input type=\"radio\" name=\"q2\" value=\"B\"> B. learn how to restore ancient and fragile maps.</label></div><div class=\"mcq-option\"><label><input type=\"radio\" name=\"q2\" value=\"C\"> C. enjoy the atmosphere of the reading room.</label></div><div class=\"mcq-option\"><label><input type=\"radio\" name=\"q2\" value=\"D\"> D. create individual computer map to order.</label></div></div></div><a id=\"q3-anchor\"></a><div><p>3. Ptolemy alerted his contemporaries to the importance of</p><div class=\"mcq-options\"><div class=\"mcq-option\"><label><input type=\"radio\" name=\"q3\" value=\"A\"> A. measuring the circumference of the world.</label></div><div class=\"mcq-option\"><label><input type=\"radio\" name=\"q3\" value=\"B\"> B. organizing maps to reflect accurate ratios of distance.</label></div><div class=\"mcq-option\"><label><input type=\"radio\" name=\"q3\" value=\"C\"> C. working out the distance between parallels of latitude.</label></div><div class=\"mcq-option\"><label><input type=\"radio\" name=\"q3\" value=\"D\"> D. accuracy and precision in mapping.</label></div></div></div><a id=\"q4-anchor\"></a><div><p>4. The invention of the printing press</p><div class=\"mcq-options\"><div class=\"mcq-option\"><label><input type=\"radio\" name=\"q4\" value=\"A\"> A. revitalized interest in scientific knowledge.</label></div><div class=\"mcq-option\"><label><input type=\"radio\" name=\"q4\" value=\"B\"> B. enabled maps to be produced more cheaply.</label></div><div class=\"mcq-option\"><label><input type=\"radio\" name=\"q4\" value=\"C\"> C. changed the approach to mapmaking.</label></div><div class=\"mcq-option\"><label><input type=\"radio\" name=\"q4\" value=\"D\"> D. ensured that the work of Ptolemy was continued.</label></div></div></div><a id=\"q5-anchor\"></a><div><p>5. The writer concludes by stating that</p><div class=\"mcq-options\"><div class=\"mcq-option\"><label><input type=\"radio\" name=\"q5\" value=\"A\"> A. mapmaking has become too specialized.</label></div><div class=\"mcq-option\"><label><input type=\"radio\" name=\"q5\" value=\"B\"> B. cartographers work in very harsh conditions.</label></div><div class=\"mcq-option\"><label><input type=\"radio\" name=\"q5\" value=\"C\"> C. the fundamental aims of mapmaking remain unchanged.</label></div><div class=\"mcq-option\"><label><input type=\"radio\" name=\"q5\" value=\"D\"> D. the possibilities of satellite mapping are infinite.</label></div></div></div></div>",
+      "leadHtml": ""
+    },
+    {
+      "groupId": "group-2",
+      "kind": "matching",
+      "questionIds": [
+        "q6",
+        "q7",
+        "q8"
+      ],
+      "bodyHtml": "<div class=\"group\" id=\"q6-7-8-anchor\"><h4>Questions 6-8</h4><p>Look at the following statements (Questions 6-8) and the list of items below.</p><p>Match each statement with the correct option, A-D.</p><p>Write the correct letter, A-D, in boxes 6-8 on your answer sheet.</p><div class=\"match-question-item\" id=\"q6-anchor\"><p><strong>6</strong> came very close to accurately measuring the distance round the Earth</p><div class=\"match-dropzone\" data-question=\"q6\"></div></div><div class=\"match-question-item\" id=\"q7-anchor\"><p><strong>7</strong> produced maps showing man-made landmarks</p><div class=\"match-dropzone\" data-question=\"q7\"></div></div><div class=\"match-question-item\" id=\"q8-anchor\"><p><strong>8</strong> laid the foundation for our modem time zones</p><div class=\"match-dropzone\" data-question=\"q8\"></div></div><div class=\"options-pool\" data-allow-reuse=\"true\" data-allow-option-reuse=\"true\"><div class=\"pool-items\"><div class=\"drag-item\" draggable=\"true\" data-option=\"A\">A Mercator</div><div class=\"drag-item\" draggable=\"true\" data-option=\"B\">B Ptolemy</div><div class=\"drag-item\" draggable=\"true\" data-option=\"C\">C Cassini family</div><div class=\"drag-item\" draggable=\"true\" data-option=\"D\">D Eratosthenes</div></div></div></div>",
+      "leadHtml": ""
+    },
+    {
+      "groupId": "group-3",
+      "kind": "summary_completion",
+      "questionIds": [
+        "q9",
+        "q10",
+        "q11",
+        "q12",
+        "q13"
+      ],
+      "bodyHtml": "<div class=\"group\" id=\"q9-10-11-12-13-anchor\"><h4>Questions 9-13</h4><p>Complete the summary below.</p><p>Choose <strong>NO MORE THAN TWO WORDS</strong> from the passage for each answer.</p><p>Ancient maps allow US to see how we have come to make sense of the world. They also reflect the attitudes and knowledge of the day. The first great step in mapmaking took place in <strong>9</strong> <input class=\"blank\" name=\"q9\" type=\"text\"> in the 3rd century BC. Work continued in this tradition until the 2nd century AD but was then abandoned for over a thousand years, during which time maps were the responsibility of <strong>10</strong> <input class=\"blank\" name=\"q10\" type=\"text\"> scientists. Fortunately, however, the writings of <strong>11</strong> <input class=\"blank\" name=\"q11\" type=\"text\"> rather than had been kept, and interest in scientific mapmaking was revived as scholars sought to produce maps, inspired by the accounts of travellers. These days, <strong>12</strong> <input class=\"blank\" name=\"q12\" type=\"text\"> are vital to the creation of maps and radar has allowed cartographers to map areas beyond our immediate world. In addition, this high-tech equipment is not only used to map faraway places, but cheaper versions have also been developed for use in <strong>13</strong> <input class=\"blank\" name=\"q13\" type=\"text\">.</p></div>",
+      "leadHtml": ""
+    }
+  ],
+  "answerKey": {
+    "q1": "A",
+    "q2": "D",
+    "q3": "B",
+    "q4": "C",
+    "q5": "C",
+    "q6": "D",
+    "q7": "C",
+    "q8": "B",
+    "q9": "Egypt",
+    "q10": "monks",
+    "q11": "Ptolemy",
+    "q12": "satellites",
+    "q13": "cars"
+  },
+  "questionOrder": [
+    "q1",
+    "q2",
+    "q3",
+    "q4",
+    "q5",
+    "q6",
+    "q7",
+    "q8",
+    "q9",
+    "q10",
+    "q11",
+    "q12",
+    "q13"
+  ],
+  "questionDisplayMap": {
+    "q1": "1",
+    "q2": "2",
+    "q3": "3",
+    "q4": "4",
+    "q5": "5",
+    "q6": "6",
+    "q7": "7",
+    "q8": "8",
+    "q9": "9",
+    "q10": "10",
+    "q11": "11",
+    "q12": "12",
+    "q13": "13"
+  }
+});
+})(typeof window !== "undefined" ? window : this);
+
+// 自动设置 examId（独立单篇页）
+(function () {
+  var qs = new URLSearchParams(window.location.search);
+  if (!qs.get('examId')) qs.set('examId', 'p1-low-1941');
+  if (!qs.get('dataKey')) qs.set('dataKey', 'p1-low-1941');
+  var q = qs.toString();
+  if (window.location.search !== ('?' + q)) {
+    window.location.replace(window.location.pathname + '?' + q);
+  }
+})();
+</script>
+    <script src="../../../js/runtime/suiteResources.js"></script>
+    <script src="../../../js/utils/answerMatchCore.js"></script>
+    <script src="../../../js/components/vocabularyNotebook.js"></script>
+    <script src="../../../js/practice-page-ui.js"></script>
+    <!-- 套题交卷后按雅思分数表换算三篇合计成绩 -->
+    <script src="../../../js/utils/ieltsBandScore.js"></script>
+    <script src="../../../js/runtime/unifiedReadingPage.js"></script>
+  <script src="../../../js/practice-drag-scroll-fix.js"></script>
+  <script src="../../../js/practice-official-options.js"></script>
+</body>
+
+</html>

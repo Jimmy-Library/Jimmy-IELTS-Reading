@@ -256,8 +256,8 @@
           "questionNumber": 23,
           "stem": "Although it is uncertain, the tomato is thought to have first grown in the _____.",
           "translation": "虽然尚不确定，但番茄被认为最早生长在 ______。",
-          "answer": "andes",
-          "wordClass": "专有名词（地名，位于介词 in 之后作介词宾语，说明 first grown 的地点；原文写作 Andes、首字母大写，答案表作小写 andes）",
+          "answer": "Andes",
+          "wordClass": "专有名词（地名，位于介词 in 之后作介词宾语，说明 first grown 的地点；答案表写作 Andes，首字母大写，照抄即可）",
           "locating": {
             "paragraph": "2",
             "quote": "The modern tomato seems to have its origins in the Andes in South America and may have been domesticated in Veracruz, Mexico."
@@ -267,8 +267,8 @@
             "“have first grown in” 同义替换为原文的 “have its origins in”（起源于），origin 对应“最早生长的地方”",
             "“Although it is uncertain” 对应原文的 “seems to ... and may have been”，用 seems、may 两个模糊限定词表示不确定"
           ],
-          "locatingTip": "定位：题干问“番茄最早被认为生长在哪里”，找原文表示起源、发源的地名即可。B 段出现 origins in the Andes in South America，一步定位。确定答案技巧：原文 “The modern tomato seems to have its origins in the Andes in South America” 中，seems 对应题干的 is thought to（不确定的推测），have its origins in 对应 have first grown in，介词 in 后面的地点就是答案。注意该句还提到 “may have been domesticated in Veracruz, Mexico”（驯化地可能在墨西哥），这是另一个信息点（驯化地），与题干问的“最早生长地（起源地）”不同，不要误填 Veracruz；地点层级上也要选括号所需的那个：the Andes 是原文紧跟在 origins in 之后的地名。答案按答案表作小写 andes，只写一个词，不要写 South America。",
-          "analysis": "B 段原文：“The modern tomato seems to have its origins in the Andes in South America and may have been domesticated in Veracruz, Mexico. Primitive varieties still grow throughout the Americas.”（现代番茄似乎起源于南美洲的安第斯山脉，可能是在墨西哥的韦拉克鲁斯被驯化的。原始品种至今还生长在整个美洲）。题干 Although it is uncertain 对应原文的 seems to 与 may have been（均为推测性表达）；the tomato is thought to have first grown in 对应 have its origins in；因此空格填 origin 处的地点 the Andes，答案表给出小写形式 andes。题干与原文都以“不确定”为前提，正因为不确定，原文才用 seems 而不说 is；答题时不必因 seems 而犹豫，只要地点对应即可。",
+          "locatingTip": "定位：题干问“番茄最早被认为生长在哪里”，找原文表示起源、发源的地名即可。B 段出现 origins in the Andes in South America，一步定位。确定答案技巧：原文 “The modern tomato seems to have its origins in the Andes in South America” 中，seems 对应题干的 is thought to（不确定的推测），have its origins in 对应 have first grown in，介词 in 后面的地点就是答案。注意该句还提到 “may have been domesticated in Veracruz, Mexico”（驯化地可能在墨西哥），这是另一个信息点（驯化地），与题干问的“最早生长地（起源地）”不同，不要误填 Veracruz；地点层级上也要选括号所需的那个：the Andes 是原文紧跟在 origins in 之后的地名。答案按答案表写作专有名词 Andes（首字母大写 A），只写一个词，不要写 South America。",
+          "analysis": "B 段原文：“The modern tomato seems to have its origins in the Andes in South America and may have been domesticated in Veracruz, Mexico. Primitive varieties still grow throughout the Americas.”（现代番茄似乎起源于南美洲的安第斯山脉，可能是在墨西哥的韦拉克鲁斯被驯化的。原始品种至今还生长在整个美洲）。题干 Although it is uncertain 对应原文的 seems to 与 may have been（均为推测性表达）；the tomato is thought to have first grown in 对应 have its origins in；因此空格填 origin 处的地点 the Andes，答案表即写作 Andes（首字母大写 A），照抄即可。题干与原文都以“不确定”为前提，正因为不确定，原文才用 seems 而不说 is；答题时不必因 seems 而犹豫，只要地点对应即可。",
           "traps": []
         },
         {
