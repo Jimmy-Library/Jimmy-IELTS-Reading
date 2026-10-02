@@ -75,7 +75,7 @@
     "examId": "p3-medium-169",
     "dataKey": "p3-medium-169",
     "script": "./p3-medium-169.js",
-    "title": "（无题目）  Music Language We All Speak 音乐语言",
+    "title": "Music Language We All Speak 音乐语言",
     "category": "P3"
   },
   "p1-high-01": {
@@ -1497,13 +1497,6 @@
     "dataKey": "p3-medium-197",
     "script": "./p3-medium-197.js",
     "title": "Australia’s Megafauna Controversy 巨兽灭绝【次】",
-    "category": "P3"
-  },
-  "p3-low-078": {
-    "examId": "p3-low-078",
-    "dataKey": "p3-low-078",
-    "script": "./p3-low-078.js",
-    "title": "P3 (ds做出来的) - Music Language We All Speak 音乐语言",
     "category": "P3"
   },
   "p3-high-206": {

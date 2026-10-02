@@ -1177,12 +1177,6 @@
     "script": "../reading-explanations/p3-low-76.js",
     "title": "Sign, Baby, Sign! 美国手语"
   },
-  "p3-low-078": {
-    "examId": "p3-low-078",
-    "dataKey": "p3-low-078",
-    "script": "../reading-explanations/p3-low-078.js",
-    "title": "P3 (ds做出来的) - Music Language We All Speak 音乐语言"
-  },
   "p3-low-78": {
     "examId": "p3-low-78",
     "dataKey": "p3-low-78",
@@ -1367,7 +1361,7 @@
     "examId": "p3-medium-169",
     "dataKey": "p3-medium-169",
     "script": "../reading-explanations/p3-medium-169.js",
-    "title": "（无题目）  Music Language We All Speak 音乐语言"
+    "title": "Music Language We All Speak 音乐语言"
   },
   "p3-medium-176": {
     "examId": "p3-medium-176",

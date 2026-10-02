@@ -2120,7 +2120,7 @@ window.completeExamIndex = [
     },
     {
         id: 'p3-medium-169',
-        title: '（无题目）  Music Language We All Speak 音乐语言',
+        title: 'Music Language We All Speak 音乐语言',
         category: 'P3',
         frequency: 'medium',
         path: '睡着过项目组/1.11月高频文章[94篇+18背景]/P3 （29高+6次高）/2. P3次高频 (6篇)/78. P3 (仅原文无题) - Music Language We All Speak 音乐语言【次】/',
@@ -2623,19 +2623,7 @@ window.completeExamIndex = [
         hasHtml: true,
         hasPdf: false,
         pdfFilename: 'ReadingPractice/PDF/198. P3 - Child’s Play in Medieval England 中世纪的游戏.pdf',
-    },
-    {
-        id: 'p3-low-078',
-        title: 'P3 (ds做出来的) - Music Language We All Speak 音乐语言',
-        category: 'P3',
-        frequency: 'low',
-        path: '三月/6.P3 次高频/',
-        filename: '78. P3 (ds做出来的) - Music Language We All Speak 音乐语言.html',
-        hasHtml: true,
-        hasPdf: false,
-        pdfFilename: 'ReadingPractice/PDF/78. P3 (仅原文无题) - Music Language We All Speak 音乐语言.pdf',
-    },
-    {
+    },    {
         id: 'p1-high-227',
         title: 'The Whale Goes to Court 鲸鱼油',
         category: 'P1',

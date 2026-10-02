@@ -1239,10 +1239,6 @@
       "matching-info",
       "short-answer"
     ],
-    "p3-low-078": [
-      "tfng",
-      "summary-passage"
-    ],
     "p3-low-100": [
       "mc",
       "ynng",

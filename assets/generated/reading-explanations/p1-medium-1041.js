@@ -183,7 +183,7 @@
             "「to ______」对应原文的「to thirty-two」，即数量的上限"
           ],
           "locatingTip": "定位：题干关键词 spokes（辐条）只出现在第 4 段（D 段）讲车轮构造的部分，扫读时盯住 spokes 与数字即可锁定该段第四句。确定答案技巧：数字填空题要把原文的英文数词与题干的阿拉伯数字对应起来——题干给了下限 18，原文是 eighteen to thirty-two，因此空格填上限 thirty-two 的数字形式 32。注意本段还有其他数字与信息（the fourth century BC 公元前四世纪、millet grains 小米粒等）属于干扰，只有与 eighteen 成对出现的那个数字才对。",
-          "analysis": "第 4 段（D 段）第四句：“Though the number of spokes varied, a wheel by the fourth century BC usually had eighteen to thirty-two of them.”（虽然辐条的数量各不相同，但到公元前四世纪，车轮通常有 18 到 32 根辐条）。笔记题干把这句话压缩成 The number of spokes varied from 18 to ______，空格的落点就是数量的上限。原文用英文数词 eighteen to thirty-two 表达区间，题干已把下限写成阿拉伯数字 18，因此上限按同一形式填 32 即可（写 thirty-two 也符合原文，但答案表给出的是 32）。该句的 usually 表示“通常情况下”，与题干“从 18 到 32 不等”的表述一致，不需要额外推断。",
+          "analysis": "第 4 段（D 段）第四句：“Though the number of spokes varied, a wheel by the fourth century BC usually had eighteen to thirty-two of them.”（虽然辐条的数量各不相同，但到公元前四世纪，车轮通常有 18 到 32 根辐条）。笔记题干把这句话压缩成 The number of spokes varied from 18 to ______，空格的落点就是数量的上限。原文用英文数词 eighteen to thirty-two 表达区间，题干已把下限写成阿拉伯数字 18，因此上限按同一形式填 32 即可（写 thirty-two 也符合原文，但答案表给出的是 32）。该句的 usually 表示“通常情况下”，与题干“从 18 到 32 不等”的表述一致，不需要额外推断。\n\n答案可写阿拉伯数字 32，也可写英文数词 thirty-two（原文用 eighteen to thirty-two，两种写法系统都判对）。",
           "traps": []
         },
         {

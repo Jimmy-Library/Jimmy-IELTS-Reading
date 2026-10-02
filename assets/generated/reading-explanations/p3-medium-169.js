@@ -8,7 +8,7 @@
   "examId": "p3-medium-169",
   "meta": {
     "examId": "p3-medium-169",
-    "title": "（无题目）  Music Language We All Speak 音乐语言",
+    "title": "Music Language We All Speak 音乐语言",
     "category": "P3",
     "noteType": "逐题解析"
   },
@@ -118,23 +118,25 @@
           "questionId": "q5",
           "questionNumber": 31,
           "stem": "Section E — Choose the correct heading for this section from the list of headings below.",
-          "translation": "E 段：从标题列表（i–viii）中为 E 段选出正确的标题。答案 v 意为「音乐对婴儿有益」。",
-          "answer": "v",
+          "translation": "E 段：从标题列表（i–viii）中为 E 段选出正确的标题。答案 viii 意为「我们天生就是为音乐而设计的吗？」。",
+          "answer": "viii",
           "wordClass": "",
           "locating": {
             "paragraph": "14",
-            "quote": "For babies, music and speech are on a continuum. Mothers use musical speech to “regulate infants' emotional states”, Trehub says."
+            "quote": "No matter how the connection between language and music is parsed, what is apparent is that our sense of music, even our love for it, is as deeply rooted in our biology and in our brains as language is."
           },
           "synonyms": [
-            "标题 v 的 “infants”（婴儿）对应原文的 babies、the baby、infants，指同一群体",
-            "标题 v 的 “beneficial”（有益）对应原文 “regulate infants' emotional states”（调节婴儿的情绪状态）以及 “puts the baby in a trance-like state, which may proceed to sleep or extended periods of rapture”（让婴儿进入恍惚状态，进而入睡或长时间陶醉）",
-            "标题 v 的 “beneficial” 还对应段末 “music may be even more of a necessity than we realise”，说明音乐对婴儿乃至人类不只是娱乐而是必需"
+            "标题 viii 的 “genetically designed for music”（天生为音乐而设计）对应原文 “our sense of music, even our love for it, is as deeply rooted in our biology and in our brains as language is”——biology（生物构造）与 brains（大脑）正是「天生、写在基因里」的同义表达",
+            "标题 viii 的疑问句形式，对应原文用一个可观察的实例来作答：“This is most obvious with babies, says Sandra Trehub at the University of Toronto”——婴儿尚未受过任何音乐训练，却已经对音乐有反应，说明这种能力是与生俱来而非后天习得",
+            "婴儿案例的细节继续印证「天生」：母亲对婴儿说话的嗓音“something between speech and song”（介于言语与歌唱之间）、“Regardless of what language they speak… is the same”（无论说什么语言都一样），跨语言高度一致的发声方式把婴儿带进“a trance-like state”（恍惚状态），说明人类对音乐的反应出于生理本能",
+            "段末结论“music may be even more of a necessity than we realise”（音乐可能比我们意识到的更为必需）也指向「人类天生需要音乐」这一说法"
           ],
-          "locatingTip": "定位：E 段对应输入原文第 13、14 段，是全文最后一段。第 13 段末句把话题落到婴儿上：“This is most obvious with babies, says Sandra Trehub”，第 14 段整段讲母亲对婴儿说话时的音乐性。确定答案技巧：段内反复出现 babies / the baby / infants，且都在讲这种介于言语与歌唱之间的声音对婴儿情绪与状态的作用（regulate infants' emotional states、trance-like state、sleep or extended periods of rapture），标题 v Music is beneficial for infants 与之精确对应。",
-          "analysis": "E 段（输入原文第 13、14 段）收束全文并给出结论。第 13 段先概括全文主张：“No matter how the connection between language and music is parsed, what is apparent is that our sense of music, even our love for it, is as deeply rooted in our biology and in our brains as language is.”（无论怎样解析语言与音乐的联系，显而易见的是我们对音乐的感觉、甚至对音乐的热爱，与语言一样深植于我们的生物构造与大脑之中），随后立刻举例说明这一点的最佳观察对象：“This is most obvious with babies, says Sandra Trehub at the University of Toronto.”（多伦多大学的 Sandra Trehub 说，这一点在婴儿身上最明显）。第 14 段展开这一观察：对婴儿而言音乐与言语处于一个连续统之上；母亲用带有音乐性的言语来“调节婴儿的情绪状态”；无论说什么语言，所有母亲对婴儿用的嗓音都一样，是“介于言语与歌唱之间的某种东西”；这种交流“让婴儿进入恍惚状态，进而可能入睡或长时间陶醉”。正因如此，文章说如果世界上的婴儿能读懂最新的语言与音乐研究，他们大概不会感到惊讶——而 Trehub 的结论是音乐可能比我们意识到的更为必需。整段都在讲带音乐性的声音如何作用并有益于婴儿，因此标题 v Music is beneficial for infants 最准确。",
+          "locatingTip": "定位：E 段是全文最后一段（输入原文第 14、15 段）。第 14 段首句即本段的主题句——“what is apparent is that our sense of music, even our love for it, is as deeply rooted in our biology and in our brains as language is”；紧接着用 babies（婴儿）作为说明这一点的最明显例证，第 15 段整段展开这个例证。判题技巧：标题 viii 是个疑问句 “Are we genetically designed for music?”，而正文给出的关键词 biology、brains、babies 正是在回答「是不是天生的」——正文与标题一问一答，对应最严密。",
+          "analysis": "E 段（输入原文第 14、15 段）是全文的收束段，先把全文主张归纳成一句话：“No matter how the connection between language and music is parsed, what is apparent is that our sense of music, even our love for it, is as deeply rooted in our biology and in our brains as language is.”（无论怎样解析语言与音乐的联系，显而易见的是：我们对音乐的感觉、甚至对音乐的热爱，与语言一样深植于我们的生物构造与大脑之中。）这句话的落点是「音乐能力有生物学基础」，也就是标题 viii 所说的「天生为音乐而设计」。\n\n紧接着作者立刻给出最能说明这一点的案例——婴儿：“This is most obvious with babies, says Sandra Trehub at the University of Toronto.”（多伦多大学的 Sandra Trehub 说，这一点在婴儿身上最明显。）第 15 段把这个案例展开：对婴儿来说音乐与言语处在同一个连续统上；母亲会用带音乐性的言语去“regulate infants' emotional states”（调节婴儿的情绪状态）；而且无论母亲说哪种语言，她对婴儿使用的嗓音都一样，是“something between speech and song”（介于言语与歌唱之间的某种东西）；这种交流“puts the baby in a trance-like state, which may proceed to sleep or extended periods of rapture”（让婴儿进入恍惚状态，进而可能入睡或长时间陶醉）。婴儿没有任何音乐训练、也不懂歌词含义，却能被这种歌唱式的声音直接安抚，说明人类对音乐的感受不是文化习得的结果，而是生理与大脑层面先天具备的反应——这正是 viii 提出的问题「我们是不是天生就为音乐而设计」的正面回答。段末 Trehub 的结论“music may be even more of a necessity than we realise”（音乐可能比我们意识到的更为必需）进一步把音乐从「消遣」提升为「人类本能所需」。",
           "traps": [
-            "为什么不选 viii（Are we genetically designed for music?）：E 段首句确实说我们对音乐的感觉与语言一样深植于生物与大脑，带有「天生」的意味，但那是全段的引子与总纲；段内主体与落点是婴儿的实证观察（母亲的音乐化言语如何调节婴儿情绪），标题 viii 过于宽泛且没有抓住 babies 这一落点。",
-            "为什么不选 vi（Music transcends cultures）：E 段有 “Regardless of what language they speak, the voice all mothers use with babies is the same”，看似谈跨文化，但这只是一个让步状语，用来强调这种声音对婴儿的作用具有普遍性；该段的中心仍是音乐对婴儿的益处。"
+            "为什么不选 v（Music is beneficial for infants）：v 只抓住 babies / infants 和「有益」两点，把整段降格为「音乐对婴儿有好处」这一局部结论；但在 E 段里婴儿是论据、不是论点——作者用婴儿来说明「我们对音乐的感觉深植于生物与大脑」这个更普遍、也更贴合标题 viii 的命题，段末落点也是「音乐是人类的必需」而不是「对婴儿有益」。",
+            "为什么不选 vi（Music transcends cultures）：段中 “Regardless of what language they speak, the voice all mothers use with babies is the same” 看似在讲跨文化，但它只是一处让步细节，用来说明这种发声方式对婴儿的作用是普遍的，服务于「生物本能」这一论点，并非段落主旨。",
+            "为什么不选 iv（Current research on music）：Sandra Trehub 的研究属于当前研究，本段也确实提到 Nature Neuroscience 专刊，但引用它不是为了报道研究动态，而是为了回答标题 viii 那个问题，研究在文中同样是论据。"
           ]
         }
       ]
@@ -346,24 +348,24 @@
           "questionId": "q14",
           "questionNumber": 40,
           "stem": "What is the main theme of this passage?",
-          "translation": "这篇文章的主题是什么？答案 B 意为「音乐的进化」。",
-          "answer": "B",
+          "translation": "这篇文章的主题是什么？答案 C 意为「音乐在人类社会（生活）中的作用」。",
+          "answer": "C",
           "wordClass": "",
           "locating": {
-            "paragraph": "9",
-            "quote": "This brings up some chicken-or-egg evolutionary questions. It may be that music imitates speech directly, the researchers say, in which case it would seem that language evolved first."
+            "paragraph": "2",
+            "quote": "Music is one of the human species' relatively few universal abilities."
           },
           "synonyms": [
-            "选项 B 的 “The evolution of music” 对应原文 “This brings up some chicken-or-egg evolutionary questions”，evolutionary 为原词复现",
-            "原文接着给出两种进化路径的假设：“It may be that music imitates speech directly … It's also conceivable that music came first and language is in effect an imitation of song”，即音乐与语言何者在进化上先出现的问题",
-            "第 13 段的 “our sense of music, even our love for it, is as deeply rooted in our biology and in our brains as language is” 把全文收束到音乐的生物与进化根源上，也与选项 B 对应"
+            "选项 C 的 “the role of music in human society” 对应开篇论断 “Music is one of the human species' relatively few universal abilities”（音乐是人类为数不多的几种普遍能力之一）——音乐对整个人类而言都是普遍存在、人人具备的能力",
+            "选项 C 的 “role” 对应全文对音乐各项作用的展开：组织人类生活与交流（与语言并列为人类两种普遍能力）、调节情绪（母亲用歌唱式言语安抚婴儿 regulate infants' emotional states）、维系共同的文化经验（各文化共享半音音阶、音乐偏好来自共同的声音经验）",
+            "选项 C 的 “in human society” 对应收束句 “music may be even more of a necessity than we realise”（音乐可能比我们意识到的更为必需）——作者最终把音乐定位为人类社会生活的必需品，而不只是消遣"
           ],
-          "locatingTip": "定位：主题题不看某一句，而看全文主线。确定答案技巧：先看文章标题 Music: Language We All Speak 与 A 段提出的问题（音乐为何是人类的普遍能力、原因仍是个谜），再看中间各段——B 段梳理历史上的数学解释，C 段用 Schwartz 等人的研究说明音乐的构成源自言语的声音，第 9 段直接抛出 “chicken-or-egg evolutionary questions”（音乐与语言谁在进化上先出现），D 段延伸到动物，E 段用婴儿研究说明音乐深植于生物与大脑。全文始终在追问音乐从何而来、为何人类天生拥有音乐，即音乐的起源与进化，故选 B。",
-          "analysis": "全文的推进路线是一条关于音乐起源与进化的论证链。开篇（第 1 段）提出谜题：音乐是人类为数不多的普遍能力之一，人人不需训练就会辨认与创造音乐，“Why this should be so is a mystery”；第 2 段交代音乐长期在研究界不受重视的处境。随后 B 段回望历史上的两种解释：音乐学家强调音乐本身有普遍品质，Pythagoras 指出和谐与发声物体尺寸的比例关系，数百年来观察者把音乐偏好归因于声音的数学属性。C 段用 Schwartz、Howe 与 Purves 的研究推翻旧说：他们分析十万多条语音片段，发现最强频率的集合与半音音阶高度吻合，“the building blocks of music are to be found in speech”；第 9 段顺势提出进化难题——究竟是音乐模仿言语（语言先出现），还是音乐先出现而语言模仿歌唱，抑或两者都出自人类发声系统这一共同来源。D 段把这一思路延伸到动物，说明动物若有「音乐」也应来自它们自身的声音环境。末段（第 13、14 段）用婴儿的证据收束：我们对音乐的感觉与热爱和语言一样深植于生物与大脑，母亲对婴儿说话的方式介于言语与歌唱之间，音乐可能比我们意识到的更为必需。整篇文章追问的是音乐为何存在、从何处演化而来，因此主题是音乐的进化，故选 B。",
+          "locatingTip": "定位：主题题不看某一句，而看全文主线。文章的推进顺序是——开篇（第 2 段）提出音乐是人类普遍的、人人天生具备的能力；A 段后半（第 3 段）交代音乐长期被当作「进化上的小玩艺儿」，与语言的地位对比；B、C 段用 Schwartz 等人的研究说明音乐的构成来自言语的声音、音乐偏好植根于现实生活与人类的进化遗产；第 10 段讨论音乐与语言在进化上的先后；D 段延伸到动物；E 段用婴儿与母亲说明音乐深植于生物与大脑，是人类更根本的需要。全篇不是在追踪音乐的历史来源，而是在说明「音乐在人类身上、在人类生活中究竟占据什么位置」，因此 C 最全面。",
+          "analysis": "全文围绕「音乐对人类意味着什么」展开，落点是音乐在人类社会生活中的作用。开篇指出：音乐是人类为数不多的普遍能力之一，无需任何正式训练，从石器时代部落成员到郊区少年都能辨认音乐、并以某种方式制造音乐（“Music is one of the human species' relatively few universal abilities… has the ability to recognise music and, in some fashion, to make it”）。随后 A 段后半把音乐与语言对照：语言能组织迁徙、造船渡海、在夜间互相沟通，现代文化也直接源自人类操纵符号与句法的能力，而音乐长期只被当作“evolutionary frippery”（进化上的小玩艺儿）、Pinker 口中的“auditory cheesecake”（听觉上的芝士蛋糕）——这一对比本身就是在讨论音乐在人类生活中的位置与价值。\n\nB、C 段用 Schwartz、Howe 与 Purves 的研究翻转旧说：音乐不是抽象的数学游戏，他们分析十万多条语音片段后发现最强频率与半音音阶高度吻合，“the building blocks of music are to be found in speech”（音乐的构成要素存在于言语之中），音乐偏好来自现实生活的声音经验与人类的进化遗产。第 10 段讨论音乐与语言何者在进化上先出现，D 段讨论动物是否能理解音乐，这些都是在追问音乐在人类自身经验中的位置。末段（第 14、15 段）把结论落到人与人的生活上：我们对音乐的感觉、甚至热爱，与语言一样深植于生物与大脑；婴儿对母亲那种介于言语与歌唱之间的声音有直接反应，母亲用歌唱式的言语“regulate infants' emotional states”；Trehub 的结论是“music may be even more of a necessity than we realise”——音乐可能比我们意识到的更为必需。全篇从「人人都有」写到「生活必需」，始终在说明音乐在人类社会与人类经验中的作用，故选 C。",
           "traps": [
-            "A 为什么错（Language and learning）：文章确实反复对比语言与音乐，但讨论的是两者在生物与进化上的同源关系，而非“学习”问题；全文没有把语言学习当作话题展开。",
-            "C 为什么错（The role of music in human society）：文章关心的是音乐的生物与进化根源，而不是音乐在社会中承担什么功能；社会功能只在第 1 段作为语言的对照出现（语言能组织迁徙、造船渡海）。",
-            "D 为什么错（Music for animals）：动物能否理解音乐只是 D 段（第 10、11、12 段）讨论的局部问题，用来支撑“偏好来自自身声音环境”这一主张，属于全文的一个分支而非主题。"
+            "A 为什么错（Language and learning）：文章确实反复对照语言与音乐，但落点是两者在生物与大脑上的同源关系，而不是「学习」问题——全文没有展开语言或音乐的学习机制，learning 在文中并未成为话题。",
+            "B 为什么错（The evolution of music）：「chicken-or-egg evolutionary questions」（第 10 段，音乐模仿言语还是言语模仿歌唱）只是全文中段的一个局部话题，用来解释音乐的来源；文章还写了音乐在各文化的普遍性、在母婴之间的作用、在人类社会生活中的必需性，这些都不是「进化」一词能概括的，B 失之过窄。",
+            "D 为什么错（Music for animals）：动物能否理解音乐只在 D 段（第 11–13 段）讨论，是为支撑「偏好来自自身声音环境」这一论断而设的分支论据，属于全文的一个旁支，不可能是主题。"
           ]
         }
       ]
